@@ -146,6 +146,10 @@ function Index() {
             { label: "Avg. Profit Factor", value: "2.42" },
             { label: "Max Drawdown", value: "4.1%", accent: true },
             { label: "Assets Managed", value: "$2.4M" },
+            { label: "Avg. Trade Return", value: "0.82", suffix: "%" },
+            { label: "Avg. Monthly Return", value: "5.6", suffix: "%" },
+            { label: "Risk / Reward Ratio", value: "1:2.8" },
+            { label: "Sharpe Ratio", value: "2.14" },
           ].map((stat) => (
             <div key={stat.label} className="flex flex-col gap-2">
               <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest">{stat.label}</span>
