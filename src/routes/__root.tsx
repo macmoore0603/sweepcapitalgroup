@@ -83,8 +83,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:site", content: "@LexusNexusCap" },
       { name: "twitter:title", content: "Lexus Nexus Capital Group — Institutional Trading" },
       { name: "twitter:description", content: "Private, institutional-grade day trading mentorship and capital allocation for serious investors. Discipline is the only edge." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/eb5b9d8c-7cfa-4f98-86bf-31323fa887e0/id-preview-ad379e29--7621b351-a114-4960-911c-c816c6e7b71a.lovable.app-1778907080229.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/eb5b9d8c-7cfa-4f98-86bf-31323fa887e0/id-preview-ad379e29--7621b351-a114-4960-911c-c816c6e7b71a.lovable.app-1778907080229.png" },
+      { property: "og:image", content: "https://lexusnexuscapital.com/og-card.jpg" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { property: "og:image:alt", content: "Lexus Nexus Capital Group — Success is the only edge." },
+      { name: "twitter:image", content: "https://lexusnexuscapital.com/og-card.jpg" },
+      { name: "twitter:image:alt", content: "Lexus Nexus Capital Group — Success is the only edge." },
     ],
     links: [
       {
