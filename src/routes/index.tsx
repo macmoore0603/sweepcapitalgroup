@@ -38,9 +38,68 @@ function Index() {
           <a href="#apply" className="hover:text-foreground transition-colors">Apply</a>
           <a href="#contact" className="hover:text-foreground transition-colors">Contact</a>
         </div>
-        <a href="#apply" className="px-5 py-2.5 bg-foreground text-background font-extrabold text-[11px] uppercase tracking-widest hover:bg-accent transition-colors">
-          Request Access
-        </a>
+        <div className="flex items-center gap-3">
+          <a href="#apply" className="hidden sm:inline-block px-5 py-2.5 bg-foreground text-background font-extrabold text-[11px] uppercase tracking-widest hover:bg-accent transition-colors">
+            Request Access
+          </a>
+          <Sheet>
+            <SheetTrigger
+              aria-label="Open menu"
+              className="md:hidden inline-flex items-center justify-center w-10 h-10 border border-border hover:bg-white/5 transition-colors"
+            >
+              <Menu className="w-5 h-5" />
+            </SheetTrigger>
+            <SheetContent side="right" className="bg-background border-border w-[280px] sm:w-[340px]">
+              <SheetHeader>
+                <SheetTitle className="font-extrabold tracking-tighter text-xl uppercase text-left">
+                  Lexus Nexus
+                </SheetTitle>
+              </SheetHeader>
+              <nav className="flex flex-col mt-8 font-mono text-xs uppercase tracking-widest">
+                {[
+                  { label: "Methodology", href: "#methodology", type: "hash" as const },
+                  { label: "Performance", href: "#performance", type: "hash" as const },
+                  { label: "Tiers", href: "#tiers", type: "hash" as const },
+                  { label: "Apply", href: "#apply", type: "hash" as const },
+                  { label: "Contact", href: "#contact", type: "hash" as const },
+                ].map((item) => (
+                  <SheetClose asChild key={item.label}>
+                    <a
+                      href={item.href}
+                      className="py-4 border-b border-border text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {item.label}
+                    </a>
+                  </SheetClose>
+                ))}
+                <SheetClose asChild>
+                  <Link
+                    to="/about"
+                    className="py-4 border-b border-border text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    About
+                  </Link>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Link
+                    to="/leadership"
+                    className="py-4 border-b border-border text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Leadership
+                  </Link>
+                </SheetClose>
+                <SheetClose asChild>
+                  <a
+                    href="#apply"
+                    className="mt-8 px-5 py-4 bg-foreground text-background font-extrabold text-[11px] uppercase tracking-widest text-center hover:bg-accent transition-colors"
+                  >
+                    Request Access
+                  </a>
+                </SheetClose>
+              </nav>
+            </SheetContent>
+          </Sheet>
+        </div>
       </nav>
 
       {/* Hero */}
