@@ -67,7 +67,7 @@ function AboutPage() {
               <span>Atlanta, Georgia</span>
             </div>
             <div className="flex flex-col gap-1">
-              <span className="text-foreground">Founder &amp; Owner</span>
+              <span className="text-foreground">Founder, Owner &amp; CEO</span>
               <span>Mac Moore</span>
             </div>
             <div className="flex flex-col gap-1">
@@ -124,7 +124,7 @@ function AboutPage() {
       <footer className="px-6 md:px-10 py-10 border-t border-border">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
           <span>© 2026 Lexus Nexus Capital Group — Atlanta, GA</span>
-          <span>Mac Moore — Founder &amp; Owner</span>
+          <span>Mac Moore — Founder, Owner &amp; CEO</span>
         </div>
       </footer>
     </div>
