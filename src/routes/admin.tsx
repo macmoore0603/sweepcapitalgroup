@@ -98,7 +98,10 @@ function AdminPage() {
   });
 
   const updateLead = useMutation({
-    mutationFn: async (input: { id: string; patch: Partial<Pick<Lead, "status" | "notes">> }) => {
+    mutationFn: async (input: {
+      id: string;
+      patch: Partial<Pick<Lead, "status" | "notes" | "scheduled_at" | "confirmation_sent_at">>;
+    }) => {
       const { error } = await supabase.from("leads").update(input.patch).eq("id", input.id);
       if (error) throw error;
     },
