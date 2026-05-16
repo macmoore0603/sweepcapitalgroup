@@ -36,6 +36,10 @@ function AdminPage() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [statusFilter, setStatusFilter] = useState<LeadStatus | "all">("all");
+  const [tierFilter, setTierFilter] = useState<string>("all");
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
+  const [search, setSearch] = useState<string>("");
 
   // Auth + role check (client-side; RLS enforces server-side)
   useEffect(() => {
@@ -124,16 +128,88 @@ function AdminPage() {
   });
 
   const leads = leadsQuery.data ?? [];
-  const filtered = useMemo(
-    () => (statusFilter === "all" ? leads : leads.filter((l) => l.status === statusFilter)),
-    [leads, statusFilter],
-  );
+
+  const tiers = useMemo(() => {
+    const set = new Set<string>();
+    for (const l of leads) {
+      const t = (l.capital_size ?? "").trim();
+      if (t) set.add(t);
+    }
+    return Array.from(set).sort();
+  }, [leads]);
+
+  const filtered = useMemo(() => {
+    const fromTs = dateFrom ? new Date(dateFrom + "T00:00:00").getTime() : null;
+    const toTs = dateTo ? new Date(dateTo + "T23:59:59.999").getTime() : null;
+    const q = search.trim().toLowerCase();
+    return leads.filter((l) => {
+      if (statusFilter !== "all" && l.status !== statusFilter) return false;
+      if (tierFilter !== "all" && (l.capital_size ?? "") !== tierFilter) return false;
+      const created = new Date(l.created_at).getTime();
+      if (fromTs !== null && created < fromTs) return false;
+      if (toTs !== null && created > toTs) return false;
+      if (q) {
+        const hay = `${l.full_name} ${l.email} ${l.notes ?? ""}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [leads, statusFilter, tierFilter, dateFrom, dateTo, search]);
 
   const counts = useMemo(() => {
     const c: Record<LeadStatus, number> = { new: 0, contacted: 0, qualified: 0, closed: 0, rejected: 0 };
     for (const l of leads) c[l.status]++;
     return c;
   }, [leads]);
+
+  const handleExportCsv = () => {
+    if (filtered.length === 0) {
+      toast.error("No leads to export.");
+      return;
+    }
+    const headers = [
+      "id", "created_at", "full_name", "email", "tier", "status",
+      "scheduled_at", "confirmation_sent_at",
+      "utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content",
+      "referrer", "landing_page", "notes",
+    ];
+    const esc = (v: unknown) => {
+      if (v === null || v === undefined) return "";
+      const s = String(v).replace(/\r?\n/g, " ").replace(/"/g, '""');
+      return /[",]/.test(s) ? `"${s}"` : s;
+    };
+    const rows = filtered.map((l) => {
+      const x = l as unknown as Record<string, unknown>;
+      return [
+        l.id, l.created_at, l.full_name, l.email, l.capital_size, l.status,
+        l.scheduled_at, l.confirmation_sent_at,
+        x.utm_source, x.utm_medium, x.utm_campaign, x.utm_term, x.utm_content,
+        x.referrer, x.landing_page, l.notes,
+      ].map(esc).join(",");
+    });
+    const csv = "\uFEFF" + [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `leads-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success(`Exported ${filtered.length} lead${filtered.length === 1 ? "" : "s"}.`);
+  };
+
+  const clearFilters = () => {
+    setStatusFilter("all");
+    setTierFilter("all");
+    setDateFrom("");
+    setDateTo("");
+    setSearch("");
+  };
+
+  const hasActiveFilters =
+    statusFilter !== "all" || tierFilter !== "all" || !!dateFrom || !!dateTo || !!search;
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -211,13 +287,85 @@ function AdminPage() {
           ))}
         </div>
 
+        {/* Filter toolbar */}
+        <div className="border border-border bg-background p-4 md:p-5 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <label className="flex flex-col gap-1.5">
+              <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Tier</span>
+              <select
+                value={tierFilter}
+                onChange={(e) => setTierFilter(e.target.value)}
+                className="bg-background border border-border px-3 py-2 text-sm focus:outline-none focus:border-accent"
+              >
+                <option value="all">All tiers</option>
+                {tiers.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">From</span>
+              <input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                max={dateTo || undefined}
+                className="bg-background border border-border px-3 py-2 text-sm font-mono focus:outline-none focus:border-accent"
+              />
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">To</span>
+              <input
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                min={dateFrom || undefined}
+                className="bg-background border border-border px-3 py-2 text-sm font-mono focus:outline-none focus:border-accent"
+              />
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Search</span>
+              <input
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Name, email, notes…"
+                className="bg-background border border-border px-3 py-2 text-sm focus:outline-none focus:border-accent"
+              />
+            </label>
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+            <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              Showing {filtered.length} of {leads.length}
+              {hasActiveFilters ? " · filtered" : ""}
+            </div>
+            <div className="flex items-center gap-2">
+              {hasActiveFilters && (
+                <button
+                  onClick={clearFilters}
+                  className="font-mono text-[10px] uppercase tracking-widest px-3 py-2 border border-border hover:bg-white/5"
+                >
+                  Clear filters
+                </button>
+              )}
+              <button
+                onClick={handleExportCsv}
+                disabled={filtered.length === 0}
+                className="font-mono text-[10px] uppercase tracking-widest px-4 py-2 bg-foreground text-background hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Export CSV ({filtered.length})
+              </button>
+            </div>
+          </div>
+        </div>
+
         {leadsQuery.isLoading ? (
           <div className="py-16 text-center text-muted-foreground font-mono text-xs uppercase tracking-widest">
             Loading leads…
           </div>
         ) : filtered.length === 0 ? (
           <div className="py-16 text-center text-muted-foreground font-mono text-xs uppercase tracking-widest border border-border">
-            No leads {statusFilter !== "all" ? `with status "${STATUS_LABEL[statusFilter as LeadStatus]}"` : "yet"}.
+            No leads match the current filters.
           </div>
         ) : (
           <div className="space-y-px bg-border">
