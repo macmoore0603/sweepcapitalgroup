@@ -90,6 +90,103 @@ const TIERS: Tier[] = [
   },
 ];
 
+type FaqItem = { q: string; a: string };
+type FaqGroup = { title: string; kicker: string; items: FaqItem[] };
+
+const FAQ_GROUPS: FaqGroup[] = [
+  {
+    title: "Eligibility",
+    kicker: "Who this is for",
+    items: [
+      {
+        q: "Do I need prior trading experience?",
+        a: "No. The Course assumes zero experience and builds from the ground up. Course + Coaching is ideal whether you're starting fresh or already trading and want a structured edge.",
+      },
+      {
+        q: "Is there a minimum account size?",
+        a: "For self-trading tiers, $500–$2,000 in starting capital is the practical floor. For Managed Trading, the minimum funded account is $2,500.",
+      },
+      {
+        q: "Country requirements?",
+        a: "Open to US residents 18+. International students can enroll in The Course; managed trading and direct coaching are US-only at this time.",
+      },
+      {
+        q: "What broker do I need?",
+        a: "We'll recommend a vetted broker on your kickoff call. If you already have one, we'll work with it where possible.",
+      },
+    ],
+  },
+  {
+    title: "Refunds & Guarantees",
+    kicker: "Where we stand",
+    items: [
+      {
+        q: "Is there a refund window?",
+        a: "The Course and Course + Coaching include a 7-day satisfaction window from the date of first login — full refund, no questions, if the material isn't for you.",
+      },
+      {
+        q: "What does the Managed Trading guarantee cover?",
+        a: "If your account does not reach a $2,000 minimum net profit within the 3–4 week target window, we continue trading at no additional cost until it does, or we refund the $500 setup fee. Full terms in your written agreement.",
+      },
+      {
+        q: "Are returns guaranteed for self-trading tiers?",
+        a: "No. Self-trading outcomes depend on your execution. We guarantee curriculum quality and coaching access, not market returns.",
+      },
+      {
+        q: "Can I upgrade after I start?",
+        a: "Yes. Any tier can be upgraded within 30 days and we credit 100% of what you've already paid toward the higher tier.",
+      },
+    ],
+  },
+];
+
+const TIER_EXPECTATIONS: { id: string; name: string; timeline: string; steps: string[] }[] = [
+  {
+    id: "course",
+    name: "The Course",
+    timeline: "Self-paced · ~4 weeks",
+    steps: [
+      "Instant access to the full curriculum and student community",
+      "Weekly study path with setups, journaling, and review templates",
+      "Lifetime updates and new module drops",
+      "Optional Q&A office hours inside the community",
+    ],
+  },
+  {
+    id: "course-coaching",
+    name: "Course + Coaching",
+    timeline: "6–8 weeks to first profit",
+    steps: [
+      "Kickoff call within 24 hours to map your starting point",
+      "1:1 walkthroughs of every core setup until executed cleanly",
+      "Direct messaging access for live trade reviews",
+      "Coaching continues until you hit your first profitable week",
+    ],
+  },
+  {
+    id: "managed",
+    name: "Managed Trading",
+    timeline: "3–4 week target window",
+    steps: [
+      "Sign agreement and connect your funded account",
+      "I trade your account hands-off with weekly performance reports",
+      "$2,000 minimum target — continue at no cost or refund if missed",
+      "Quarterly review on whether to continue managed or transition you to self-trading",
+    ],
+  },
+  {
+    id: "all-in",
+    name: "All-Inclusive",
+    timeline: "Full stack from day one",
+    steps: [
+      "Everything in Course + Coaching, with highest-priority direct access",
+      "Managed Trading runs in parallel while you learn",
+      "Side-by-side reviews of my trades vs. yours",
+      "Continued support after the managed window closes",
+    ],
+  },
+];
+
 export default function MentorshipPage() {
   return (
     <div className="min-h-screen bg-background text-foreground font-sans">
@@ -106,6 +203,7 @@ export default function MentorshipPage() {
           <Link to="/" className="hover:text-foreground transition-colors">Home</Link>
           <Link to="/about" className="hover:text-foreground transition-colors">About</Link>
           <Link to="/mentorship" className="text-foreground">Mentorship</Link>
+          <a href="#faq" className="hover:text-foreground transition-colors">FAQ</a>
         </div>
         <a href="#lead" className="px-5 py-2.5 bg-foreground text-background font-extrabold text-[11px] uppercase tracking-widest hover:bg-accent transition-colors">
           Get Started
@@ -179,6 +277,92 @@ export default function MentorshipPage() {
         <p className="max-w-5xl mx-auto mt-10 font-mono text-[11px] uppercase tracking-widest text-muted-foreground text-center">
           All options are a single one-time payment — the most affordable mentorship on the market.
         </p>
+      </section>
+
+      {/* FAQ */}
+      <section id="faq" className="px-6 md:px-10 py-24 md:py-32 border-t border-border">
+        <div className="max-w-5xl mx-auto flex flex-col gap-12">
+          <div className="flex flex-col gap-4">
+            <span className="font-mono text-accent text-[11px] uppercase tracking-[0.3em]">FAQ</span>
+            <h2 className="text-4xl md:text-5xl font-extrabold tracking-tighter uppercase leading-[0.95]">
+              Eligibility, refunds,{" "}
+              <span className="italic font-semibold text-accent" style={{ fontFamily: "var(--font-serif)" }}>
+                and what to expect.
+              </span>
+            </h2>
+            <p className="max-w-[60ch] text-muted-foreground text-base md:text-lg text-pretty">
+              Straight answers before you commit. If something isn't covered here, drop it in the
+              notes field above and we'll address it on the kickoff call.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-border">
+            {FAQ_GROUPS.map((group) => (
+              <div key={group.title} className="bg-background p-8 flex flex-col gap-5">
+                <div className="flex items-baseline justify-between gap-4 border-b border-border pb-3">
+                  <h3 className="font-extrabold uppercase tracking-tight text-lg">{group.title}</h3>
+                  <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                    {group.kicker}
+                  </span>
+                </div>
+                <dl className="flex flex-col gap-5">
+                  {group.items.map((item) => (
+                    <div key={item.q} className="flex flex-col gap-1.5">
+                      <dt className="font-mono text-[11px] uppercase tracking-widest text-accent">
+                        {item.q}
+                      </dt>
+                      <dd className="text-sm text-muted-foreground text-pretty">{item.a}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            ))}
+          </div>
+
+          {/* What to expect — per tier */}
+          <div className="flex flex-col gap-6">
+            <h3 className="text-2xl md:text-3xl font-extrabold tracking-tighter uppercase">
+              What to expect — by tier
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-border">
+              {TIER_EXPECTATIONS.map((te) => (
+                <div key={te.id} className="bg-background p-6 flex flex-col gap-4">
+                  <div className="flex flex-col gap-1">
+                    <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                      {te.name}
+                    </span>
+                    <span className="font-mono text-[10px] uppercase tracking-widest text-accent">
+                      {te.timeline}
+                    </span>
+                  </div>
+                  <ul className="flex flex-col gap-2.5 text-sm text-muted-foreground">
+                    {te.steps.map((s, i) => (
+                      <li key={s} className="flex gap-2">
+                        <span className="font-mono text-[10px] text-accent pt-1">0{i + 1}</span>
+                        <span>{s}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Disclaimer */}
+          <div className="border border-accent/40 bg-white/[0.02] p-6 md:p-8 flex flex-col gap-3">
+            <span className="font-mono text-[10px] uppercase tracking-widest text-accent">
+              Risk Disclaimer
+            </span>
+            <p className="text-sm text-muted-foreground text-pretty">
+              Trading involves substantial risk of loss and is not suitable for every investor.
+              Nothing on this page is financial, legal, or tax advice. Past performance and example
+              results do not guarantee future returns. Any "guaranteed" language in the Managed
+              Trading tier refers to a contractual minimum performance commitment that will be
+              detailed in a written agreement before any capital is deployed — by enrolling, you
+              acknowledge you've read and understood the terms in that agreement.
+            </p>
+          </div>
+        </div>
       </section>
 
       {/* Lead capture */}
