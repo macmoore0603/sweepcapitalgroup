@@ -227,6 +227,15 @@ function AdminPage() {
                 lead={lead}
                 onStatusChange={(status) => updateLead.mutate({ id: lead.id, patch: { status } })}
                 onNotesChange={(notes) => updateLead.mutate({ id: lead.id, patch: { notes } })}
+                onScheduleChange={(scheduled_at) =>
+                  updateLead.mutate({ id: lead.id, patch: { scheduled_at } })
+                }
+                onMarkConfirmed={() =>
+                  updateLead.mutate({
+                    id: lead.id,
+                    patch: { confirmation_sent_at: new Date().toISOString() },
+                  })
+                }
                 onDelete={() => {
                   if (confirm(`Delete lead from ${lead.full_name}?`)) {
                     deleteLead.mutate(lead.id);
