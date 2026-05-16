@@ -272,6 +272,8 @@ function ApplicationForm() {
   const [email, setEmail] = useState("");
   const [capitalSize, setCapitalSize] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [leadId, setLeadId] = useState<string | null>(null);
+  const [scheduledAt, setScheduledAt] = useState<Date | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -285,21 +287,36 @@ function ApplicationForm() {
       return;
     }
     setSubmitting(true);
-    const { error } = await supabase.from("leads").insert({
-      full_name: parsed.data.full_name,
-      email: parsed.data.email,
-      capital_size: parsed.data.capital_size ?? null,
-    });
+    const { data, error } = await supabase
+      .from("leads")
+      .insert({
+        full_name: parsed.data.full_name,
+        email: parsed.data.email,
+        capital_size: parsed.data.capital_size ?? null,
+      })
+      .select("id")
+      .single();
     setSubmitting(false);
-    if (error) {
+    if (error || !data) {
       toast.error("Submission failed. Please try again.");
       return;
     }
-    toast.success("Application received. Our intake team will reach out within 48 hours.");
-    setFullName("");
-    setEmail("");
-    setCapitalSize("");
+    toast.success("Application received. Please book your introductory call.");
+    setLeadId(data.id);
   };
+
+  if (scheduledAt && leadId) {
+    return <SchedulingConfirmation slot={scheduledAt} />;
+  }
+
+  if (leadId) {
+    return (
+      <CallScheduler
+        leadId={leadId}
+        onScheduled={(slot) => setScheduledAt(slot)}
+      />
+    );
+  }
 
   return (
     <form className="space-y-8" onSubmit={handleSubmit}>
