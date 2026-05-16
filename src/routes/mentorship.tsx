@@ -253,6 +253,30 @@ function LeadForm() {
       return;
     }
     setSubmitting(true);
+
+    // Capture attribution: prefer first-touch UTMs stored in sessionStorage,
+    // fall back to current URL. Always send current page + referrer.
+    let attribution: Record<string, string | undefined> = {};
+    if (typeof window !== "undefined") {
+      try {
+        const url = new URL(window.location.href);
+        const stored = window.sessionStorage.getItem("lnc_attribution");
+        const firstTouch = stored ? (JSON.parse(stored) as Record<string, string>) : {};
+        const get = (k: string) => firstTouch[k] || url.searchParams.get(k) || undefined;
+        attribution = {
+          utm_source: get("utm_source"),
+          utm_medium: get("utm_medium"),
+          utm_campaign: get("utm_campaign"),
+          utm_term: get("utm_term"),
+          utm_content: get("utm_content"),
+          referrer: firstTouch.referrer || document.referrer || undefined,
+          landing_page: firstTouch.landing_page || window.location.href,
+        };
+      } catch {
+        // ignore attribution capture errors
+      }
+    }
+
     const res = await fetch("/api/public/lead-submit", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -261,6 +285,7 @@ function LeadForm() {
         email: parsed.data.email,
         tier: parsed.data.tier,
         notes: parsed.data.notes,
+        ...attribution,
       }),
     });
     setSubmitting(false);

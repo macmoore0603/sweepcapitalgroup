@@ -7,9 +7,32 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
+import { useEffect } from "react";
 
 import appCss from "../styles.css?url";
 import { Toaster } from "@/components/ui/sonner";
+
+const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"] as const;
+
+function captureFirstTouchAttribution() {
+  if (typeof window === "undefined") return;
+  try {
+    const STORAGE_KEY = "lnc_attribution";
+    if (window.sessionStorage.getItem(STORAGE_KEY)) return;
+    const url = new URL(window.location.href);
+    const data: Record<string, string> = {
+      landing_page: window.location.href,
+    };
+    if (document.referrer) data.referrer = document.referrer;
+    for (const k of UTM_KEYS) {
+      const v = url.searchParams.get(k);
+      if (v) data[k] = v;
+    }
+    window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch {
+    // ignore
+  }
+}
 
 function NotFoundComponent() {
   return (
@@ -119,6 +142,10 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+
+  useEffect(() => {
+    captureFirstTouchAttribution();
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

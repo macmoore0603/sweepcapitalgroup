@@ -110,10 +110,17 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          landing_page: string | null
           notes: string | null
+          referrer: string | null
           scheduled_at: string | null
           status: Database["public"]["Enums"]["lead_status"]
           updated_at: string
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
         }
         Insert: {
           booking_token?: string
@@ -123,10 +130,17 @@ export type Database = {
           email: string
           full_name: string
           id?: string
+          landing_page?: string | null
           notes?: string | null
+          referrer?: string | null
           scheduled_at?: string | null
           status?: Database["public"]["Enums"]["lead_status"]
           updated_at?: string
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
         }
         Update: {
           booking_token?: string
@@ -136,10 +150,17 @@ export type Database = {
           email?: string
           full_name?: string
           id?: string
+          landing_page?: string | null
           notes?: string | null
+          referrer?: string | null
           scheduled_at?: string | null
           status?: Database["public"]["Enums"]["lead_status"]
           updated_at?: string
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
         }
         Relationships: []
       }

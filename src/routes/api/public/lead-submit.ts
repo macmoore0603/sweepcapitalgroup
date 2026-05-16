@@ -9,11 +9,21 @@ const SITE_NAME = 'Lexus Nexus Capital Group'
 const SENDER_DOMAIN = 'notify.lexusnexuscapital.com'
 const FROM_DOMAIN = 'notify.lexusnexuscapital.com'
 
+const optionalStr = (max: number) =>
+  z.string().trim().max(max).optional().transform((v) => (v && v.length > 0 ? v : undefined))
+
 const submitSchema = z.object({
   full_name: z.string().trim().min(2).max(120),
   email: z.string().trim().email().max(255),
   tier: z.string().trim().min(1).max(120),
   notes: z.string().trim().max(2000).optional(),
+  utm_source: optionalStr(255),
+  utm_medium: optionalStr(255),
+  utm_campaign: optionalStr(255),
+  utm_term: optionalStr(255),
+  utm_content: optionalStr(255),
+  referrer: optionalStr(2048),
+  landing_page: optionalStr(2048),
 })
 
 function generateToken(): string {
@@ -45,7 +55,11 @@ export const Route = createFileRoute('/api/public/lead-submit')({
             { status: 400 },
           )
         }
-        const { full_name, email, tier, notes } = parsed.data
+        const {
+          full_name, email, tier, notes,
+          utm_source, utm_medium, utm_campaign, utm_term, utm_content,
+          referrer, landing_page,
+        } = parsed.data
         const normalizedEmail = email.toLowerCase()
 
         const supabase: any = createClient(supabaseUrl, supabaseServiceKey)
@@ -56,6 +70,13 @@ export const Route = createFileRoute('/api/public/lead-submit')({
           email,
           capital_size: tier,
           notes: notes ?? null,
+          utm_source: utm_source ?? null,
+          utm_medium: utm_medium ?? null,
+          utm_campaign: utm_campaign ?? null,
+          utm_term: utm_term ?? null,
+          utm_content: utm_content ?? null,
+          referrer: referrer ?? null,
+          landing_page: landing_page ?? null,
         })
         if (insertError) {
           console.error('Lead insert failed', { error: insertError })
