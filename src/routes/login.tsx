@@ -16,7 +16,6 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -24,29 +23,14 @@ function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password.length < 8) {
-      toast.error("Password must be at least 8 characters.");
+      toast.error("Invalid credentials.");
       return;
     }
     setBusy(true);
-    if (mode === "signup") {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { emailRedirectTo: `${window.location.origin}/admin` },
-      });
-      setBusy(false);
-      if (error) {
-        toast.error(error.message);
-        return;
-      }
-      toast.success("Account created. Check your email to confirm, then sign in.");
-      setMode("signin");
-      return;
-    }
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
     if (error) {
-      toast.error(error.message);
+      toast.error("Invalid credentials.");
       return;
     }
     toast.success("Welcome back.");
@@ -65,11 +49,8 @@ function LoginPage() {
           <div className="space-y-3">
             <span className="font-mono text-accent text-[11px] uppercase tracking-[0.3em]">Restricted Access</span>
             <h1 className="text-4xl md:text-5xl font-extrabold tracking-tighter uppercase">
-              {mode === "signin" ? "Sign In" : "Create Account"}
+              Sign In
             </h1>
-            <p className="text-sm text-muted-foreground">
-              The first account created becomes the dashboard administrator.
-            </p>
           </div>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
@@ -82,6 +63,7 @@ function LoginPage() {
                 maxLength={255}
                 className="w-full bg-transparent border-b border-border py-3 focus:outline-none focus:border-accent text-base"
                 placeholder="you@firm.com"
+                autoComplete="email"
               />
             </div>
             <div className="space-y-2">
@@ -95,6 +77,7 @@ function LoginPage() {
                 maxLength={128}
                 className="w-full bg-transparent border-b border-border py-3 focus:outline-none focus:border-accent text-base"
                 placeholder="••••••••"
+                autoComplete="current-password"
               />
             </div>
             <button
@@ -102,15 +85,9 @@ function LoginPage() {
               disabled={busy}
               className="w-full py-4 bg-foreground text-background font-extrabold uppercase tracking-[0.2em] hover:bg-accent transition-colors disabled:opacity-50"
             >
-              {busy ? "Working…" : mode === "signin" ? "Sign In" : "Create Account"}
+              {busy ? "Working…" : "Sign In"}
             </button>
           </form>
-          <button
-            onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
-            className="w-full font-mono text-[11px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
-          >
-            {mode === "signin" ? "Need to create the admin account?" : "Have an account? Sign in"}
-          </button>
         </div>
       </main>
     </div>
