@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import logo from "../assets/lnc-logo.png";
 
 export const Route = createFileRoute("/about")({
   head: () => ({
