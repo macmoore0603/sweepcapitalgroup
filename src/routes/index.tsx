@@ -305,15 +305,30 @@ function ApplicationForm() {
     setLeadId(data.id);
   };
 
-  if (scheduledAt && leadId) {
-    return <SchedulingConfirmation slot={scheduledAt} />;
+  const [rescheduling, setRescheduling] = useState(false);
+
+  if (leadId && scheduledAt && !rescheduling) {
+    return (
+      <SchedulingConfirmation
+        slot={scheduledAt}
+        leadId={leadId}
+        onReschedule={() => setRescheduling(true)}
+        onCancelled={() => setScheduledAt(null)}
+      />
+    );
   }
 
   if (leadId) {
     return (
       <CallScheduler
         leadId={leadId}
-        onScheduled={(slot) => setScheduledAt(slot)}
+        mode={rescheduling ? "reschedule" : "initial"}
+        currentSlot={scheduledAt}
+        onScheduled={(slot) => {
+          setScheduledAt(slot);
+          setRescheduling(false);
+        }}
+        onBack={rescheduling ? () => setRescheduling(false) : undefined}
       />
     );
   }
