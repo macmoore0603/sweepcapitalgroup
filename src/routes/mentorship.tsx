@@ -203,6 +203,7 @@ export default function MentorshipPage() {
           <Link to="/" className="hover:text-foreground transition-colors">Home</Link>
           <Link to="/about" className="hover:text-foreground transition-colors">About</Link>
           <Link to="/mentorship" className="text-foreground">Mentorship</Link>
+          <a href="#faq" className="hover:text-foreground transition-colors">FAQ</a>
         </div>
         <a href="#lead" className="px-5 py-2.5 bg-foreground text-background font-extrabold text-[11px] uppercase tracking-widest hover:bg-accent transition-colors">
           Get Started
