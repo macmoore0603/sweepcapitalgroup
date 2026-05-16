@@ -552,11 +552,13 @@ function CallScheduler({
 function SchedulingConfirmation({
   slot,
   leadId,
+  bookingToken,
   onReschedule,
   onCancelled,
 }: {
   slot: Date;
   leadId: string;
+  bookingToken: string;
   onReschedule: () => void;
   onCancelled: () => void;
 }) {
@@ -567,6 +569,7 @@ function SchedulingConfirmation({
     setCancelling(true);
     const { data, error } = await supabase.rpc("reschedule_lead_call", {
       _lead_id: leadId,
+      _token: bookingToken,
       _slot: null as unknown as string,
     });
     setCancelling(false);
