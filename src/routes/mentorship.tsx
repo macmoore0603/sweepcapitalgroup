@@ -90,6 +90,103 @@ const TIERS: Tier[] = [
   },
 ];
 
+type FaqItem = { q: string; a: string };
+type FaqGroup = { title: string; kicker: string; items: FaqItem[] };
+
+const FAQ_GROUPS: FaqGroup[] = [
+  {
+    title: "Eligibility",
+    kicker: "Who this is for",
+    items: [
+      {
+        q: "Do I need prior trading experience?",
+        a: "No. The Course assumes zero experience and builds from the ground up. Course + Coaching is ideal whether you're starting fresh or already trading and want a structured edge.",
+      },
+      {
+        q: "Is there a minimum account size?",
+        a: "For self-trading tiers, $500–$2,000 in starting capital is the practical floor. For Managed Trading, the minimum funded account is $2,500.",
+      },
+      {
+        q: "Country requirements?",
+        a: "Open to US residents 18+. International students can enroll in The Course; managed trading and direct coaching are US-only at this time.",
+      },
+      {
+        q: "What broker do I need?",
+        a: "We'll recommend a vetted broker on your kickoff call. If you already have one, we'll work with it where possible.",
+      },
+    ],
+  },
+  {
+    title: "Refunds & Guarantees",
+    kicker: "Where we stand",
+    items: [
+      {
+        q: "Is there a refund window?",
+        a: "The Course and Course + Coaching include a 7-day satisfaction window from the date of first login — full refund, no questions, if the material isn't for you.",
+      },
+      {
+        q: "What does the Managed Trading guarantee cover?",
+        a: "If your account does not reach a $2,000 minimum net profit within the 3–4 week target window, we continue trading at no additional cost until it does, or we refund the $500 setup fee. Full terms in your written agreement.",
+      },
+      {
+        q: "Are returns guaranteed for self-trading tiers?",
+        a: "No. Self-trading outcomes depend on your execution. We guarantee curriculum quality and coaching access, not market returns.",
+      },
+      {
+        q: "Can I upgrade after I start?",
+        a: "Yes. Any tier can be upgraded within 30 days and we credit 100% of what you've already paid toward the higher tier.",
+      },
+    ],
+  },
+];
+
+const TIER_EXPECTATIONS: { id: string; name: string; timeline: string; steps: string[] }[] = [
+  {
+    id: "course",
+    name: "The Course",
+    timeline: "Self-paced · ~4 weeks",
+    steps: [
+      "Instant access to the full curriculum and student community",
+      "Weekly study path with setups, journaling, and review templates",
+      "Lifetime updates and new module drops",
+      "Optional Q&A office hours inside the community",
+    ],
+  },
+  {
+    id: "course-coaching",
+    name: "Course + Coaching",
+    timeline: "6–8 weeks to first profit",
+    steps: [
+      "Kickoff call within 24 hours to map your starting point",
+      "1:1 walkthroughs of every core setup until executed cleanly",
+      "Direct messaging access for live trade reviews",
+      "Coaching continues until you hit your first profitable week",
+    ],
+  },
+  {
+    id: "managed",
+    name: "Managed Trading",
+    timeline: "3–4 week target window",
+    steps: [
+      "Sign agreement and connect your funded account",
+      "I trade your account hands-off with weekly performance reports",
+      "$2,000 minimum target — continue at no cost or refund if missed",
+      "Quarterly review on whether to continue managed or transition you to self-trading",
+    ],
+  },
+  {
+    id: "all-in",
+    name: "All-Inclusive",
+    timeline: "Full stack from day one",
+    steps: [
+      "Everything in Course + Coaching, with highest-priority direct access",
+      "Managed Trading runs in parallel while you learn",
+      "Side-by-side reviews of my trades vs. yours",
+      "Continued support after the managed window closes",
+    ],
+  },
+];
+
 export default function MentorshipPage() {
   return (
     <div className="min-h-screen bg-background text-foreground font-sans">
