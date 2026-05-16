@@ -116,7 +116,7 @@ function Index() {
               The Private Office of Trading
             </span>
             <h1 className="text-5xl sm:text-7xl md:text-[120px] leading-[0.85] font-extrabold tracking-tighter text-balance">
-              DISCIPLINE IS{" "}
+              SUCCESS IS{" "}
               <span className="italic font-semibold text-accent" style={{ fontFamily: "var(--font-serif)" }}>
                 the only
               </span>{" "}
