@@ -103,6 +103,7 @@ export type Database = {
       }
       leads: {
         Row: {
+          booking_token: string
           capital_size: string | null
           confirmation_sent_at: string | null
           created_at: string
@@ -115,6 +116,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          booking_token?: string
           capital_size?: string | null
           confirmation_sent_at?: string | null
           created_at?: string
@@ -127,6 +129,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          booking_token?: string
           capital_size?: string | null
           confirmation_sent_at?: string | null
           created_at?: string
@@ -223,11 +226,11 @@ export type Database = {
         }[]
       }
       reschedule_lead_call: {
-        Args: { _lead_id: string; _slot: string }
+        Args: { _lead_id: string; _slot: string; _token: string }
         Returns: boolean
       }
       schedule_lead_call: {
-        Args: { _lead_id: string; _slot: string }
+        Args: { _lead_id: string; _slot: string; _token: string }
         Returns: boolean
       }
     }
