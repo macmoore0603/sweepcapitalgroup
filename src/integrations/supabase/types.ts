@@ -22,6 +22,7 @@ export type Database = {
           full_name: string
           id: string
           notes: string | null
+          scheduled_at: string | null
           status: Database["public"]["Enums"]["lead_status"]
           updated_at: string
         }
@@ -32,6 +33,7 @@ export type Database = {
           full_name: string
           id?: string
           notes?: string | null
+          scheduled_at?: string | null
           status?: Database["public"]["Enums"]["lead_status"]
           updated_at?: string
         }
@@ -42,6 +44,7 @@ export type Database = {
           full_name?: string
           id?: string
           notes?: string | null
+          scheduled_at?: string | null
           status?: Database["public"]["Enums"]["lead_status"]
           updated_at?: string
         }
@@ -78,6 +81,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      schedule_lead_call: {
+        Args: { _lead_id: string; _slot: string }
         Returns: boolean
       }
     }

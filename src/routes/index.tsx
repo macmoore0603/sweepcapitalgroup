@@ -272,6 +272,8 @@ function ApplicationForm() {
   const [email, setEmail] = useState("");
   const [capitalSize, setCapitalSize] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [leadId, setLeadId] = useState<string | null>(null);
+  const [scheduledAt, setScheduledAt] = useState<Date | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -285,21 +287,36 @@ function ApplicationForm() {
       return;
     }
     setSubmitting(true);
-    const { error } = await supabase.from("leads").insert({
-      full_name: parsed.data.full_name,
-      email: parsed.data.email,
-      capital_size: parsed.data.capital_size ?? null,
-    });
+    const { data, error } = await supabase
+      .from("leads")
+      .insert({
+        full_name: parsed.data.full_name,
+        email: parsed.data.email,
+        capital_size: parsed.data.capital_size ?? null,
+      })
+      .select("id")
+      .single();
     setSubmitting(false);
-    if (error) {
+    if (error || !data) {
       toast.error("Submission failed. Please try again.");
       return;
     }
-    toast.success("Application received. Our intake team will reach out within 48 hours.");
-    setFullName("");
-    setEmail("");
-    setCapitalSize("");
+    toast.success("Application received. Please book your introductory call.");
+    setLeadId(data.id);
   };
+
+  if (scheduledAt && leadId) {
+    return <SchedulingConfirmation slot={scheduledAt} />;
+  }
+
+  if (leadId) {
+    return (
+      <CallScheduler
+        leadId={leadId}
+        onScheduled={(slot) => setScheduledAt(slot)}
+      />
+    );
+  }
 
   return (
     <form className="space-y-8" onSubmit={handleSubmit}>
@@ -348,5 +365,149 @@ function ApplicationForm() {
         {submitting ? "Submitting…" : "Submit Application for Review"}
       </button>
     </form>
+  );
+}
+
+function generateSlots(): Date[] {
+  const slots: Date[] = [];
+  const now = new Date();
+  let day = new Date(now);
+  day.setHours(0, 0, 0, 0);
+  day.setDate(day.getDate() + 1);
+  const hours = [10, 11, 13, 14, 15, 16];
+  let added = 0;
+  while (added < 5) {
+    const dow = day.getDay();
+    if (dow !== 0 && dow !== 6) {
+      for (const h of hours) {
+        const slot = new Date(day);
+        slot.setHours(h, 0, 0, 0);
+        if (slot > now) slots.push(slot);
+      }
+      added++;
+    }
+    day.setDate(day.getDate() + 1);
+  }
+  return slots;
+}
+
+function CallScheduler({ leadId, onScheduled }: { leadId: string; onScheduled: (slot: Date) => void }) {
+  const slots = generateSlots();
+  const days = Array.from(
+    slots.reduce((acc, s) => {
+      const key = s.toDateString();
+      if (!acc.has(key)) acc.set(key, []);
+      acc.get(key)!.push(s);
+      return acc;
+    }, new Map<string, Date[]>()).entries()
+  );
+  const [selectedDay, setSelectedDay] = useState(days[0]?.[0] ?? "");
+  const [booking, setBooking] = useState<string | null>(null);
+
+  const handleBook = async (slot: Date) => {
+    setBooking(slot.toISOString());
+    const { data, error } = await supabase.rpc("schedule_lead_call", {
+      _lead_id: leadId,
+      _slot: slot.toISOString(),
+    });
+    setBooking(null);
+    if (error || !data) {
+      toast.error("Could not book that slot. Try another time.");
+      return;
+    }
+    toast.success("Call confirmed. Calendar invite incoming.");
+    onScheduled(slot);
+  };
+
+  const daySlots = days.find(([k]) => k === selectedDay)?.[1] ?? [];
+
+  return (
+    <div className="space-y-8">
+      <div className="space-y-3">
+        <div className="font-mono text-[10px] uppercase text-muted-foreground tracking-widest">
+          Step 02 — Book Introductory Call
+        </div>
+        <h3 className="text-2xl md:text-3xl font-extrabold tracking-tight uppercase">
+          Select a 30-minute window
+        </h3>
+        <p className="font-mono text-[11px] text-muted-foreground tracking-wider">
+          Times shown in your local timezone. Recorded & encrypted.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+        {days.map(([key]) => {
+          const d = new Date(key);
+          const active = key === selectedDay;
+          return (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setSelectedDay(key)}
+              className={`p-3 border text-left transition-colors ${
+                active
+                  ? "border-accent bg-accent/10 text-foreground"
+                  : "border-border text-muted-foreground hover:border-foreground/50"
+              }`}
+            >
+              <div className="font-mono text-[9px] uppercase tracking-widest">
+                {d.toLocaleDateString(undefined, { weekday: "short" })}
+              </div>
+              <div className="text-lg font-extrabold mt-1">
+                {d.toLocaleDateString(undefined, { day: "2-digit" })}
+              </div>
+              <div className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+                {d.toLocaleDateString(undefined, { month: "short" })}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        {daySlots.map((slot) => {
+          const iso = slot.toISOString();
+          const isBooking = booking === iso;
+          return (
+            <button
+              key={iso}
+              type="button"
+              disabled={booking !== null}
+              onClick={() => handleBook(slot)}
+              className="py-3 border border-border font-mono text-xs uppercase tracking-widest hover:border-accent hover:text-accent transition-colors disabled:opacity-40"
+            >
+              {isBooking
+                ? "Booking…"
+                : slot.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function SchedulingConfirmation({ slot }: { slot: Date }) {
+  return (
+    <div className="space-y-6 border border-accent/40 p-8 bg-accent/5">
+      <div className="font-mono text-[10px] uppercase text-accent tracking-widest">
+        ✓ Confirmed
+      </div>
+      <h3 className="text-3xl md:text-4xl font-extrabold tracking-tight uppercase">
+        You're on the desk
+      </h3>
+      <div className="space-y-1 font-mono text-sm">
+        <div className="text-muted-foreground text-[10px] uppercase tracking-widest">Call scheduled for</div>
+        <div className="text-foreground text-lg">
+          {slot.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
+        </div>
+        <div className="text-accent text-lg">
+          {slot.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
+        </div>
+      </div>
+      <p className="font-mono text-[11px] text-muted-foreground tracking-wider leading-relaxed">
+        A calendar invitation with secure dial-in credentials will be dispatched to your inbox shortly.
+      </p>
+    </div>
   );
 }
