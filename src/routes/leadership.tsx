@@ -47,11 +47,11 @@ const LEADERS: Leader[] = [
   },
   {
     name: "Christopher Nguyen",
-    title: "Partner",
+    title: "Co-Founder",
     initials: "CN",
     location: "Atlanta, Georgia",
     bio: [
-      "Christopher partners with Mac on strategy design, risk architecture, and mentee selection. His focus is the quantitative underwriting of every position — building the rails that keep the firm's discipline measurable rather than theoretical.",
+      "Christopher co-founded Lexus Nexus Capital Group alongside Mac Moore, leading strategy design, risk architecture, and mentee selection. His focus is the quantitative underwriting of every position — building the rails that keep the firm's discipline measurable rather than theoretical.",
       "He works directly with each cohort on execution review and post-trade analysis, translating data into the next quarter's playbook.",
     ],
     stats: [
