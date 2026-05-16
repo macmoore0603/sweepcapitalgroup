@@ -1,9 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import { toast } from "sonner";
+import { z } from "zod";
+import { supabase } from "@/integrations/supabase/client";
 import methodologyImg from "../assets/methodology.jpg";
 import heroBg from "../assets/hero-bg.jpg";
 
 export const Route = createFileRoute("/")({
   component: Index,
+});
+
+const leadSchema = z.object({
+  full_name: z.string().trim().min(2, "Name is required").max(100),
+  email: z.string().trim().email("Invalid email").max(255),
+  capital_size: z.string().trim().max(100).optional(),
 });
 
 function Index() {
