@@ -253,18 +253,22 @@ function LeadForm() {
       return;
     }
     setSubmitting(true);
-    const { error } = await supabase.from("leads").insert({
-      full_name: parsed.data.full_name,
-      email: parsed.data.email,
-      capital_size: parsed.data.tier,
-      notes: parsed.data.notes ?? null,
+    const res = await fetch("/api/public/lead-submit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        full_name: parsed.data.full_name,
+        email: parsed.data.email,
+        tier: parsed.data.tier,
+        notes: parsed.data.notes,
+      }),
     });
     setSubmitting(false);
-    if (error) {
+    if (!res.ok) {
       toast.error("Submission failed. Please try again.");
       return;
     }
-    toast.success("Got it — we'll reach out within 24 hours.");
+    toast.success("Got it — check your inbox for next steps.");
     setSubmitted(true);
     setFullName("");
     setEmail("");
