@@ -146,7 +146,7 @@ function Index() {
             { label: "Avg. Profit Factor", value: "2.42" },
             { label: "Max Drawdown", value: "4.1%", accent: true },
             { label: "Assets Managed", value: "$2.4M" },
-            { label: "Avg. Trade Return", value: "4x" },
+            { label: "Avg. Trade Return", value: "4.2x" },
             { label: "Avg. Monthly Return", value: "5.6", suffix: "%" },
             { label: "Risk / Reward Ratio", value: "1:2.8" },
             { label: "Sharpe Ratio", value: "2.14" },
