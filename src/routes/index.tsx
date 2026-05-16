@@ -1,9 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import { toast } from "sonner";
+import { z } from "zod";
+import { supabase } from "@/integrations/supabase/client";
 import methodologyImg from "../assets/methodology.jpg";
 import heroBg from "../assets/hero-bg.jpg";
 
 export const Route = createFileRoute("/")({
   component: Index,
+});
+
+const leadSchema = z.object({
+  full_name: z.string().trim().min(2, "Name is required").max(100),
+  email: z.string().trim().email("Invalid email").max(255),
+  capital_size: z.string().trim().max(100).optional(),
 });
 
 function Index() {
@@ -237,48 +247,7 @@ function Index() {
                 <span>EST. MMXXIV — LEXUS NEXUS</span>
               </div>
             </div>
-            <form
-              className="space-y-8"
-              onSubmit={(e) => {
-                e.preventDefault();
-                alert("Application received. Our intake team will reach out within 48 hours.");
-              }}
-            >
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                <div className="space-y-2">
-                  <label className="font-mono text-[10px] uppercase text-muted-foreground tracking-widest">Full Name</label>
-                  <input
-                    required
-                    type="text"
-                    className="w-full bg-transparent border-b border-border py-4 focus:outline-none focus:border-accent text-lg placeholder:text-muted-foreground/40"
-                    placeholder="ALEXANDER VAUGHN"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="font-mono text-[10px] uppercase text-muted-foreground tracking-widest">Capital Size</label>
-                  <input
-                    type="text"
-                    className="w-full bg-transparent border-b border-border py-4 focus:outline-none focus:border-accent text-lg placeholder:text-muted-foreground/40"
-                    placeholder="$100K — $500K"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label className="font-mono text-[10px] uppercase text-muted-foreground tracking-widest">Email Address</label>
-                <input
-                  required
-                  type="email"
-                  className="w-full bg-transparent border-b border-border py-4 focus:outline-none focus:border-accent text-lg placeholder:text-muted-foreground/40"
-                  placeholder="CLIENT@PROTOCOL.COM"
-                />
-              </div>
-              <button
-                type="submit"
-                className="w-full py-5 md:py-6 bg-foreground text-background font-extrabold uppercase tracking-[0.2em] hover:bg-accent transition-colors duration-500"
-              >
-                Submit Application for Review
-              </button>
-            </form>
+            <ApplicationForm />
           </div>
         </div>
       </section>
@@ -295,5 +264,89 @@ function Index() {
         </div>
       </footer>
     </div>
+  );
+}
+
+function ApplicationForm() {
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [capitalSize, setCapitalSize] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const parsed = leadSchema.safeParse({
+      full_name: fullName,
+      email,
+      capital_size: capitalSize || undefined,
+    });
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message ?? "Please check your inputs");
+      return;
+    }
+    setSubmitting(true);
+    const { error } = await supabase.from("leads").insert({
+      full_name: parsed.data.full_name,
+      email: parsed.data.email,
+      capital_size: parsed.data.capital_size ?? null,
+    });
+    setSubmitting(false);
+    if (error) {
+      toast.error("Submission failed. Please try again.");
+      return;
+    }
+    toast.success("Application received. Our intake team will reach out within 48 hours.");
+    setFullName("");
+    setEmail("");
+    setCapitalSize("");
+  };
+
+  return (
+    <form className="space-y-8" onSubmit={handleSubmit}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+        <div className="space-y-2">
+          <label className="font-mono text-[10px] uppercase text-muted-foreground tracking-widest">Full Name</label>
+          <input
+            required
+            type="text"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            maxLength={100}
+            className="w-full bg-transparent border-b border-border py-4 focus:outline-none focus:border-accent text-lg placeholder:text-muted-foreground/40"
+            placeholder="ALEXANDER VAUGHN"
+          />
+        </div>
+        <div className="space-y-2">
+          <label className="font-mono text-[10px] uppercase text-muted-foreground tracking-widest">Capital Size</label>
+          <input
+            type="text"
+            value={capitalSize}
+            onChange={(e) => setCapitalSize(e.target.value)}
+            maxLength={100}
+            className="w-full bg-transparent border-b border-border py-4 focus:outline-none focus:border-accent text-lg placeholder:text-muted-foreground/40"
+            placeholder="$100K — $500K"
+          />
+        </div>
+      </div>
+      <div className="space-y-2">
+        <label className="font-mono text-[10px] uppercase text-muted-foreground tracking-widest">Email Address</label>
+        <input
+          required
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          maxLength={255}
+          className="w-full bg-transparent border-b border-border py-4 focus:outline-none focus:border-accent text-lg placeholder:text-muted-foreground/40"
+          placeholder="CLIENT@PROTOCOL.COM"
+        />
+      </div>
+      <button
+        type="submit"
+        disabled={submitting}
+        className="w-full py-5 md:py-6 bg-foreground text-background font-extrabold uppercase tracking-[0.2em] hover:bg-accent transition-colors duration-500 disabled:opacity-50"
+      >
+        {submitting ? "Submitting…" : "Submit Application for Review"}
+      </button>
+    </form>
   );
 }

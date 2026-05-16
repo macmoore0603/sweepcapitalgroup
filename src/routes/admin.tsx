@@ -1,0 +1,360 @@
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
+
+type Lead = Database["public"]["Tables"]["leads"]["Row"];
+type LeadStatus = Database["public"]["Enums"]["lead_status"];
+
+const STATUSES: LeadStatus[] = ["new", "contacted", "qualified", "closed", "rejected"];
+
+const STATUS_LABEL: Record<LeadStatus, string> = {
+  new: "New",
+  contacted: "Contacted",
+  qualified: "Qualified",
+  closed: "Closed",
+  rejected: "Rejected",
+};
+
+export const Route = createFileRoute("/admin")({
+  head: () => ({
+    meta: [
+      { title: "Lead Dashboard — Lexus Nexus Capital Group" },
+      { name: "description", content: "Internal lead management dashboard." },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
+  }),
+  component: AdminPage,
+});
+
+function AdminPage() {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [authChecked, setAuthChecked] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const [statusFilter, setStatusFilter] = useState<LeadStatus | "all">("all");
+
+  // Auth + role check (client-side; RLS enforces server-side)
+  useEffect(() => {
+    let active = true;
+
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      if (!active) return;
+      if (!session) {
+        navigate({ to: "/login" });
+        return;
+      }
+      setUserEmail(session.user.email ?? null);
+      void checkRole(session.user.id);
+    });
+
+    const checkRole = async (uid: string) => {
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", uid)
+        .eq("role", "admin")
+        .maybeSingle();
+      if (!active) return;
+      if (error) {
+        setIsAdmin(false);
+      } else {
+        setIsAdmin(!!data);
+      }
+      setAuthChecked(true);
+    };
+
+    void (async () => {
+      const { data } = await supabase.auth.getSession();
+      if (!active) return;
+      if (!data.session) {
+        navigate({ to: "/login" });
+        return;
+      }
+      setUserEmail(data.session.user.email ?? null);
+      await checkRole(data.session.user.id);
+    })();
+
+    return () => {
+      active = false;
+      sub.subscription.unsubscribe();
+    };
+  }, [navigate]);
+
+  const leadsQuery = useQuery({
+    queryKey: ["leads"],
+    enabled: isAdmin === true,
+    queryFn: async (): Promise<Lead[]> => {
+      const { data, error } = await supabase
+        .from("leads")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const updateLead = useMutation({
+    mutationFn: async (input: { id: string; patch: Partial<Pick<Lead, "status" | "notes">> }) => {
+      const { error } = await supabase.from("leads").update(input.patch).eq("id", input.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["leads"] });
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  const deleteLead = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("leads").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["leads"] });
+      toast.success("Lead deleted.");
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  const leads = leadsQuery.data ?? [];
+  const filtered = useMemo(
+    () => (statusFilter === "all" ? leads : leads.filter((l) => l.status === statusFilter)),
+    [leads, statusFilter],
+  );
+
+  const counts = useMemo(() => {
+    const c: Record<LeadStatus, number> = { new: 0, contacted: 0, qualified: 0, closed: 0, rejected: 0 };
+    for (const l of leads) c[l.status]++;
+    return c;
+  }, [leads]);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate({ to: "/login" });
+  };
+
+  if (!authChecked) {
+    return <FullScreenMessage>Loading…</FullScreenMessage>;
+  }
+
+  if (isAdmin === false) {
+    return (
+      <FullScreenMessage>
+        <div className="space-y-4 text-center">
+          <h1 className="text-2xl font-extrabold uppercase tracking-tighter">Access denied</h1>
+          <p className="text-sm text-muted-foreground max-w-sm">
+            Your account does not have administrator access. Contact the dashboard owner.
+          </p>
+          <button
+            onClick={handleSignOut}
+            className="font-mono text-[11px] uppercase tracking-widest text-accent hover:text-foreground"
+          >
+            Sign out
+          </button>
+        </div>
+      </FullScreenMessage>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background text-foreground">
+      <header className="px-6 md:px-10 py-5 border-b border-border flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Link to="/" className="font-extrabold tracking-tighter text-lg uppercase">
+            Lexus Nexus
+          </Link>
+          <span className="font-mono text-[10px] text-accent border border-accent/40 px-1.5 py-0.5 uppercase tracking-widest">
+            Lead Dashboard
+          </span>
+        </div>
+        <div className="flex items-center gap-4">
+          {userEmail && (
+            <span className="hidden sm:inline font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
+              {userEmail}
+            </span>
+          )}
+          <button
+            onClick={handleSignOut}
+            className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
+          >
+            Sign out
+          </button>
+        </div>
+      </header>
+
+      <main className="px-6 md:px-10 py-10 md:py-14 max-w-7xl mx-auto space-y-10">
+        <div className="space-y-2">
+          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tighter uppercase">Applications</h1>
+          <p className="text-sm text-muted-foreground font-mono uppercase tracking-widest">
+            {leads.length} total · review and update status
+          </p>
+        </div>
+
+        {/* Stat tiles + filter */}
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-px bg-border">
+          <FilterTile label="All" value={leads.length} active={statusFilter === "all"} onClick={() => setStatusFilter("all")} />
+          {STATUSES.map((s) => (
+            <FilterTile
+              key={s}
+              label={STATUS_LABEL[s]}
+              value={counts[s]}
+              active={statusFilter === s}
+              onClick={() => setStatusFilter(s)}
+            />
+          ))}
+        </div>
+
+        {leadsQuery.isLoading ? (
+          <div className="py-16 text-center text-muted-foreground font-mono text-xs uppercase tracking-widest">
+            Loading leads…
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="py-16 text-center text-muted-foreground font-mono text-xs uppercase tracking-widest border border-border">
+            No leads {statusFilter !== "all" ? `with status "${STATUS_LABEL[statusFilter as LeadStatus]}"` : "yet"}.
+          </div>
+        ) : (
+          <div className="space-y-px bg-border">
+            {filtered.map((lead) => (
+              <LeadRow
+                key={lead.id}
+                lead={lead}
+                onStatusChange={(status) => updateLead.mutate({ id: lead.id, patch: { status } })}
+                onNotesChange={(notes) => updateLead.mutate({ id: lead.id, patch: { notes } })}
+                onDelete={() => {
+                  if (confirm(`Delete lead from ${lead.full_name}?`)) {
+                    deleteLead.mutate(lead.id);
+                  }
+                }}
+              />
+            ))}
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
+
+function FilterTile({
+  label,
+  value,
+  active,
+  onClick,
+}: {
+  label: string;
+  value: number;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`bg-background p-5 text-left transition-colors hover:bg-white/5 ${
+        active ? "ring-1 ring-accent/60" : ""
+      }`}
+    >
+      <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-1">{label}</div>
+      <div className={`text-2xl font-extrabold tracking-tight ${active ? "text-accent" : ""}`}>{value}</div>
+    </button>
+  );
+}
+
+function LeadRow({
+  lead,
+  onStatusChange,
+  onNotesChange,
+  onDelete,
+}: {
+  lead: Lead;
+  onStatusChange: (status: LeadStatus) => void;
+  onNotesChange: (notes: string) => void;
+  onDelete: () => void;
+}) {
+  const [notes, setNotes] = useState(lead.notes ?? "");
+  const [expanded, setExpanded] = useState(false);
+  const created = new Date(lead.created_at);
+
+  return (
+    <div className="bg-background p-5 md:p-6">
+      <div className="grid grid-cols-1 md:grid-cols-[1.5fr_1.5fr_1fr_auto] gap-4 items-start">
+        <div>
+          <div className="font-extrabold uppercase tracking-tight text-base">{lead.full_name}</div>
+          <a href={`mailto:${lead.email}`} className="text-sm text-muted-foreground hover:text-foreground break-all">
+            {lead.email}
+          </a>
+        </div>
+        <div className="space-y-1">
+          <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Capital</div>
+          <div className="text-sm">{lead.capital_size || <span className="text-muted-foreground">—</span>}</div>
+        </div>
+        <div className="space-y-1">
+          <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Received</div>
+          <div className="text-sm font-mono">
+            {created.toLocaleDateString()} · {created.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 justify-end">
+          <select
+            value={lead.status}
+            onChange={(e) => onStatusChange(e.target.value as LeadStatus)}
+            className="bg-background border border-border px-3 py-2 font-mono text-[11px] uppercase tracking-widest focus:outline-none focus:border-accent"
+          >
+            {STATUSES.map((s) => (
+              <option key={s} value={s}>
+                {STATUS_LABEL[s]}
+              </option>
+            ))}
+          </select>
+          <button
+            onClick={() => setExpanded((v) => !v)}
+            className="font-mono text-[10px] uppercase tracking-widest px-3 py-2 border border-border hover:bg-white/5"
+          >
+            {expanded ? "Close" : "Notes"}
+          </button>
+          <button
+            onClick={onDelete}
+            className="font-mono text-[10px] uppercase tracking-widest px-3 py-2 text-destructive hover:bg-destructive/10"
+            aria-label="Delete lead"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+      {expanded && (
+        <div className="mt-5 space-y-3">
+          <label className="font-mono text-[10px] uppercase text-muted-foreground tracking-widest">Internal notes</label>
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            maxLength={2000}
+            rows={4}
+            className="w-full bg-background border border-border p-3 text-sm focus:outline-none focus:border-accent"
+            placeholder="Call notes, qualification details, next steps…"
+          />
+          <div className="flex justify-end">
+            <button
+              onClick={() => {
+                onNotesChange(notes);
+                toast.success("Notes saved.");
+              }}
+              className="font-mono text-[10px] uppercase tracking-widest px-4 py-2 bg-foreground text-background hover:bg-accent"
+            >
+              Save notes
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FullScreenMessage({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="min-h-screen bg-background text-foreground grid place-items-center px-6">
+      <div className="font-mono text-xs uppercase tracking-widest text-muted-foreground">{children}</div>
+    </div>
+  );
+}
