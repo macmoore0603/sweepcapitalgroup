@@ -83,6 +83,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      reschedule_lead_call: {
+        Args: { _lead_id: string; _slot: string }
+        Returns: boolean
+      }
       schedule_lead_call: {
         Args: { _lead_id: string; _slot: string }
         Returns: boolean

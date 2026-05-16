@@ -305,15 +305,30 @@ function ApplicationForm() {
     setLeadId(data.id);
   };
 
-  if (scheduledAt && leadId) {
-    return <SchedulingConfirmation slot={scheduledAt} />;
+  const [rescheduling, setRescheduling] = useState(false);
+
+  if (leadId && scheduledAt && !rescheduling) {
+    return (
+      <SchedulingConfirmation
+        slot={scheduledAt}
+        leadId={leadId}
+        onReschedule={() => setRescheduling(true)}
+        onCancelled={() => setScheduledAt(null)}
+      />
+    );
   }
 
   if (leadId) {
     return (
       <CallScheduler
         leadId={leadId}
-        onScheduled={(slot) => setScheduledAt(slot)}
+        mode={rescheduling ? "reschedule" : "initial"}
+        currentSlot={scheduledAt}
+        onScheduled={(slot) => {
+          setScheduledAt(slot);
+          setRescheduling(false);
+        }}
+        onBack={rescheduling ? () => setRescheduling(false) : undefined}
       />
     );
   }
@@ -391,7 +406,19 @@ function generateSlots(): Date[] {
   return slots;
 }
 
-function CallScheduler({ leadId, onScheduled }: { leadId: string; onScheduled: (slot: Date) => void }) {
+function CallScheduler({
+  leadId,
+  mode = "initial",
+  currentSlot,
+  onScheduled,
+  onBack,
+}: {
+  leadId: string;
+  mode?: "initial" | "reschedule";
+  currentSlot?: Date | null;
+  onScheduled: (slot: Date) => void;
+  onBack?: () => void;
+}) {
   const slots = generateSlots();
   const days = Array.from(
     slots.reduce((acc, s) => {
@@ -404,18 +431,25 @@ function CallScheduler({ leadId, onScheduled }: { leadId: string; onScheduled: (
   const [selectedDay, setSelectedDay] = useState(days[0]?.[0] ?? "");
   const [booking, setBooking] = useState<string | null>(null);
 
+  const isReschedule = mode === "reschedule";
+
   const handleBook = async (slot: Date) => {
     setBooking(slot.toISOString());
-    const { data, error } = await supabase.rpc("schedule_lead_call", {
+    const rpcName = isReschedule ? "reschedule_lead_call" : "schedule_lead_call";
+    const { data, error } = await supabase.rpc(rpcName, {
       _lead_id: leadId,
       _slot: slot.toISOString(),
     });
     setBooking(null);
     if (error || !data) {
-      toast.error("Could not book that slot. Try another time.");
+      toast.error(
+        isReschedule
+          ? "Could not reschedule. The call may have already passed."
+          : "Could not book that slot. Try another time.",
+      );
       return;
     }
-    toast.success("Call confirmed. Calendar invite incoming.");
+    toast.success(isReschedule ? "Call rescheduled." : "Call confirmed. Calendar invite incoming.");
     onScheduled(slot);
   };
 
@@ -425,14 +459,25 @@ function CallScheduler({ leadId, onScheduled }: { leadId: string; onScheduled: (
     <div className="space-y-8">
       <div className="space-y-3">
         <div className="font-mono text-[10px] uppercase text-muted-foreground tracking-widest">
-          Step 02 — Book Introductory Call
+          {isReschedule ? "Reschedule Call" : "Step 02 — Book Introductory Call"}
         </div>
         <h3 className="text-2xl md:text-3xl font-extrabold tracking-tight uppercase">
-          Select a 30-minute window
+          {isReschedule ? "Pick a new window" : "Select a 30-minute window"}
         </h3>
-        <p className="font-mono text-[11px] text-muted-foreground tracking-wider">
-          Times shown in your local timezone. Recorded & encrypted.
-        </p>
+        {isReschedule && currentSlot && (
+          <p className="font-mono text-[11px] text-muted-foreground tracking-wider">
+            Current:{" "}
+            <span className="text-accent">
+              {currentSlot.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}{" "}
+              · {currentSlot.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
+            </span>
+          </p>
+        )}
+        {!isReschedule && (
+          <p className="font-mono text-[11px] text-muted-foreground tracking-wider">
+            Times shown in your local timezone. Recorded & encrypted.
+          </p>
+        )}
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
@@ -483,11 +528,49 @@ function CallScheduler({ leadId, onScheduled }: { leadId: string; onScheduled: (
           );
         })}
       </div>
+
+      {onBack && (
+        <button
+          type="button"
+          onClick={onBack}
+          className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
+        >
+          ← Keep current time
+        </button>
+      )}
     </div>
   );
 }
 
-function SchedulingConfirmation({ slot }: { slot: Date }) {
+function SchedulingConfirmation({
+  slot,
+  leadId,
+  onReschedule,
+  onCancelled,
+}: {
+  slot: Date;
+  leadId: string;
+  onReschedule: () => void;
+  onCancelled: () => void;
+}) {
+  const [cancelling, setCancelling] = useState(false);
+
+  const handleCancel = async () => {
+    if (!confirm("Cancel your scheduled call? You'll need to pick a new time.")) return;
+    setCancelling(true);
+    const { data, error } = await supabase.rpc("reschedule_lead_call", {
+      _lead_id: leadId,
+      _slot: null as unknown as string,
+    });
+    setCancelling(false);
+    if (error || !data) {
+      toast.error("Could not cancel. The call may have already passed.");
+      return;
+    }
+    toast.success("Call cancelled.");
+    onCancelled();
+  };
+
   return (
     <div className="space-y-6 border border-accent/40 p-8 bg-accent/5">
       <div className="font-mono text-[10px] uppercase text-accent tracking-widest">
@@ -508,6 +591,24 @@ function SchedulingConfirmation({ slot }: { slot: Date }) {
       <p className="font-mono text-[11px] text-muted-foreground tracking-wider leading-relaxed">
         A calendar invitation with secure dial-in credentials will be dispatched to your inbox shortly.
       </p>
+      <div className="flex flex-col sm:flex-row gap-3 pt-2 border-t border-accent/20">
+        <button
+          type="button"
+          onClick={onReschedule}
+          disabled={cancelling}
+          className="flex-1 py-3 border border-border font-mono text-[11px] uppercase tracking-widest hover:border-accent hover:text-accent transition-colors disabled:opacity-40"
+        >
+          Reschedule
+        </button>
+        <button
+          type="button"
+          onClick={handleCancel}
+          disabled={cancelling}
+          className="flex-1 py-3 border border-destructive/40 font-mono text-[11px] uppercase tracking-widest text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-40"
+        >
+          {cancelling ? "Cancelling…" : "Cancel Call"}
+        </button>
+      </div>
     </div>
   );
 }
