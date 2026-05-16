@@ -181,6 +181,92 @@ export default function MentorshipPage() {
         </p>
       </section>
 
+      {/* FAQ */}
+      <section id="faq" className="px-6 md:px-10 py-24 md:py-32 border-t border-border">
+        <div className="max-w-5xl mx-auto flex flex-col gap-12">
+          <div className="flex flex-col gap-4">
+            <span className="font-mono text-accent text-[11px] uppercase tracking-[0.3em]">FAQ</span>
+            <h2 className="text-4xl md:text-5xl font-extrabold tracking-tighter uppercase leading-[0.95]">
+              Eligibility, refunds,{" "}
+              <span className="italic font-semibold text-accent" style={{ fontFamily: "var(--font-serif)" }}>
+                and what to expect.
+              </span>
+            </h2>
+            <p className="max-w-[60ch] text-muted-foreground text-base md:text-lg text-pretty">
+              Straight answers before you commit. If something isn't covered here, drop it in the
+              notes field above and we'll address it on the kickoff call.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-border">
+            {FAQ_GROUPS.map((group) => (
+              <div key={group.title} className="bg-background p-8 flex flex-col gap-5">
+                <div className="flex items-baseline justify-between gap-4 border-b border-border pb-3">
+                  <h3 className="font-extrabold uppercase tracking-tight text-lg">{group.title}</h3>
+                  <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                    {group.kicker}
+                  </span>
+                </div>
+                <dl className="flex flex-col gap-5">
+                  {group.items.map((item) => (
+                    <div key={item.q} className="flex flex-col gap-1.5">
+                      <dt className="font-mono text-[11px] uppercase tracking-widest text-accent">
+                        {item.q}
+                      </dt>
+                      <dd className="text-sm text-muted-foreground text-pretty">{item.a}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            ))}
+          </div>
+
+          {/* What to expect — per tier */}
+          <div className="flex flex-col gap-6">
+            <h3 className="text-2xl md:text-3xl font-extrabold tracking-tighter uppercase">
+              What to expect — by tier
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-border">
+              {TIER_EXPECTATIONS.map((te) => (
+                <div key={te.id} className="bg-background p-6 flex flex-col gap-4">
+                  <div className="flex flex-col gap-1">
+                    <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                      {te.name}
+                    </span>
+                    <span className="font-mono text-[10px] uppercase tracking-widest text-accent">
+                      {te.timeline}
+                    </span>
+                  </div>
+                  <ul className="flex flex-col gap-2.5 text-sm text-muted-foreground">
+                    {te.steps.map((s, i) => (
+                      <li key={s} className="flex gap-2">
+                        <span className="font-mono text-[10px] text-accent pt-1">0{i + 1}</span>
+                        <span>{s}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Disclaimer */}
+          <div className="border border-accent/40 bg-white/[0.02] p-6 md:p-8 flex flex-col gap-3">
+            <span className="font-mono text-[10px] uppercase tracking-widest text-accent">
+              Risk Disclaimer
+            </span>
+            <p className="text-sm text-muted-foreground text-pretty">
+              Trading involves substantial risk of loss and is not suitable for every investor.
+              Nothing on this page is financial, legal, or tax advice. Past performance and example
+              results do not guarantee future returns. Any "guaranteed" language in the Managed
+              Trading tier refers to a contractual minimum performance commitment that will be
+              detailed in a written agreement before any capital is deployed — by enrolling, you
+              acknowledge you've read and understood the terms in that agreement.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Lead capture */}
       <section id="lead" className="px-6 md:px-10 py-24 md:py-32 border-t border-border bg-white/[0.02]">
         <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24">
