@@ -274,24 +274,107 @@ function FilterTile({
   );
 }
 
+type CallStatus = "not_booked" | "upcoming" | "today" | "past";
+
+function getCallStatus(scheduledAt: string | null): CallStatus {
+  if (!scheduledAt) return "not_booked";
+  const s = new Date(scheduledAt);
+  const now = new Date();
+  if (s < now) return "past";
+  if (s.toDateString() === now.toDateString()) return "today";
+  return "upcoming";
+}
+
+const CALL_STATUS_META: Record<CallStatus, { label: string; className: string }> = {
+  not_booked: { label: "Not booked", className: "text-muted-foreground border-border" },
+  upcoming: { label: "Upcoming", className: "text-accent border-accent/40" },
+  today: { label: "Today", className: "text-background bg-accent border-accent" },
+  past: { label: "Past", className: "text-muted-foreground border-border/60 line-through" },
+};
+
+// Convert ISO timestamp to value usable by <input type="datetime-local"> in local time
+function isoToLocalInput(iso: string | null): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 function LeadRow({
   lead,
   onStatusChange,
   onNotesChange,
+  onScheduleChange,
+  onMarkConfirmed,
   onDelete,
 }: {
   lead: Lead;
   onStatusChange: (status: LeadStatus) => void;
   onNotesChange: (notes: string) => void;
+  onScheduleChange: (scheduled_at: string | null) => void;
+  onMarkConfirmed: () => void;
   onDelete: () => void;
 }) {
   const [notes, setNotes] = useState(lead.notes ?? "");
   const [expanded, setExpanded] = useState(false);
+  const [editingSchedule, setEditingSchedule] = useState(false);
+  const [scheduleDraft, setScheduleDraft] = useState(isoToLocalInput(lead.scheduled_at));
   const created = new Date(lead.created_at);
+  const callStatus = getCallStatus(lead.scheduled_at);
+  const callMeta = CALL_STATUS_META[callStatus];
+  const confirmationSent = lead.confirmation_sent_at
+    ? new Date(lead.confirmation_sent_at)
+    : null;
+
+  const handleSaveSchedule = () => {
+    if (!scheduleDraft) {
+      onScheduleChange(null);
+    } else {
+      const d = new Date(scheduleDraft);
+      if (isNaN(d.getTime())) {
+        toast.error("Invalid date");
+        return;
+      }
+      onScheduleChange(d.toISOString());
+    }
+    setEditingSchedule(false);
+    toast.success("Call time updated.");
+  };
+
+  const handleSendConfirmation = () => {
+    if (!lead.scheduled_at) {
+      toast.error("No call time scheduled.");
+      return;
+    }
+    const slot = new Date(lead.scheduled_at);
+    const dateLine = slot.toLocaleDateString(undefined, {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+    const timeLine = slot.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+    const subject = `Your Lexus Nexus Capital intake call — ${dateLine}`;
+    const body = [
+      `${lead.full_name},`,
+      "",
+      `Confirming your introductory call with Lexus Nexus Capital Group.`,
+      "",
+      `Date:  ${dateLine}`,
+      `Time:  ${timeLine} (${Intl.DateTimeFormat().resolvedOptions().timeZone})`,
+      "",
+      `A secure dial-in link will follow shortly. Reply to this email if you need to reschedule.`,
+      "",
+      `— Lexus Nexus Capital Group`,
+    ].join("\n");
+    window.location.href = `mailto:${encodeURIComponent(lead.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    onMarkConfirmed();
+    toast.success("Confirmation drafted and marked as sent.");
+  };
 
   return (
     <div className="bg-background p-5 md:p-6">
-      <div className="grid grid-cols-1 md:grid-cols-[1.5fr_1.5fr_1fr_auto] gap-4 items-start">
+      <div className="grid grid-cols-1 md:grid-cols-[1.5fr_1.5fr_1.4fr_auto] gap-4 items-start">
         <div>
           <div className="font-extrabold uppercase tracking-tight text-base">{lead.full_name}</div>
           <a href={`mailto:${lead.email}`} className="text-sm text-muted-foreground hover:text-foreground break-all">
@@ -301,23 +384,81 @@ function LeadRow({
         <div className="space-y-1">
           <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Capital</div>
           <div className="text-sm">{lead.capital_size || <span className="text-muted-foreground">—</span>}</div>
-        </div>
-        <div className="space-y-1">
-          <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Received</div>
+          <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground pt-2">Received</div>
           <div className="text-sm font-mono">
             {created.toLocaleDateString()} · {created.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
           </div>
-          <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground pt-2">Call</div>
-          <div className="text-sm font-mono">
-            {lead.scheduled_at ? (
-              <span className="text-accent">
-                {new Date(lead.scheduled_at).toLocaleDateString()} ·{" "}
-                {new Date(lead.scheduled_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-              </span>
-            ) : (
-              <span className="text-muted-foreground">Not booked</span>
-            )}
+        </div>
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Call</div>
+            <span
+              className={`font-mono text-[9px] uppercase tracking-widest px-1.5 py-0.5 border ${callMeta.className}`}
+            >
+              {callMeta.label}
+            </span>
           </div>
+          {editingSchedule ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <input
+                type="datetime-local"
+                value={scheduleDraft}
+                onChange={(e) => setScheduleDraft(e.target.value)}
+                className="bg-background border border-border px-2 py-1.5 text-sm font-mono focus:outline-none focus:border-accent"
+              />
+              <button
+                onClick={handleSaveSchedule}
+                className="font-mono text-[10px] uppercase tracking-widest px-2 py-1.5 bg-foreground text-background hover:bg-accent"
+              >
+                Save
+              </button>
+              <button
+                onClick={() => {
+                  setScheduleDraft(isoToLocalInput(lead.scheduled_at));
+                  setEditingSchedule(false);
+                }}
+                className="font-mono text-[10px] uppercase tracking-widest px-2 py-1.5 border border-border hover:bg-white/5"
+              >
+                Cancel
+              </button>
+              {lead.scheduled_at && (
+                <button
+                  onClick={() => {
+                    onScheduleChange(null);
+                    setEditingSchedule(false);
+                    toast.success("Call cleared.");
+                  }}
+                  className="font-mono text-[10px] uppercase tracking-widest px-2 py-1.5 text-destructive hover:bg-destructive/10"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="text-sm font-mono">
+                {lead.scheduled_at ? (
+                  <span className={callStatus === "past" ? "text-muted-foreground" : "text-foreground"}>
+                    {new Date(lead.scheduled_at).toLocaleDateString()} ·{" "}
+                    {new Date(lead.scheduled_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground">—</span>
+                )}
+              </div>
+              <button
+                onClick={() => setEditingSchedule(true)}
+                className="font-mono text-[9px] uppercase tracking-widest text-accent hover:text-foreground"
+              >
+                Edit
+              </button>
+            </div>
+          )}
+          {confirmationSent && (
+            <div className="font-mono text-[10px] text-muted-foreground">
+              ✓ Confirmation sent {confirmationSent.toLocaleDateString()}
+            </div>
+          )}
         </div>
         <div className="flex flex-wrap items-center gap-2 justify-end">
           <select
@@ -331,6 +472,14 @@ function LeadRow({
               </option>
             ))}
           </select>
+          <button
+            onClick={handleSendConfirmation}
+            disabled={!lead.scheduled_at}
+            className="font-mono text-[10px] uppercase tracking-widest px-3 py-2 border border-accent/40 text-accent hover:bg-accent/10 disabled:opacity-40 disabled:cursor-not-allowed"
+            title={lead.scheduled_at ? "Send booking confirmation" : "Schedule a call first"}
+          >
+            {confirmationSent ? "Resend Confirm" : "Send Confirm"}
+          </button>
           <button
             onClick={() => setExpanded((v) => !v)}
             className="font-mono text-[10px] uppercase tracking-widest px-3 py-2 border border-border hover:bg-white/5"
