@@ -47,7 +47,7 @@ const LEADERS: Leader[] = [
   },
   {
     name: "Christopher Nguyen",
-    title: "Co-Founder",
+    title: "Co-Founder & Director of Asset Management",
     initials: "CN",
     location: "Atlanta, Georgia",
     bio: [
