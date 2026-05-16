@@ -145,5 +145,14 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    font-family: var(--font-display);
   }
+}
+
+@keyframes revealUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-reveal {
+  animation: revealUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
