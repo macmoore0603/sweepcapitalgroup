@@ -287,13 +287,85 @@ function AdminPage() {
           ))}
         </div>
 
+        {/* Filter toolbar */}
+        <div className="border border-border bg-background p-4 md:p-5 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <label className="flex flex-col gap-1.5">
+              <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Tier</span>
+              <select
+                value={tierFilter}
+                onChange={(e) => setTierFilter(e.target.value)}
+                className="bg-background border border-border px-3 py-2 text-sm focus:outline-none focus:border-accent"
+              >
+                <option value="all">All tiers</option>
+                {tiers.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">From</span>
+              <input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                max={dateTo || undefined}
+                className="bg-background border border-border px-3 py-2 text-sm font-mono focus:outline-none focus:border-accent"
+              />
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">To</span>
+              <input
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                min={dateFrom || undefined}
+                className="bg-background border border-border px-3 py-2 text-sm font-mono focus:outline-none focus:border-accent"
+              />
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Search</span>
+              <input
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Name, email, notes…"
+                className="bg-background border border-border px-3 py-2 text-sm focus:outline-none focus:border-accent"
+              />
+            </label>
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+            <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              Showing {filtered.length} of {leads.length}
+              {hasActiveFilters ? " · filtered" : ""}
+            </div>
+            <div className="flex items-center gap-2">
+              {hasActiveFilters && (
+                <button
+                  onClick={clearFilters}
+                  className="font-mono text-[10px] uppercase tracking-widest px-3 py-2 border border-border hover:bg-white/5"
+                >
+                  Clear filters
+                </button>
+              )}
+              <button
+                onClick={handleExportCsv}
+                disabled={filtered.length === 0}
+                className="font-mono text-[10px] uppercase tracking-widest px-4 py-2 bg-foreground text-background hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Export CSV ({filtered.length})
+              </button>
+            </div>
+          </div>
+        </div>
+
         {leadsQuery.isLoading ? (
           <div className="py-16 text-center text-muted-foreground font-mono text-xs uppercase tracking-widest">
             Loading leads…
           </div>
         ) : filtered.length === 0 ? (
           <div className="py-16 text-center text-muted-foreground font-mono text-xs uppercase tracking-widest border border-border">
-            No leads {statusFilter !== "all" ? `with status "${STATUS_LABEL[statusFilter as LeadStatus]}"` : "yet"}.
+            No leads match the current filters.
           </div>
         ) : (
           <div className="space-y-px bg-border">
