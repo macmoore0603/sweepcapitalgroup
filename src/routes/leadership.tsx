@@ -32,7 +32,7 @@ type Leader = {
 const LEADERS: Leader[] = [
   {
     name: "Mac Moore",
-    title: "Founder & Owner",
+    title: "Founder, Owner & CEO",
     initials: "MM",
     location: "Atlanta, Georgia",
     bio: [
@@ -193,7 +193,7 @@ function LeadershipPage() {
       <footer className="px-6 md:px-10 py-10 border-t border-border">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
           <span>© 2026 Lexus Nexus Capital Group — Atlanta, GA</span>
-          <span>Mac Moore — Founder &amp; Owner</span>
+          <span>Mac Moore — Founder, Owner &amp; CEO</span>
         </div>
       </footer>
     </div>

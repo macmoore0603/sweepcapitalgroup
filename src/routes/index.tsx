@@ -307,7 +307,7 @@ function Index() {
             <h2 className="text-4xl md:text-5xl font-extrabold tracking-tighter uppercase">
               Mac Moore,{" "}
               <span className="italic font-semibold text-accent" style={{ fontFamily: "var(--font-serif)" }}>
-                Founder &amp; Owner
+                Founder, Owner &amp; CEO
               </span>
             </h2>
             <p className="text-muted-foreground text-base md:text-lg leading-relaxed text-pretty">
