@@ -412,12 +412,14 @@ function generateSlots(): Date[] {
 
 function CallScheduler({
   leadId,
+  bookingToken,
   mode = "initial",
   currentSlot,
   onScheduled,
   onBack,
 }: {
   leadId: string;
+  bookingToken: string;
   mode?: "initial" | "reschedule";
   currentSlot?: Date | null;
   onScheduled: (slot: Date) => void;
@@ -442,6 +444,7 @@ function CallScheduler({
     const rpcName = isReschedule ? "reschedule_lead_call" : "schedule_lead_call";
     const { data, error } = await supabase.rpc(rpcName, {
       _lead_id: leadId,
+      _token: bookingToken,
       _slot: slot.toISOString(),
     });
     setBooking(null);
