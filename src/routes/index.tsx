@@ -316,7 +316,7 @@ function Index() {
             </h2>
             <p className="text-muted-foreground text-base md:text-lg leading-relaxed text-pretty">
               A decade behind the screens of institutional desks taught Mac one lesson worth repeating:
-              the market does not reward intelligence — it rewards discipline. He founded Lexus Nexus Capital
+              the market does not reward intelligence — it rewards success. He founded Lexus Nexus Capital
               Group in Atlanta to compress that lesson into a deliberate, repeatable framework for the
               traders he chooses to mentor.
             </p>
