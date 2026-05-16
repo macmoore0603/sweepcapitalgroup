@@ -41,7 +41,7 @@ const LEADERS: Leader[] = [
     ],
     stats: [
       { k: "10+ YRS", v: "Trading Desks" },
-      { k: "$14M+", v: "Allocated" },
+      { k: "$2.4M", v: "Allocated" },
       { k: "Atlanta", v: "Headquarters" },
     ],
   },
