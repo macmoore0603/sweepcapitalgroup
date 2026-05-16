@@ -36,6 +36,7 @@ function AboutPage() {
         <div className="hidden md:flex items-center gap-8 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
           <Link to="/" className="hover:text-foreground transition-colors">Home</Link>
           <Link to="/about" className="text-foreground">About</Link>
+          <Link to="/mentorship" className="hover:text-foreground transition-colors">Mentorship</Link>
           <Link to="/" hash="apply" className="hover:text-foreground transition-colors">Apply</Link>
         </div>
         <Link to="/" hash="apply" className="px-5 py-2.5 bg-foreground text-background font-extrabold text-[11px] uppercase tracking-widest hover:bg-accent transition-colors">

@@ -37,6 +37,7 @@ function Index() {
           <a href="#tiers" className="hover:text-foreground transition-colors">Tiers</a>
           <Link to="/about" className="hover:text-foreground transition-colors">About</Link>
           <Link to="/leadership" className="hover:text-foreground transition-colors">Leadership</Link>
+          <Link to="/mentorship" className="hover:text-foreground transition-colors">Mentorship</Link>
           <a href="#apply" className="hover:text-foreground transition-colors">Apply</a>
           <a href="#contact" className="hover:text-foreground transition-colors">Contact</a>
         </div>
