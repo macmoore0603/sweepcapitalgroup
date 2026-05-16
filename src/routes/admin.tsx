@@ -295,6 +295,17 @@ function LeadRow({
           <div className="text-sm font-mono">
             {created.toLocaleDateString()} · {created.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
           </div>
+          <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground pt-2">Call</div>
+          <div className="text-sm font-mono">
+            {lead.scheduled_at ? (
+              <span className="text-accent">
+                {new Date(lead.scheduled_at).toLocaleDateString()} ·{" "}
+                {new Date(lead.scheduled_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+              </span>
+            ) : (
+              <span className="text-muted-foreground">Not booked</span>
+            )}
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-2 justify-end">
           <select
