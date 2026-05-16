@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import logo from "../assets/lnc-logo.png";
 
 export const Route = createFileRoute("/about")({
   head: () => ({
@@ -26,6 +27,7 @@ function AboutPage() {
       {/* Navigation */}
       <nav className="sticky top-0 z-50 flex items-center justify-between px-6 md:px-10 py-5 bg-background/80 backdrop-blur-md border-b border-border">
         <Link to="/" className="flex items-center gap-3">
+          <img src={logo} alt="Lexus Nexus Capital Group logo" width={32} height={32} className="h-8 w-8 object-contain" />
           <span className="font-extrabold tracking-tighter text-xl uppercase">Lexus Nexus</span>
           <span className="hidden sm:inline font-mono text-[10px] text-accent border border-accent/40 px-1.5 py-0.5">
             CAPITAL GROUP
