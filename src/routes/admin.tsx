@@ -36,6 +36,10 @@ function AdminPage() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [statusFilter, setStatusFilter] = useState<LeadStatus | "all">("all");
+  const [tierFilter, setTierFilter] = useState<string>("all");
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
+  const [search, setSearch] = useState<string>("");
 
   // Auth + role check (client-side; RLS enforces server-side)
   useEffect(() => {
@@ -124,16 +128,88 @@ function AdminPage() {
   });
 
   const leads = leadsQuery.data ?? [];
-  const filtered = useMemo(
-    () => (statusFilter === "all" ? leads : leads.filter((l) => l.status === statusFilter)),
-    [leads, statusFilter],
-  );
+
+  const tiers = useMemo(() => {
+    const set = new Set<string>();
+    for (const l of leads) {
+      const t = (l.capital_size ?? "").trim();
+      if (t) set.add(t);
+    }
+    return Array.from(set).sort();
+  }, [leads]);
+
+  const filtered = useMemo(() => {
+    const fromTs = dateFrom ? new Date(dateFrom + "T00:00:00").getTime() : null;
+    const toTs = dateTo ? new Date(dateTo + "T23:59:59.999").getTime() : null;
+    const q = search.trim().toLowerCase();
+    return leads.filter((l) => {
+      if (statusFilter !== "all" && l.status !== statusFilter) return false;
+      if (tierFilter !== "all" && (l.capital_size ?? "") !== tierFilter) return false;
+      const created = new Date(l.created_at).getTime();
+      if (fromTs !== null && created < fromTs) return false;
+      if (toTs !== null && created > toTs) return false;
+      if (q) {
+        const hay = `${l.full_name} ${l.email} ${l.notes ?? ""}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [leads, statusFilter, tierFilter, dateFrom, dateTo, search]);
 
   const counts = useMemo(() => {
     const c: Record<LeadStatus, number> = { new: 0, contacted: 0, qualified: 0, closed: 0, rejected: 0 };
     for (const l of leads) c[l.status]++;
     return c;
   }, [leads]);
+
+  const handleExportCsv = () => {
+    if (filtered.length === 0) {
+      toast.error("No leads to export.");
+      return;
+    }
+    const headers = [
+      "id", "created_at", "full_name", "email", "tier", "status",
+      "scheduled_at", "confirmation_sent_at",
+      "utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content",
+      "referrer", "landing_page", "notes",
+    ];
+    const esc = (v: unknown) => {
+      if (v === null || v === undefined) return "";
+      const s = String(v).replace(/\r?\n/g, " ").replace(/"/g, '""');
+      return /[",]/.test(s) ? `"${s}"` : s;
+    };
+    const rows = filtered.map((l) => {
+      const x = l as unknown as Record<string, unknown>;
+      return [
+        l.id, l.created_at, l.full_name, l.email, l.capital_size, l.status,
+        l.scheduled_at, l.confirmation_sent_at,
+        x.utm_source, x.utm_medium, x.utm_campaign, x.utm_term, x.utm_content,
+        x.referrer, x.landing_page, l.notes,
+      ].map(esc).join(",");
+    });
+    const csv = "\uFEFF" + [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `leads-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success(`Exported ${filtered.length} lead${filtered.length === 1 ? "" : "s"}.`);
+  };
+
+  const clearFilters = () => {
+    setStatusFilter("all");
+    setTierFilter("all");
+    setDateFrom("");
+    setDateTo("");
+    setSearch("");
+  };
+
+  const hasActiveFilters =
+    statusFilter !== "all" || tierFilter !== "all" || !!dateFrom || !!dateTo || !!search;
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
