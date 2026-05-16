@@ -407,7 +407,10 @@ function Index() {
       {/* Footer */}
       <footer className="px-6 md:px-10 py-10 border-t border-border">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
-          <span>© 2026 Lexus Nexus Capital Group — Atlanta, GA</span>
+          <div className="flex items-center gap-3">
+            <img src={logo} alt="Lexus Nexus Capital Group logo" width={24} height={24} className="h-6 w-6 object-contain opacity-60" />
+            <span>© 2026 Lexus Nexus Capital Group — Atlanta, GA</span>
+          </div>
           <div className="flex gap-6">
             <a href="#" className="hover:text-foreground">Risk Disclosure</a>
             <a href="#" className="hover:text-foreground">Terms</a>
