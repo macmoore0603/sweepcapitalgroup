@@ -301,10 +301,45 @@ function Index() {
         </div>
       </section>
 
+      {/* Contact */}
+      <section id="contact" className="px-6 md:px-10 py-20 md:py-28 border-t border-border bg-white/[0.02]">
+        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-12 md:gap-20">
+          <div className="flex flex-col gap-4">
+            <span className="font-mono text-accent text-[11px] uppercase tracking-[0.3em]">Contact</span>
+            <h2 className="text-4xl md:text-5xl font-extrabold tracking-tighter uppercase leading-[0.95]">
+              Atlanta,{" "}
+              <span className="italic font-semibold text-accent" style={{ fontFamily: "var(--font-serif)" }}>
+                Georgia.
+              </span>
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-10">
+            <div className="flex flex-col gap-2">
+              <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Headquarters</span>
+              <span className="text-foreground font-semibold">Atlanta, Georgia</span>
+            </div>
+            <div className="flex flex-col gap-2">
+              <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Mailing Address</span>
+              <address className="not-italic text-foreground leading-relaxed">
+                Lexus Nexus Capital Group<br />
+                1131 Oaklake Terrace<br />
+                Watkinsville, GA 30677
+              </address>
+            </div>
+            <div className="flex flex-col gap-2">
+              <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Direct</span>
+              <a href="tel:+14782978388" className="text-foreground font-semibold hover:text-accent transition-colors">
+                (478) 297-8388
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="px-6 md:px-10 py-10 border-t border-border">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
-          <span>© 2026 Lexus Nexus Capital Group — All rights reserved.</span>
+          <span>© 2026 Lexus Nexus Capital Group — Atlanta, GA</span>
           <div className="flex gap-6">
             <a href="#" className="hover:text-foreground">Risk Disclosure</a>
             <a href="#" className="hover:text-foreground">Terms</a>
