@@ -145,7 +145,7 @@ function Index() {
             { label: "Audited Win Rate", value: "68.4", suffix: "%" },
             { label: "Avg. Profit Factor", value: "2.42" },
             { label: "Max Drawdown", value: "4.1%", accent: true },
-            { label: "Assets Managed", value: "$14M+" },
+            { label: "Assets Managed", value: "$2.4M" },
           ].map((stat) => (
             <div key={stat.label} className="flex flex-col gap-2">
               <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest">{stat.label}</span>
@@ -324,7 +324,7 @@ function Index() {
             <div className="grid grid-cols-3 gap-6 pt-4 border-t border-border mt-2">
               {[
                 { k: "10+ YRS", v: "Trading Desks" },
-                { k: "$14M+", v: "Allocated" },
+                { k: "$2.4M", v: "Allocated" },
                 { k: "12 / QTR", v: "Selected Mentees" },
               ].map((s) => (
                 <div key={s.k} className="flex flex-col gap-1">
