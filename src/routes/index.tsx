@@ -34,6 +34,7 @@ function Index() {
           <Link to="/about" className="hover:text-foreground transition-colors">About</Link>
           <Link to="/leadership" className="hover:text-foreground transition-colors">Leadership</Link>
           <a href="#apply" className="hover:text-foreground transition-colors">Apply</a>
+          <a href="#contact" className="hover:text-foreground transition-colors">Contact</a>
         </div>
         <a href="#apply" className="px-5 py-2.5 bg-foreground text-background font-extrabold text-[11px] uppercase tracking-widest hover:bg-accent transition-colors">
           Request Access
