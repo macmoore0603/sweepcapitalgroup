@@ -17,6 +17,7 @@ export type Database = {
       leads: {
         Row: {
           capital_size: string | null
+          confirmation_sent_at: string | null
           created_at: string
           email: string
           full_name: string
@@ -28,6 +29,7 @@ export type Database = {
         }
         Insert: {
           capital_size?: string | null
+          confirmation_sent_at?: string | null
           created_at?: string
           email: string
           full_name: string
@@ -39,6 +41,7 @@ export type Database = {
         }
         Update: {
           capital_size?: string | null
+          confirmation_sent_at?: string | null
           created_at?: string
           email?: string
           full_name?: string
