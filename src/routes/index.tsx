@@ -350,22 +350,3 @@ function ApplicationForm() {
     </form>
   );
 }
-            </form>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="px-6 md:px-10 py-10 border-t border-border">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
-          <span>© 2026 Lexus Nexus Capital Group — All rights reserved.</span>
-          <div className="flex gap-6">
-            <a href="#" className="hover:text-foreground">Risk Disclosure</a>
-            <a href="#" className="hover:text-foreground">Terms</a>
-            <a href="#" className="hover:text-foreground">Privacy</a>
-          </div>
-        </div>
-      </footer>
-    </div>
-  );
-}
