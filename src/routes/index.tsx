@@ -243,7 +243,8 @@ function Index() {
                 of our instruction and the quality of our network.
               </p>
               <div className="pt-8 flex flex-col gap-3 font-mono text-[10px] text-muted-foreground tracking-widest">
-                <span>GENEVA / LONDON / SINGAPORE</span>
+                <span>ATLANTA, GEORGIA</span>
+                <span>MAC MOORE — FOUNDER &amp; OWNER</span>
                 <span>EST. MMXXIV — LEXUS NEXUS</span>
               </div>
             </div>
