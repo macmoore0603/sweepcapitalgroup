@@ -227,6 +227,52 @@ function Index() {
         </div>
       </section>
 
+      {/* Founder */}
+      <section id="founder" className="px-6 md:px-10 py-24 md:py-32 border-t border-border bg-white/[0.02]">
+        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-12 md:gap-20 items-start">
+          <div className="flex flex-col gap-4">
+            <span className="font-mono text-accent text-[11px] uppercase tracking-[0.3em]">The Founder</span>
+            <div className="aspect-[4/5] w-full bg-gradient-to-br from-accent/30 via-muted to-background border border-border flex items-end p-5">
+              <span className="font-extrabold text-5xl tracking-tighter leading-none">MM</span>
+            </div>
+            <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              Atlanta, Georgia
+            </div>
+          </div>
+          <div className="flex flex-col gap-6">
+            <h2 className="text-4xl md:text-5xl font-extrabold tracking-tighter uppercase">
+              Mac Moore,{" "}
+              <span className="italic font-semibold text-accent" style={{ fontFamily: "var(--font-serif)" }}>
+                Founder &amp; Owner
+              </span>
+            </h2>
+            <p className="text-muted-foreground text-base md:text-lg leading-relaxed text-pretty">
+              A decade behind the screens of institutional desks taught Mac one lesson worth repeating:
+              the market does not reward intelligence — it rewards discipline. He founded Lexus Nexus Capital
+              Group in Atlanta to compress that lesson into a deliberate, repeatable framework for the
+              traders he chooses to mentor.
+            </p>
+            <p className="text-muted-foreground text-base md:text-lg leading-relaxed text-pretty">
+              His approach is unromantic: edge is built through statistical rigor, position sizing, and an
+              unwavering process. Each mentee is selected personally, briefed personally, and held personally
+              accountable to the same standards Mac runs his own book against.
+            </p>
+            <div className="grid grid-cols-3 gap-6 pt-4 border-t border-border mt-2">
+              {[
+                { k: "10+ YRS", v: "Trading Desks" },
+                { k: "$14M+", v: "Allocated" },
+                { k: "12 / QTR", v: "Selected Mentees" },
+              ].map((s) => (
+                <div key={s.k} className="flex flex-col gap-1">
+                  <span className="font-extrabold text-xl md:text-2xl tracking-tight text-accent">{s.k}</span>
+                  <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{s.v}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Apply */}
       <section id="apply" className="px-6 md:px-10 py-24 md:py-32 border-t border-border">
         <div className="max-w-7xl mx-auto">
