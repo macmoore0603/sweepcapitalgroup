@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+
 import logo from "../assets/lnc-logo.png";
 
 export const Route = createFileRoute("/mentorship")({
