@@ -309,21 +309,23 @@ function ApplicationForm() {
 
   const [rescheduling, setRescheduling] = useState(false);
 
-  if (leadId && scheduledAt && !rescheduling) {
+  if (leadId && bookingToken && scheduledAt && !rescheduling) {
     return (
       <SchedulingConfirmation
         slot={scheduledAt}
         leadId={leadId}
+        bookingToken={bookingToken}
         onReschedule={() => setRescheduling(true)}
         onCancelled={() => setScheduledAt(null)}
       />
     );
   }
 
-  if (leadId) {
+  if (leadId && bookingToken) {
     return (
       <CallScheduler
         leadId={leadId}
+        bookingToken={bookingToken}
         mode={rescheduling ? "reschedule" : "initial"}
         currentSlot={scheduledAt}
         onScheduled={(slot) => {
