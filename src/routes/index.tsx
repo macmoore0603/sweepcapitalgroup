@@ -273,6 +273,7 @@ function ApplicationForm() {
   const [capitalSize, setCapitalSize] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [leadId, setLeadId] = useState<string | null>(null);
+  const [bookingToken, setBookingToken] = useState<string | null>(null);
   const [scheduledAt, setScheduledAt] = useState<Date | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -294,7 +295,7 @@ function ApplicationForm() {
         email: parsed.data.email,
         capital_size: parsed.data.capital_size ?? null,
       })
-      .select("id")
+      .select("id, booking_token")
       .single();
     setSubmitting(false);
     if (error || !data) {
@@ -303,6 +304,7 @@ function ApplicationForm() {
     }
     toast.success("Application received. Please book your introductory call.");
     setLeadId(data.id);
+    setBookingToken(data.booking_token);
   };
 
   const [rescheduling, setRescheduling] = useState(false);
