@@ -79,6 +79,7 @@ function LeadershipPage() {
           <Link to="/" className="hover:text-foreground transition-colors">Home</Link>
           <Link to="/about" className="hover:text-foreground transition-colors">About</Link>
           <Link to="/leadership" className="text-foreground">Leadership</Link>
+          <Link to="/mentorship" className="hover:text-foreground transition-colors">Mentorship</Link>
           <Link to="/" hash="apply" className="hover:text-foreground transition-colors">Apply</Link>
         </div>
         <Link
