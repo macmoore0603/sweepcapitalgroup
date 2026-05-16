@@ -73,14 +73,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lexus Nexus Capital Group — Institutional Trading Mentorship" },
+      { title: "Lexus Nexus Capital Group — Institutional Trading" },
       { name: "description", content: "Private, institutional-grade day trading mentorship and capital allocation for serious investors. Discipline is the only edge." },
       { name: "author", content: "Lexus Nexus Capital Group" },
-      { property: "og:title", content: "Lexus Nexus Capital Group" },
-      { property: "og:description", content: "Institutional-grade day trading mentorship and investment programs." },
+      { property: "og:title", content: "Lexus Nexus Capital Group — Institutional Trading" },
+      { property: "og:description", content: "Private, institutional-grade day trading mentorship and capital allocation for serious investors. Discipline is the only edge." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@LexusNexusCap" },
+      { name: "twitter:title", content: "Lexus Nexus Capital Group — Institutional Trading" },
+      { name: "twitter:description", content: "Private, institutional-grade day trading mentorship and capital allocation for serious investors. Discipline is the only edge." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/eb5b9d8c-7cfa-4f98-86bf-31323fa887e0/id-preview-ad379e29--7621b351-a114-4960-911c-c816c6e7b71a.lovable.app-1778907080229.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/eb5b9d8c-7cfa-4f98-86bf-31323fa887e0/id-preview-ad379e29--7621b351-a114-4960-911c-c816c6e7b71a.lovable.app-1778907080229.png" },
     ],
     links: [
       {
