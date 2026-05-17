@@ -9,6 +9,7 @@ import methodologyImg from "../assets/methodology.jpg";
 import heroBg from "../assets/hero-bg.jpg";
 import logo from "../assets/lnc-logo.png";
 import macMoore from "../assets/mac-moore.png";
+import { CallScheduler, SchedulingConfirmation } from "@/components/booking";
 
 export const Route = createFileRoute("/")({
   component: Index,
