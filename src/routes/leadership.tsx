@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import logo from "../assets/lnc-logo.png";
+import macMoore from "../assets/mac-moore.png";
 
 export const Route = createFileRoute("/leadership")({
   head: () => ({
@@ -26,6 +27,7 @@ type Leader = {
   title: string;
   initials: string;
   location: string;
+  image?: string;
   bio: string[];
   stats: { k: string; v: string }[];
 };
@@ -36,7 +38,7 @@ const LEADERS: Leader[] = [
     title: "Founder, Owner & CEO",
     initials: "MM",
     location: "Atlanta, Georgia",
-    bio: [
+    image: macMoore,
       "A decade behind institutional desks taught Mac one lesson worth repeating: the market does not reward intelligence — it rewards discipline. He founded Lexus Nexus Capital Group in Atlanta to compress that lesson into a deliberate, repeatable framework for the traders he chooses to mentor.",
       "Every mentee is selected personally, briefed personally, and held personally accountable to the same standards Mac runs his own book against.",
     ],
