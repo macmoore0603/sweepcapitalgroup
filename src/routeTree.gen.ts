@@ -17,6 +17,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
+import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as ApiPublicLeadSubmitRouteImport } from './routes/api/public/lead-submit'
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
@@ -63,6 +64,11 @@ const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
   path: '/email/unsubscribe',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
+  id: '/checkout/return',
+  path: '/checkout/return',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
   id: '/lovable/email/suppression',
   path: '/lovable/email/suppression',
@@ -100,6 +106,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/mentorship': typeof MentorshipRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/checkout/return': typeof CheckoutReturnRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/api/public/lead-submit': typeof ApiPublicLeadSubmitRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -115,6 +122,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/mentorship': typeof MentorshipRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/checkout/return': typeof CheckoutReturnRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/api/public/lead-submit': typeof ApiPublicLeadSubmitRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -131,6 +139,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/mentorship': typeof MentorshipRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/checkout/return': typeof CheckoutReturnRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/api/public/lead-submit': typeof ApiPublicLeadSubmitRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -148,6 +157,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/mentorship'
     | '/unsubscribe'
+    | '/checkout/return'
     | '/email/unsubscribe'
     | '/api/public/lead-submit'
     | '/lovable/email/suppression'
@@ -163,6 +173,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/mentorship'
     | '/unsubscribe'
+    | '/checkout/return'
     | '/email/unsubscribe'
     | '/api/public/lead-submit'
     | '/lovable/email/suppression'
@@ -178,6 +189,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/mentorship'
     | '/unsubscribe'
+    | '/checkout/return'
     | '/email/unsubscribe'
     | '/api/public/lead-submit'
     | '/lovable/email/suppression'
@@ -194,6 +206,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   MentorshipRoute: typeof MentorshipRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
+  CheckoutReturnRoute: typeof CheckoutReturnRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   ApiPublicLeadSubmitRoute: typeof ApiPublicLeadSubmitRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
@@ -260,6 +273,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EmailUnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/checkout/return': {
+      id: '/checkout/return'
+      path: '/checkout/return'
+      fullPath: '/checkout/return'
+      preLoaderRoute: typeof CheckoutReturnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lovable/email/suppression': {
       id: '/lovable/email/suppression'
       path: '/lovable/email/suppression'
@@ -306,6 +326,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   MentorshipRoute: MentorshipRoute,
   UnsubscribeRoute: UnsubscribeRoute,
+  CheckoutReturnRoute: CheckoutReturnRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   ApiPublicLeadSubmitRoute: ApiPublicLeadSubmitRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
