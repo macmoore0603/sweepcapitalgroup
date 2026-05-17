@@ -425,6 +425,8 @@ function LeadForm() {
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [checkoutEmail, setCheckoutEmail] = useState<string | null>(null);
+  const selectedTier = TIERS.find((t) => t.name === tier) ?? TIERS[0];
 
   if (typeof window !== "undefined") {
     if (!(window as unknown as { __lncTierWired?: boolean }).__lncTierWired) {
