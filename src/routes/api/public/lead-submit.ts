@@ -134,7 +134,7 @@ export const Route = createFileRoute('/api/public/lead-submit')({
         if (!template) {
           return Response.json({ success: true, email_sent: false })
         }
-        const data = { name: full_name, tier }
+        const data = { name: full_name, tier, bookingUrl }
         const element = createElement(template.component, data)
         const html = await render(element)
         const plainText = await render(element, { plainText: true })
