@@ -486,26 +486,42 @@ function LeadForm() {
       toast.error("Submission failed. Please try again.");
       return;
     }
-    toast.success("Got it — check your inbox for next steps.");
+    toast.success("Got it — opening secure checkout…");
+    setCheckoutEmail(parsed.data.email);
     setSubmitted(true);
     setFullName("");
-    setEmail("");
     setNotes("");
   };
 
-  if (submitted) {
+  if (submitted && checkoutEmail) {
     return (
-      <div className="flex flex-col gap-4 p-8 border border-accent bg-white/[0.03]">
-        <span className="font-mono text-[11px] uppercase tracking-widest text-accent">Received</span>
-        <h3 className="text-2xl font-extrabold tracking-tighter uppercase">You're on the list.</h3>
-        <p className="text-muted-foreground text-sm">
-          We'll be in touch within 24 hours with next steps and payment details.
-        </p>
+      <div className="flex flex-col gap-6">
+        <PaymentTestModeBanner />
+        <div className="flex flex-col gap-2 p-6 border border-accent bg-white/[0.03]">
+          <span className="font-mono text-[11px] uppercase tracking-widest text-accent">
+            Step 2 of 2 — Secure payment
+          </span>
+          <h3 className="text-xl font-extrabold tracking-tighter uppercase">
+            {selectedTier.name} — {selectedTier.price}
+          </h3>
+          <p className="text-muted-foreground text-xs">
+            One-time payment. You'll get a receipt by email.
+          </p>
+        </div>
+        <div className="border border-border bg-background">
+          <StripeEmbeddedCheckout
+            priceId={selectedTier.priceId}
+            customerEmail={checkoutEmail}
+          />
+        </div>
         <button
-          onClick={() => setSubmitted(false)}
-          className="self-start mt-2 font-mono text-[11px] uppercase tracking-widest text-foreground hover:text-accent"
+          onClick={() => {
+            setSubmitted(false);
+            setCheckoutEmail(null);
+          }}
+          className="self-start font-mono text-[11px] uppercase tracking-widest text-foreground hover:text-accent"
         >
-          Submit another →
+          ← Change selection
         </button>
       </div>
     );
