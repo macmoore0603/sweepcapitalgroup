@@ -95,7 +95,7 @@ function AboutPage() {
             <h2 className="text-3xl md:text-4xl font-extrabold tracking-tighter uppercase pt-6">The founder</h2>
             <p className="text-muted-foreground text-base md:text-lg leading-relaxed text-pretty">
               The firm was founded and is owned by <span className="text-foreground font-semibold">Mac Moore</span>.
-              A decade behind institutional desks taught Mac one lesson worth repeating: the market does
+              Three years behind institutional desks taught Mac one lesson worth repeating: the market does
               not reward intelligence — it rewards discipline. He built Lexus Nexus to compress that
               lesson into a deliberate, repeatable framework for the traders he chooses to mentor.
             </p>
