@@ -326,7 +326,7 @@ function Index() {
               </span>
             </h2>
             <p className="text-muted-foreground text-base md:text-lg leading-relaxed text-pretty">
-              A decade behind the screens of institutional desks taught Mac one lesson worth repeating:
+              Three years behind the screens of institutional desks taught Mac one lesson worth repeating:
               the market does not reward intelligence — it rewards success. He founded Lexus Nexus Capital
               Group in Atlanta to compress that lesson into a deliberate, repeatable framework for the
               traders he chooses to mentor.
@@ -338,7 +338,7 @@ function Index() {
             </p>
             <div className="grid grid-cols-3 gap-6 pt-4 border-t border-border mt-2">
               {[
-                { k: "10+ YRS", v: "Trading Desks" },
+                { k: "3 YRS", v: "Trading Desks" },
                 { k: "$2.4M", v: "Allocated" },
                 { k: "12 / QTR", v: "Selected Mentees" },
               ].map((s) => (
