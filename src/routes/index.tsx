@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import methodologyImg from "../assets/methodology.jpg";
 import heroBg from "../assets/hero-bg.jpg";
 import logo from "../assets/lnc-logo.png";
+import macMoore from "../assets/mac-moore.png";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -303,8 +304,15 @@ function Index() {
         <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-12 md:gap-20 items-start">
           <div className="flex flex-col gap-4">
             <span className="font-mono text-accent text-[11px] uppercase tracking-[0.3em]">The Founder</span>
-            <div className="aspect-[4/5] w-full bg-gradient-to-br from-accent/30 via-muted to-background border border-border flex items-end p-5">
-              <span className="font-extrabold text-5xl tracking-tighter leading-none">MM</span>
+            <div className="aspect-[4/5] w-full bg-gradient-to-br from-accent/30 via-muted to-background border border-border overflow-hidden">
+              <img
+                src={macMoore}
+                alt="Mac Moore — Founder of Lexus Nexus Capital Group"
+                width={800}
+                height={1000}
+                loading="lazy"
+                className="w-full h-full object-cover"
+              />
             </div>
             <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
               Atlanta, Georgia
