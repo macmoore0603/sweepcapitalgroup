@@ -122,10 +122,23 @@ function LeadershipPage() {
               }`}
             >
               <div className="flex flex-col gap-4">
-                <div className="aspect-[4/5] w-full bg-gradient-to-br from-accent/30 via-muted to-background border border-border flex items-end p-5">
-                  <span className="font-extrabold text-5xl tracking-tighter leading-none">
-                    {leader.initials}
-                  </span>
+                <div className="aspect-[4/5] w-full bg-gradient-to-br from-accent/30 via-muted to-background border border-border overflow-hidden relative">
+                  {leader.image ? (
+                    <img
+                      src={leader.image}
+                      alt={leader.name}
+                      width={800}
+                      height={1000}
+                      loading="lazy"
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-end p-5">
+                      <span className="font-extrabold text-5xl tracking-tighter leading-none">
+                        {leader.initials}
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
                   {leader.location}
