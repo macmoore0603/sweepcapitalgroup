@@ -31,6 +31,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       mode: "payment",
       ui_mode: "embedded_page",
       return_url: data.returnUrl,
+      managed_payments: { enabled: true },
       ...(data.customerEmail && { customer_email: data.customerEmail }),
     });
 
