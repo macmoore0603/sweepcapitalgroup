@@ -4,6 +4,8 @@ import { z } from "zod";
 import { toast } from "sonner";
 
 import logo from "../assets/lnc-logo.png";
+import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
+import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 
 export const Route = createFileRoute("/mentorship")({
   head: () => ({
@@ -29,6 +31,7 @@ type Tier = {
   id: string;
   name: string;
   price: string;
+  priceId: string;
   tagline: string;
   features: string[];
   highlight?: boolean;
