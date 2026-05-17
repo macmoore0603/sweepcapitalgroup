@@ -39,6 +39,7 @@ const LEADERS: Leader[] = [
     initials: "MM",
     location: "Atlanta, Georgia",
     image: macMoore,
+    bio: [
       "A decade behind institutional desks taught Mac one lesson worth repeating: the market does not reward intelligence — it rewards discipline. He founded Lexus Nexus Capital Group in Atlanta to compress that lesson into a deliberate, repeatable framework for the traders he chooses to mentor.",
       "Every mentee is selected personally, briefed personally, and held personally accountable to the same standards Mac runs his own book against.",
     ],
