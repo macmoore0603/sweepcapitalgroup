@@ -4,6 +4,8 @@ import { z } from "zod";
 import { toast } from "sonner";
 
 import logo from "../assets/lnc-logo.png";
+import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
+import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 
 export const Route = createFileRoute("/mentorship")({
   head: () => ({
@@ -29,6 +31,7 @@ type Tier = {
   id: string;
   name: string;
   price: string;
+  priceId: string;
   tagline: string;
   features: string[];
   highlight?: boolean;
@@ -40,6 +43,7 @@ const TIERS: Tier[] = [
     id: "course",
     name: "The Course",
     price: "$500",
+    priceId: "mentorship_course_onetime",
     tagline: "Self-paced curriculum. One-time payment.",
     features: [
       "Full mentorship course access",
@@ -52,6 +56,7 @@ const TIERS: Tier[] = [
     id: "course-coaching",
     name: "Course + Coaching",
     price: "$1,500",
+    priceId: "mentorship_course_coaching_onetime",
     tagline: "Course plus step-by-step personal guidance.",
     features: [
       "Everything in The Course",
@@ -66,6 +71,7 @@ const TIERS: Tier[] = [
     id: "managed",
     name: "Managed Trading",
     price: "$500",
+    priceId: "mentorship_managed_onetime",
     tagline: "I trade for you. Guaranteed $2k min in 3–4 weeks.",
     features: [
       "Hands-off — I trade your account",
@@ -79,6 +85,7 @@ const TIERS: Tier[] = [
     id: "all-in",
     name: "All-Inclusive",
     price: "$2,000",
+    priceId: "mentorship_all_inclusive_onetime",
     tagline: "Course + coaching + managed trading. Everything.",
     features: [
       "Full course access",
@@ -418,6 +425,8 @@ function LeadForm() {
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [checkoutEmail, setCheckoutEmail] = useState<string | null>(null);
+  const selectedTier = TIERS.find((t) => t.name === tier) ?? TIERS[0];
 
   if (typeof window !== "undefined") {
     if (!(window as unknown as { __lncTierWired?: boolean }).__lncTierWired) {
@@ -477,26 +486,42 @@ function LeadForm() {
       toast.error("Submission failed. Please try again.");
       return;
     }
-    toast.success("Got it — check your inbox for next steps.");
+    toast.success("Got it — opening secure checkout…");
+    setCheckoutEmail(parsed.data.email);
     setSubmitted(true);
     setFullName("");
-    setEmail("");
     setNotes("");
   };
 
-  if (submitted) {
+  if (submitted && checkoutEmail) {
     return (
-      <div className="flex flex-col gap-4 p-8 border border-accent bg-white/[0.03]">
-        <span className="font-mono text-[11px] uppercase tracking-widest text-accent">Received</span>
-        <h3 className="text-2xl font-extrabold tracking-tighter uppercase">You're on the list.</h3>
-        <p className="text-muted-foreground text-sm">
-          We'll be in touch within 24 hours with next steps and payment details.
-        </p>
+      <div className="flex flex-col gap-6">
+        <PaymentTestModeBanner />
+        <div className="flex flex-col gap-2 p-6 border border-accent bg-white/[0.03]">
+          <span className="font-mono text-[11px] uppercase tracking-widest text-accent">
+            Step 2 of 2 — Secure payment
+          </span>
+          <h3 className="text-xl font-extrabold tracking-tighter uppercase">
+            {selectedTier.name} — {selectedTier.price}
+          </h3>
+          <p className="text-muted-foreground text-xs">
+            One-time payment. You'll get a receipt by email.
+          </p>
+        </div>
+        <div className="border border-border bg-background">
+          <StripeEmbeddedCheckout
+            priceId={selectedTier.priceId}
+            customerEmail={checkoutEmail}
+          />
+        </div>
         <button
-          onClick={() => setSubmitted(false)}
-          className="self-start mt-2 font-mono text-[11px] uppercase tracking-widest text-foreground hover:text-accent"
+          onClick={() => {
+            setSubmitted(false);
+            setCheckoutEmail(null);
+          }}
+          className="self-start font-mono text-[11px] uppercase tracking-widest text-foreground hover:text-accent"
         >
-          Submit another →
+          ← Change selection
         </button>
       </div>
     );
