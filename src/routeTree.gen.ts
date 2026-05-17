@@ -13,6 +13,7 @@ import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as MentorshipRouteImport } from './routes/mentorship'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LeadershipRouteImport } from './routes/leadership'
+import { Route as BookRouteImport } from './routes/book'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
@@ -42,6 +43,11 @@ const LoginRoute = LoginRouteImport.update({
 const LeadershipRoute = LeadershipRouteImport.update({
   id: '/leadership',
   path: '/leadership',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BookRoute = BookRouteImport.update({
+  id: '/book',
+  path: '/book',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -102,6 +108,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
+  '/book': typeof BookRoute
   '/leadership': typeof LeadershipRoute
   '/login': typeof LoginRoute
   '/mentorship': typeof MentorshipRoute
@@ -118,6 +125,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
+  '/book': typeof BookRoute
   '/leadership': typeof LeadershipRoute
   '/login': typeof LoginRoute
   '/mentorship': typeof MentorshipRoute
@@ -135,6 +143,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
+  '/book': typeof BookRoute
   '/leadership': typeof LeadershipRoute
   '/login': typeof LoginRoute
   '/mentorship': typeof MentorshipRoute
@@ -153,6 +162,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/admin'
+    | '/book'
     | '/leadership'
     | '/login'
     | '/mentorship'
@@ -169,6 +179,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/admin'
+    | '/book'
     | '/leadership'
     | '/login'
     | '/mentorship'
@@ -185,6 +196,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/admin'
+    | '/book'
     | '/leadership'
     | '/login'
     | '/mentorship'
@@ -202,6 +214,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   AdminRoute: typeof AdminRoute
+  BookRoute: typeof BookRoute
   LeadershipRoute: typeof LeadershipRoute
   LoginRoute: typeof LoginRoute
   MentorshipRoute: typeof MentorshipRoute
@@ -243,6 +256,13 @@ declare module '@tanstack/react-router' {
       path: '/leadership'
       fullPath: '/leadership'
       preLoaderRoute: typeof LeadershipRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/book': {
+      id: '/book'
+      path: '/book'
+      fullPath: '/book'
+      preLoaderRoute: typeof BookRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -322,6 +342,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   AdminRoute: AdminRoute,
+  BookRoute: BookRoute,
   LeadershipRoute: LeadershipRoute,
   LoginRoute: LoginRoute,
   MentorshipRoute: MentorshipRoute,
