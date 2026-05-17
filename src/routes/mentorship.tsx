@@ -72,14 +72,14 @@ const TIERS: Tier[] = [
     name: "Managed Trading",
     price: "$500",
     priceId: "mentorship_managed_onetime",
-    tagline: "I trade for you. Guaranteed $2k min in 3–4 weeks.",
+    tagline: "I trade for you. Targeting $2k+ over a 3–4 week window.",
     features: [
       "Hands-off — I trade your account",
-      "Guaranteed $2,000 minimum return",
+      "$2,000 performance target (not guaranteed)",
       "3–4 week target window",
       "Weekly performance updates",
     ],
-    badge: "Guaranteed",
+    badge: "Managed",
   },
   {
     id: "all-in",
