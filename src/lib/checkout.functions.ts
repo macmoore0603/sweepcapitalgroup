@@ -33,7 +33,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       return_url: data.returnUrl,
       managed_payments: { enabled: true },
       ...(data.customerEmail && { customer_email: data.customerEmail }),
-    });
+    } as any);
 
     return session.client_secret;
   });
