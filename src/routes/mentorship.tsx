@@ -43,7 +43,7 @@ const TIERS: Tier[] = [
     id: "course",
     name: "The Course",
     price: "$500",
-    tagline: "Self-paced curriculum. One-time payment.",
+    priceId: "mentorship_course_onetime",
     features: [
       "Full mentorship course access",
       "Lifetime updates",
