@@ -44,6 +44,7 @@ const TIERS: Tier[] = [
     name: "The Course",
     price: "$500",
     priceId: "mentorship_course_onetime",
+    tagline: "Self-paced curriculum. One-time payment.",
     features: [
       "Full mentorship course access",
       "Lifetime updates",
@@ -55,6 +56,7 @@ const TIERS: Tier[] = [
     id: "course-coaching",
     name: "Course + Coaching",
     price: "$1,500",
+    priceId: "mentorship_course_coaching_onetime",
     tagline: "Course plus step-by-step personal guidance.",
     features: [
       "Everything in The Course",
@@ -69,6 +71,7 @@ const TIERS: Tier[] = [
     id: "managed",
     name: "Managed Trading",
     price: "$500",
+    priceId: "mentorship_managed_onetime",
     tagline: "I trade for you. Guaranteed $2k min in 3–4 weeks.",
     features: [
       "Hands-off — I trade your account",
@@ -82,6 +85,7 @@ const TIERS: Tier[] = [
     id: "all-in",
     name: "All-Inclusive",
     price: "$2,000",
+    priceId: "mentorship_all_inclusive_onetime",
     tagline: "Course + coaching + managed trading. Everything.",
     features: [
       "Full course access",
