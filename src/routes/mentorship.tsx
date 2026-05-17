@@ -90,7 +90,7 @@ const TIERS: Tier[] = [
     features: [
       "Full course access",
       "Step-by-step personal coaching",
-      "Managed trading ($2k min guarantee)",
+      "Managed trading ($2k+ target)",
       "Highest priority direct access",
     ],
     badge: "Best Value",
