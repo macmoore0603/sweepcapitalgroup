@@ -64,24 +64,33 @@ export const Route = createFileRoute('/api/public/lead-submit')({
 
         const supabase: any = createClient(supabaseUrl, supabaseServiceKey)
 
-        // 1. Insert the lead
-        const { error: insertError } = await supabase.from('leads').insert({
-          full_name,
-          email,
-          capital_size: tier,
-          notes: notes ?? null,
-          utm_source: utm_source ?? null,
-          utm_medium: utm_medium ?? null,
-          utm_campaign: utm_campaign ?? null,
-          utm_term: utm_term ?? null,
-          utm_content: utm_content ?? null,
-          referrer: referrer ?? null,
-          landing_page: landing_page ?? null,
-        })
-        if (insertError) {
+        // 1. Insert the lead and capture id + booking token
+        const { data: insertedLead, error: insertError } = await supabase
+          .from('leads')
+          .insert({
+            full_name,
+            email,
+            capital_size: tier,
+            notes: notes ?? null,
+            utm_source: utm_source ?? null,
+            utm_medium: utm_medium ?? null,
+            utm_campaign: utm_campaign ?? null,
+            utm_term: utm_term ?? null,
+            utm_content: utm_content ?? null,
+            referrer: referrer ?? null,
+            landing_page: landing_page ?? null,
+          })
+          .select('id, booking_token')
+          .single()
+        if (insertError || !insertedLead) {
           console.error('Lead insert failed', { error: insertError })
           return Response.json({ error: 'Submission failed' }, { status: 500 })
         }
+
+        // Derive an absolute booking URL from the incoming request origin.
+        const requestUrl = new URL(request.url)
+        const origin = `${requestUrl.protocol}//${requestUrl.host}`
+        const bookingUrl = `${origin}/book?lead=${encodeURIComponent(insertedLead.id)}&token=${encodeURIComponent(insertedLead.booking_token)}`
 
         // 2. Check suppression — silently skip email if suppressed (still success for the form)
         const { data: suppressed } = await supabase
