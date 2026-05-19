@@ -13,7 +13,7 @@ export function HealthStatus() {
         const data = await res.json();
         if (!cancelled) setHealth(data);
       } catch {
-        if (!cancelled) setHealth({ status: "unhealthy" });
+        if (!cancelled) setHealth({ status: "unhealthy" } as { status: string });
       }
     }
     check();
