@@ -19,6 +19,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
+import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as ApiPublicLeadSubmitRouteImport } from './routes/api/public/lead-submit'
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
@@ -76,6 +77,11 @@ const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
   path: '/checkout/return',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiHealthRoute = ApiHealthRouteImport.update({
+  id: '/api/health',
+  path: '/api/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
   id: '/lovable/email/suppression',
   path: '/lovable/email/suppression',
@@ -120,6 +126,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/mentorship': typeof MentorshipRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/api/health': typeof ApiHealthRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/api/public/lead-submit': typeof ApiPublicLeadSubmitRoute
@@ -138,6 +145,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/mentorship': typeof MentorshipRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/api/health': typeof ApiHealthRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/api/public/lead-submit': typeof ApiPublicLeadSubmitRoute
@@ -157,6 +165,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/mentorship': typeof MentorshipRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/api/health': typeof ApiHealthRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/api/public/lead-submit': typeof ApiPublicLeadSubmitRoute
@@ -177,6 +186,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/mentorship'
     | '/unsubscribe'
+    | '/api/health'
     | '/checkout/return'
     | '/email/unsubscribe'
     | '/api/public/lead-submit'
@@ -195,6 +205,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/mentorship'
     | '/unsubscribe'
+    | '/api/health'
     | '/checkout/return'
     | '/email/unsubscribe'
     | '/api/public/lead-submit'
@@ -213,6 +224,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/mentorship'
     | '/unsubscribe'
+    | '/api/health'
     | '/checkout/return'
     | '/email/unsubscribe'
     | '/api/public/lead-submit'
@@ -232,6 +244,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   MentorshipRoute: typeof MentorshipRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
+  ApiHealthRoute: typeof ApiHealthRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   ApiPublicLeadSubmitRoute: typeof ApiPublicLeadSubmitRoute
@@ -314,6 +327,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CheckoutReturnRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/health': {
+      id: '/api/health'
+      path: '/api/health'
+      fullPath: '/api/health'
+      preLoaderRoute: typeof ApiHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lovable/email/suppression': {
       id: '/lovable/email/suppression'
       path: '/lovable/email/suppression'
@@ -368,6 +388,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   MentorshipRoute: MentorshipRoute,
   UnsubscribeRoute: UnsubscribeRoute,
+  ApiHealthRoute: ApiHealthRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   ApiPublicLeadSubmitRoute: ApiPublicLeadSubmitRoute,
@@ -380,13 +401,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

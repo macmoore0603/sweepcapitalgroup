@@ -11,6 +11,7 @@ import { useEffect } from "react";
 
 import appCss from "../styles.css?url";
 import { Toaster } from "@/components/ui/sonner";
+import { HealthStatus } from "@/components/HealthStatus";
 
 const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"] as const;
 
@@ -151,6 +152,11 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <Outlet />
       <Toaster richColors theme="dark" position="top-right" />
+      {import.meta.env.DEV ? (
+        <div className="fixed bottom-3 left-3 z-[100]">
+          <HealthStatus />
+        </div>
+      ) : null}
     </QueryClientProvider>
   );
 }
