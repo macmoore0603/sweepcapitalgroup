@@ -14,8 +14,6 @@ export const Route = createFileRoute("/api/public/social/tick")({
         const result = { claimed: 0, published: 0, failed: 0, topUpsCreated: 0 };
 
         // 1. Claim due posts
-        const { data: dueRows } = await supabaseAdmin.rpc("claim_due_social_posts" as never, {});
-        // Fallback raw SQL via PostgREST is not available; do the claim via two-step update.
         const nowISO = new Date().toISOString();
         const { data: claimable } = await supabaseAdmin
           .from("scheduled_posts")
