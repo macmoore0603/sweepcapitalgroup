@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { PLATFORMS, DEFAULT_WINDOWS, MIN_POSTS_PER_DAY } from "./types";
 
-const platformEnum = z.enum(PLATFORMS as [string, ...string[]]);
+const platformEnum = z.enum(["instagram", "x", "linkedin", "tiktok", "youtube"] as const);
 
 const windowSchema = z.object({
   hour: z.number().int().min(0).max(23),
