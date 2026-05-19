@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import type { HealthStatus as HealthStatusData } from "@/lib/health";
 
-export function HealthStatus() {
 type HealthView = Omit<Partial<HealthStatusData>, "status"> & { status: string };
 
 export function HealthStatus() {
