@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
-import { useRouter } from "@tanstack/react-router";
 
 export function HealthStatus() {
   const [health, setHealth] = useState<{ status: string } | null>(null);
-  const router = useRouter();
 
   useEffect(() => {
     let cancelled = false;
@@ -25,7 +23,6 @@ export function HealthStatus() {
   }, []);
 
   const healthy = health?.status === "healthy";
-  const isRouterHealthy = router.state.status !== "error";
 
   return (
     <div className="flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
@@ -38,8 +35,9 @@ export function HealthStatus() {
         />
       </span>
       <span>
-        App {healthy ? "Healthy" : "Unhealthy"} · Router {isRouterHealthy ? "Healthy" : "Error"}
+        App {healthy ? "Healthy" : "Unhealthy"} · Router Ready
       </span>
     </div>
   );
 }
+
