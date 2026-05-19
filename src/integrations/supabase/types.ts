@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_settings: {
+        Row: {
+          autofill_enabled: boolean
+          brand_voice_notes: string | null
+          created_at: string
+          default_posting_windows: Json
+          min_posts_per_day: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          autofill_enabled?: boolean
+          brand_voice_notes?: string | null
+          created_at?: string
+          default_posting_windows?: Json
+          min_posts_per_day?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          autofill_enabled?: boolean
+          brand_voice_notes?: string | null
+          created_at?: string
+          default_posting_windows?: Json
+          min_posts_per_day?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
@@ -164,6 +194,160 @@ export type Database = {
         }
         Relationships: []
       }
+      post_metrics: {
+        Row: {
+          comments: number
+          fetched_at: string
+          id: string
+          impressions: number
+          likes: number
+          post_id: string
+          shares: number
+        }
+        Insert: {
+          comments?: number
+          fetched_at?: string
+          id?: string
+          impressions?: number
+          likes?: number
+          post_id: string
+          shares?: number
+        }
+        Update: {
+          comments?: number
+          fetched_at?: string
+          id?: string
+          impressions?: number
+          likes?: number
+          post_id?: string
+          shares?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_metrics_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "scheduled_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scheduled_posts: {
+        Row: {
+          account_id: string
+          body: string
+          created_at: string
+          error: string | null
+          goal: string | null
+          id: string
+          media_urls: string[]
+          platform_post_id: string | null
+          platform_post_url: string | null
+          published_at: string | null
+          scheduled_for: string | null
+          source: string
+          status: Database["public"]["Enums"]["social_post_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_id: string
+          body?: string
+          created_at?: string
+          error?: string | null
+          goal?: string | null
+          id?: string
+          media_urls?: string[]
+          platform_post_id?: string | null
+          platform_post_url?: string | null
+          published_at?: string | null
+          scheduled_for?: string | null
+          source?: string
+          status?: Database["public"]["Enums"]["social_post_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string
+          body?: string
+          created_at?: string
+          error?: string | null
+          goal?: string | null
+          id?: string
+          media_urls?: string[]
+          platform_post_id?: string | null
+          platform_post_url?: string | null
+          published_at?: string | null
+          scheduled_for?: string | null
+          source?: string
+          status?: Database["public"]["Enums"]["social_post_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_posts_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "social_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_accounts: {
+        Row: {
+          access_token_encrypted: string | null
+          active: boolean
+          created_at: string
+          expires_at: string | null
+          handle: string
+          id: string
+          min_posts_per_day: number
+          platform: Database["public"]["Enums"]["social_platform"]
+          platform_account_id: string | null
+          posting_windows: Json
+          refresh_token_encrypted: string | null
+          scopes: string[] | null
+          timezone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token_encrypted?: string | null
+          active?: boolean
+          created_at?: string
+          expires_at?: string | null
+          handle: string
+          id?: string
+          min_posts_per_day?: number
+          platform: Database["public"]["Enums"]["social_platform"]
+          platform_account_id?: string | null
+          posting_windows?: Json
+          refresh_token_encrypted?: string | null
+          scopes?: string[] | null
+          timezone?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token_encrypted?: string | null
+          active?: boolean
+          created_at?: string
+          expires_at?: string | null
+          handle?: string
+          id?: string
+          min_posts_per_day?: number
+          platform?: Database["public"]["Enums"]["social_platform"]
+          platform_account_id?: string | null
+          posting_windows?: Json
+          refresh_token_encrypted?: string | null
+          scopes?: string[] | null
+          timezone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       suppressed_emails: {
         Row: {
           created_at: string
@@ -258,6 +442,14 @@ export type Database = {
     Enums: {
       app_role: "admin" | "user"
       lead_status: "new" | "contacted" | "qualified" | "closed" | "rejected"
+      social_platform: "instagram" | "x" | "linkedin" | "tiktok" | "youtube"
+      social_post_status:
+        | "draft"
+        | "scheduled"
+        | "publishing"
+        | "published"
+        | "failed"
+        | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -387,6 +579,15 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "user"],
       lead_status: ["new", "contacted", "qualified", "closed", "rejected"],
+      social_platform: ["instagram", "x", "linkedin", "tiktok", "youtube"],
+      social_post_status: [
+        "draft",
+        "scheduled",
+        "publishing",
+        "published",
+        "failed",
+        "cancelled",
+      ],
     },
   },
 } as const
