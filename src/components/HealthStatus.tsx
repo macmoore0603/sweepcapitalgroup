@@ -2,7 +2,10 @@ import { useEffect, useState } from "react";
 import type { HealthStatus as HealthStatusData } from "@/lib/health";
 
 export function HealthStatus() {
-  const [health, setHealth] = useState<Partial<HealthStatusData> & { status: string } | null>(null);
+type HealthView = Omit<Partial<HealthStatusData>, "status"> & { status: string };
+
+export function HealthStatus() {
+  const [health, setHealth] = useState<HealthView | null>(null);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
