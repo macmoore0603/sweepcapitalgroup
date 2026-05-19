@@ -5,7 +5,7 @@ import { buildSystemPrompt } from "./prompts";
 import { runGuardrails } from "./guardrails";
 import { PLATFORMS, type Platform, type PostingWindow, MIN_POSTS_PER_DAY } from "./types";
 
-const platformEnum = z.enum(PLATFORMS as [string, ...string[]]);
+const platformEnum = z.enum(["instagram", "x", "linkedin", "tiktok", "youtube"] as const);
 
 type DraftedPost = {
   platform: Platform;
