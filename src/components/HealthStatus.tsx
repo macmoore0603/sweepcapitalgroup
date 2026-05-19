@@ -1,7 +1,14 @@
 import { useEffect, useState } from "react";
-import type { HealthStatus as HealthStatusData } from "@/lib/health";
 
-type HealthView = Omit<Partial<HealthStatusData>, "status"> & { status: string };
+type HealthView = {
+  status: string;
+  timestamp?: string;
+  environment?: string;
+  version?: string;
+  commit?: string;
+  commitShort?: string;
+  buildTime?: string;
+};
 
 export function HealthStatus() {
   const [health, setHealth] = useState<HealthView | null>(null);
