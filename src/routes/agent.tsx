@@ -17,6 +17,7 @@ import {
   autofillDay,
   quotaToday,
 } from "@/lib/social/posts.functions";
+import { getOAuthStartUrl } from "@/lib/social/oauth.functions";
 import { PLATFORMS, PLATFORM_LABEL, MIN_POSTS_PER_DAY, type Platform } from "@/lib/social/types";
 
 export const Route = createFileRoute("/agent")({
@@ -44,6 +45,20 @@ function AgentPage() {
     });
     return () => sub.subscription.unsubscribe();
   }, [navigate]);
+
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const oauth = url.searchParams.get("oauth");
+    if (!oauth) return;
+    if (oauth.endsWith("_connected")) {
+      toast.success(`${oauth.replace("_connected", "")} account connected`);
+    } else if (oauth.includes("_error:")) {
+      const [plat, msg] = oauth.split("_error:");
+      toast.error(`${plat}: ${msg}`);
+    }
+    url.searchParams.delete("oauth");
+    window.history.replaceState({}, "", url.toString());
+  }, []);
 
   if (!authed) return null;
   return <Dashboard />;
@@ -201,9 +216,18 @@ function AccountsPanel({
 }) {
   const save = useServerFn(upsertAccount);
   const remove = useServerFn(deleteAccount);
+  const startOAuth = useServerFn(getOAuthStartUrl);
   const [platform, setPlatform] = useState<Platform>("instagram");
   const [handle, setHandle] = useState("");
   const [minPerDay, setMinPerDay] = useState(MIN_POSTS_PER_DAY);
+
+  const connectIG = useMutation({
+    mutationFn: () => startOAuth({ data: { platform: "instagram" } }),
+    onSuccess: (r) => {
+      window.location.href = r.url;
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "OAuth failed"),
+  });
 
   const create = useMutation({
     mutationFn: () =>
@@ -229,6 +253,18 @@ function AccountsPanel({
   return (
     <section className="space-y-4">
       <h2 className="text-lg font-semibold">Connected accounts</h2>
+      <div className="flex flex-wrap gap-2">
+        <button
+          onClick={() => connectIG.mutate()}
+          disabled={connectIG.isPending}
+          className="bg-foreground text-background px-4 py-2 rounded text-sm font-medium disabled:opacity-50"
+        >
+          {connectIG.isPending ? "Redirecting…" : "Connect Instagram via Meta"}
+        </button>
+        <span className="text-xs text-muted-foreground self-center">
+          Other platforms light up once their API credentials are added.
+        </span>
+      </div>
       <form
         onSubmit={(e) => {
           e.preventDefault();

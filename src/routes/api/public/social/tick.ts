@@ -48,7 +48,7 @@ export const Route = createFileRoute("/api/public/social/tick")({
             const publishResult = await publishToPlatform(platform, {
               body: row.body ?? "",
               mediaUrls: row.media_urls ?? [],
-              accessToken: account?.access_token_encrypted ? "stub" : null,
+              accessTokenCipher: account?.access_token_encrypted ?? null,
               platformAccountId: account?.platform_account_id ?? null,
             });
 
