@@ -17,6 +17,7 @@ import {
   autofillDay,
   quotaToday,
 } from "@/lib/social/posts.functions";
+import { getOAuthStartUrl } from "@/lib/social/oauth.functions";
 import { PLATFORMS, PLATFORM_LABEL, MIN_POSTS_PER_DAY, type Platform } from "@/lib/social/types";
 
 export const Route = createFileRoute("/agent")({
@@ -44,6 +45,20 @@ function AgentPage() {
     });
     return () => sub.subscription.unsubscribe();
   }, [navigate]);
+
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const oauth = url.searchParams.get("oauth");
+    if (!oauth) return;
+    if (oauth.endsWith("_connected")) {
+      toast.success(`${oauth.replace("_connected", "")} account connected`);
+    } else if (oauth.includes("_error:")) {
+      const [plat, msg] = oauth.split("_error:");
+      toast.error(`${plat}: ${msg}`);
+    }
+    url.searchParams.delete("oauth");
+    window.history.replaceState({}, "", url.toString());
+  }, []);
 
   if (!authed) return null;
   return <Dashboard />;
