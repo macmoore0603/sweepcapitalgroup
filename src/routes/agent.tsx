@@ -216,9 +216,18 @@ function AccountsPanel({
 }) {
   const save = useServerFn(upsertAccount);
   const remove = useServerFn(deleteAccount);
+  const startOAuth = useServerFn(getOAuthStartUrl);
   const [platform, setPlatform] = useState<Platform>("instagram");
   const [handle, setHandle] = useState("");
   const [minPerDay, setMinPerDay] = useState(MIN_POSTS_PER_DAY);
+
+  const connectIG = useMutation({
+    mutationFn: () => startOAuth({ data: { platform: "instagram" } }),
+    onSuccess: (r) => {
+      window.location.href = r.url;
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "OAuth failed"),
+  });
 
   const create = useMutation({
     mutationFn: () =>
@@ -244,6 +253,18 @@ function AccountsPanel({
   return (
     <section className="space-y-4">
       <h2 className="text-lg font-semibold">Connected accounts</h2>
+      <div className="flex flex-wrap gap-2">
+        <button
+          onClick={() => connectIG.mutate()}
+          disabled={connectIG.isPending}
+          className="bg-foreground text-background px-4 py-2 rounded text-sm font-medium disabled:opacity-50"
+        >
+          {connectIG.isPending ? "Redirecting…" : "Connect Instagram via Meta"}
+        </button>
+        <span className="text-xs text-muted-foreground self-center">
+          Other platforms light up once their API credentials are added.
+        </span>
+      </div>
       <form
         onSubmit={(e) => {
           e.preventDefault();
