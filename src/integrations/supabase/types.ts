@@ -294,6 +294,164 @@ export type Database = {
           },
         ]
       }
+      sierra_conversations: {
+        Row: {
+          created_at: string
+          id: string
+          last_channel: string
+          owner_user_id: string
+          phone_e164: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_channel?: string
+          owner_user_id: string
+          phone_e164: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_channel?: string
+          owner_user_id?: string
+          phone_e164?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      sierra_messages: {
+        Row: {
+          channel: string
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          parts: Json | null
+          role: string
+          twilio_sid: string | null
+        }
+        Insert: {
+          channel: string
+          content?: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          parts?: Json | null
+          role: string
+          twilio_sid?: string | null
+        }
+        Update: {
+          channel?: string
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          parts?: Json | null
+          role?: string
+          twilio_sid?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sierra_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "sierra_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sierra_owners: {
+        Row: {
+          created_at: string
+          id: string
+          is_admin: boolean
+          label: string | null
+          phone_e164: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_admin?: boolean
+          label?: string | null
+          phone_e164: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_admin?: boolean
+          label?: string | null
+          phone_e164?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      sierra_reminders: {
+        Row: {
+          body: string
+          created_at: string
+          due_at: string
+          error: string | null
+          id: string
+          owner_user_id: string
+          phone_e164: string
+          sent_at: string | null
+          status: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          due_at: string
+          error?: string | null
+          id?: string
+          owner_user_id: string
+          phone_e164: string
+          sent_at?: string | null
+          status?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          due_at?: string
+          error?: string | null
+          id?: string
+          owner_user_id?: string
+          phone_e164?: string
+          sent_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      sierra_settings: {
+        Row: {
+          created_at: string
+          system_prompt: string
+          twilio_phone_e164: string | null
+          updated_at: string
+          user_id: string
+          voice: string
+        }
+        Insert: {
+          created_at?: string
+          system_prompt?: string
+          twilio_phone_e164?: string | null
+          updated_at?: string
+          user_id: string
+          voice?: string
+        }
+        Update: {
+          created_at?: string
+          system_prompt?: string
+          twilio_phone_e164?: string | null
+          updated_at?: string
+          user_id?: string
+          voice?: string
+        }
+        Relationships: []
+      }
       social_accounts: {
         Row: {
           access_token_encrypted: string | null
