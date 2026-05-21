@@ -1,9 +1,9 @@
-import { decryptToken } from "../crypto";
+import { decryptTokenFromDb } from "../crypto";
 
 export async function publishInstagram(opts: {
   body: string;
   mediaUrls: string[];
-  accessTokenCipher: Buffer | Uint8Array;
+  accessTokenCipher: string;
   igUserId: string;
 }): Promise<{
   ok: boolean;
@@ -12,7 +12,7 @@ export async function publishInstagram(opts: {
   error?: string;
 }> {
   try {
-    const token = decryptToken(opts.accessTokenCipher);
+    const token = decryptTokenFromDb(opts.accessTokenCipher);
 
     if (!opts.mediaUrls.length) {
       return {
