@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { encryptToken, verifyState } from "@/lib/social/crypto";
+import { encryptTokenToDb, verifyState } from "@/lib/social/crypto";
 
 const PUBLIC_URL = "https://lexusnexuscapital.lovable.app";
 
@@ -126,7 +126,7 @@ export const Route = createFileRoute("/api/public/social/oauth/$platform/callbac
               platform: "instagram" as const,
               handle,
               platform_account_id: igId,
-              access_token_encrypted: encryptToken(page.access_token),
+              access_token_encrypted: encryptTokenToDb(page.access_token),
               expires_at: expiresAt.toISOString(),
               active: true,
             };

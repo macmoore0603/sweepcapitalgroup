@@ -4,7 +4,7 @@ import { publishInstagram } from "./instagram";
 export type PublishInput = {
   body: string;
   mediaUrls: string[];
-  accessTokenCipher: Buffer | Uint8Array | null;
+  accessTokenCipher: string | null;
   platformAccountId: string | null;
 };
 

@@ -33,6 +33,21 @@ export function decryptToken(buf: Buffer | Uint8Array): string {
   return Buffer.concat([decipher.update(enc), decipher.final()]).toString("utf8");
 }
 
+// PostgREST round-trips bytea as a hex string (`\x...`). Use these wrappers
+// so callers can stay string-typed end to end.
+export function encryptTokenToDb(plain: string): string {
+  return "\\x" + encryptToken(plain).toString("hex");
+}
+
+export function decryptTokenFromDb(stored: string | Uint8Array | null | undefined): string {
+  if (!stored) throw new Error("no token stored");
+  if (typeof stored === "string") {
+    const hex = stored.startsWith("\\x") ? stored.slice(2) : stored;
+    return decryptToken(Buffer.from(hex, "hex"));
+  }
+  return decryptToken(stored);
+}
+
 export function signState(payload: Record<string, unknown>): string {
   const k = process.env.SOCIAL_TOKEN_KEY;
   if (!k) throw new Error("SOCIAL_TOKEN_KEY missing");
