@@ -422,9 +422,8 @@ function Index() {
             <span>© 2026 Lexus Nexus Capital Group — Atlanta, GA</span>
           </div>
           <div className="flex gap-6">
-            <a href="#" className="hover:text-foreground">Risk Disclosure</a>
-            <a href="#" className="hover:text-foreground">Terms</a>
-            <a href="#" className="hover:text-foreground">Privacy</a>
+            <Link to="/terms" className="hover:text-foreground transition-colors">Terms</Link>
+            <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
           </div>
         </div>
       </footer>

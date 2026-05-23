@@ -10,6 +10,8 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as MentorshipRouteImport } from './routes/mentorship'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LeadershipRouteImport } from './routes/leadership'
@@ -33,6 +35,16 @@ import { Route as ApiPublicSocialOauthPlatformCallbackRouteImport } from './rout
 const UnsubscribeRoute = UnsubscribeRouteImport.update({
   id: '/unsubscribe',
   path: '/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MentorshipRoute = MentorshipRouteImport.update({
@@ -145,6 +157,8 @@ export interface FileRoutesByFullPath {
   '/leadership': typeof LeadershipRoute
   '/login': typeof LoginRoute
   '/mentorship': typeof MentorshipRoute
+  '/privacy': typeof PrivacyRoute
+  '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/api/health': typeof ApiHealthRoute
   '/checkout/return': typeof CheckoutReturnRoute
@@ -167,6 +181,8 @@ export interface FileRoutesByTo {
   '/leadership': typeof LeadershipRoute
   '/login': typeof LoginRoute
   '/mentorship': typeof MentorshipRoute
+  '/privacy': typeof PrivacyRoute
+  '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/api/health': typeof ApiHealthRoute
   '/checkout/return': typeof CheckoutReturnRoute
@@ -190,6 +206,8 @@ export interface FileRoutesById {
   '/leadership': typeof LeadershipRoute
   '/login': typeof LoginRoute
   '/mentorship': typeof MentorshipRoute
+  '/privacy': typeof PrivacyRoute
+  '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/api/health': typeof ApiHealthRoute
   '/checkout/return': typeof CheckoutReturnRoute
@@ -214,6 +232,8 @@ export interface FileRouteTypes {
     | '/leadership'
     | '/login'
     | '/mentorship'
+    | '/privacy'
+    | '/terms'
     | '/unsubscribe'
     | '/api/health'
     | '/checkout/return'
@@ -236,6 +256,8 @@ export interface FileRouteTypes {
     | '/leadership'
     | '/login'
     | '/mentorship'
+    | '/privacy'
+    | '/terms'
     | '/unsubscribe'
     | '/api/health'
     | '/checkout/return'
@@ -258,6 +280,8 @@ export interface FileRouteTypes {
     | '/leadership'
     | '/login'
     | '/mentorship'
+    | '/privacy'
+    | '/terms'
     | '/unsubscribe'
     | '/api/health'
     | '/checkout/return'
@@ -281,6 +305,8 @@ export interface RootRouteChildren {
   LeadershipRoute: typeof LeadershipRoute
   LoginRoute: typeof LoginRoute
   MentorshipRoute: typeof MentorshipRoute
+  PrivacyRoute: typeof PrivacyRoute
+  TermsRoute: typeof TermsRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   ApiHealthRoute: typeof ApiHealthRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
@@ -302,6 +328,20 @@ declare module '@tanstack/react-router' {
       path: '/unsubscribe'
       fullPath: '/unsubscribe'
       preLoaderRoute: typeof UnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mentorship': {
@@ -449,6 +489,8 @@ const rootRouteChildren: RootRouteChildren = {
   LeadershipRoute: LeadershipRoute,
   LoginRoute: LoginRoute,
   MentorshipRoute: MentorshipRoute,
+  PrivacyRoute: PrivacyRoute,
+  TermsRoute: TermsRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   ApiHealthRoute: ApiHealthRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
@@ -466,13 +508,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
