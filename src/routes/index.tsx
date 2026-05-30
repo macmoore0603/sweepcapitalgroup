@@ -4,12 +4,15 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import methodologyImg from "../assets/methodology.jpg";
 import heroBg from "../assets/hero-bg.jpg";
 import logo from "../assets/lnc-logo.png";
 import macMoore from "../assets/mac-moore.png";
 import { CallScheduler, SchedulingConfirmation } from "@/components/booking";
+import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
+import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 
 export const Route = createFileRoute("/")({
   component: Index,
