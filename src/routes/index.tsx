@@ -25,6 +25,8 @@ const leadSchema = z.object({
 });
 
 function Index() {
+  const [checkoutPriceId, setCheckoutPriceId] = useState<string | null>(null);
+  const [checkoutTitle, setCheckoutTitle] = useState<string>("");
   return (
     <div className="min-h-screen bg-background text-foreground font-sans selection:bg-accent selection:text-background">
       {/* Navigation */}
