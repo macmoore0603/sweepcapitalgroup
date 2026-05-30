@@ -178,7 +178,7 @@ function Index() {
               </span>
             </h2>
             <p className="max-w-xs font-mono text-[11px] text-muted-foreground uppercase leading-relaxed">
-              Selection is based on capital size, experience, and commitment to the Lexus Nexus protocol.
+              All one-time payment. The most affordable mentorship on the market.
             </p>
           </div>
 
