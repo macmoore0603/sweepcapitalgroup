@@ -178,37 +178,50 @@ function Index() {
               </span>
             </h2>
             <p className="max-w-xs font-mono text-[11px] text-muted-foreground uppercase leading-relaxed">
-              Selection is based on capital size, experience, and commitment to the Lexus Nexus protocol.
+              All one-time payment. The most affordable mentorship on the market.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-px bg-border">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-border">
             {[
               {
                 num: "01",
-                tag: "Entry Pool",
-                title: "Foundation",
-                desc: "Eight weeks of intensive technical training focusing on high-probability order flow and risk mitigation.",
-                features: ["Live Stream Access", "Technical Playbook", "Bi-weekly Review"],
-                cta: "Apply for Q3",
+                tag: "Self-Paced",
+                title: "The Course",
+                price: "$500",
+                desc: "Full self-paced curriculum. Learn the framework, setups, and risk rules at your own speed.",
+                features: ["Complete course access", "Lifetime updates", "Private student community"],
+                cta: "Get the Course",
                 featured: false,
               },
               {
                 num: "02",
-                tag: "Institutional",
-                title: "Elite Syndicate",
-                desc: "Direct mentorship under senior partners. Real-time trade co-execution and institutional liquidity access.",
-                features: ["Daily Live Trading", "Psychological Coaching", "1-on-1 Strategy Tuning"],
-                cta: "Limited Availability",
+                tag: "Most Popular",
+                title: "Course + Coaching",
+                price: "$1,500",
+                desc: "Everything in the course plus step-by-step personal guidance until you're profitable.",
+                features: ["Everything in The Course", "1:1 step-by-step walkthroughs", "Direct messaging access", "Coaching until profitable"],
+                cta: "Get Coaching",
                 featured: true,
               },
               {
                 num: "03",
-                tag: "Hedge Access",
-                title: "Capital Alpha",
-                desc: "Proprietary desk funding. Full firm backing for traders managing $1M+ portfolios. Revenue share model.",
-                features: ["Firm Funding ($250k+)", "Advanced Quant Tools", "Desk-to-Trader Pipeline"],
-                cta: "Inquire",
+                tag: "Managed",
+                title: "Managed Trading",
+                price: "$500",
+                desc: "I trade for you. Guaranteed $2,000 minimum profit in a 3–4 week window.",
+                features: ["Hands-off account trading", "Guaranteed $2k minimum", "3–4 week window", "Weekly performance updates"],
+                cta: "Go Managed",
+                featured: false,
+              },
+              {
+                num: "04",
+                tag: "Best Value",
+                title: "All-Inclusive",
+                price: "$2,000",
+                desc: "Course + coaching + managed trading. The complete package. One-time payment.",
+                features: ["Full course access", "Step-by-step coaching", "Managed trading ($2k guarantee)", "Highest priority access"],
+                cta: "Get Everything",
                 featured: false,
               },
             ].map((tier) => (
@@ -226,7 +239,11 @@ function Index() {
                     {tier.tag}
                   </span>
                 </div>
-                <h3 className="text-2xl font-extrabold uppercase tracking-tight">{tier.title}</h3>
+                <div className="flex flex-col gap-1">
+                  <h3 className="text-2xl font-extrabold uppercase tracking-tight">{tier.title}</h3>
+                  <span className="text-3xl font-extrabold tracking-tighter text-accent">{tier.price}</span>
+                  <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">One-time payment</span>
+                </div>
                 <p className="text-muted-foreground text-sm leading-relaxed">{tier.desc}</p>
                 <ul className="mt-auto flex flex-col gap-4 font-mono text-[10px] uppercase tracking-wide text-muted-foreground">
                   {tier.features.map((f) => (
@@ -235,14 +252,14 @@ function Index() {
                     </li>
                   ))}
                 </ul>
-                <a
-                  href="#apply"
+                <Link
+                  to="/mentorship"
                   className={`w-full py-4 text-center text-[11px] font-extrabold uppercase tracking-widest transition-colors ${
                     tier.featured ? "bg-foreground text-background" : "border border-border hover:bg-white/5"
                   }`}
                 >
                   {tier.cta}
-                </a>
+                </Link>
               </article>
             ))}
           </div>
