@@ -194,6 +194,7 @@ function Index() {
                 tag: "Self-Paced",
                 title: "The Course",
                 price: "$500",
+                priceId: "mentorship_course_onetime",
                 desc: "Full self-paced curriculum. Learn the framework, setups, and risk rules at your own speed.",
                 features: ["Complete course access", "Lifetime updates", "Private student community"],
                 cta: "Get the Course",
@@ -204,6 +205,7 @@ function Index() {
                 tag: "Most Popular",
                 title: "Course + Coaching",
                 price: "$1,500",
+                priceId: "mentorship_course_coaching_onetime",
                 desc: "Everything in the course plus step-by-step personal guidance until you're profitable.",
                 features: ["Everything in The Course", "1:1 step-by-step walkthroughs", "Direct messaging access", "Coaching until profitable"],
                 cta: "Get Coaching",
@@ -214,6 +216,7 @@ function Index() {
                 tag: "Managed",
                 title: "Managed Trading",
                 price: "$500",
+                priceId: "mentorship_managed_onetime",
                 desc: "I trade for you. Guaranteed $2,000 minimum profit in a 3–4 week window.",
                 features: ["Hands-off account trading", "Guaranteed $2k minimum", "3–4 week window", "Weekly performance updates"],
                 cta: "Go Managed",
@@ -224,6 +227,7 @@ function Index() {
                 tag: "Best Value",
                 title: "All-Inclusive",
                 price: "$2,000",
+                priceId: "mentorship_all_inclusive_onetime",
                 desc: "Course + coaching + managed trading. The complete package. One-time payment.",
                 features: ["Full course access", "Step-by-step coaching", "Managed trading ($2k guarantee)", "Highest priority access"],
                 cta: "Get Everything",
@@ -257,19 +261,38 @@ function Index() {
                     </li>
                   ))}
                 </ul>
-                <Link
-                  to="/mentorship"
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCheckoutTitle(tier.title);
+                    setCheckoutPriceId(tier.priceId);
+                  }}
                   className={`w-full py-4 text-center text-[11px] font-extrabold uppercase tracking-widest transition-colors ${
-                    tier.featured ? "bg-foreground text-background" : "border border-border hover:bg-white/5"
+                    tier.featured ? "bg-foreground text-background hover:bg-accent" : "border border-border hover:bg-white/5"
                   }`}
                 >
                   {tier.cta}
-                </Link>
+                </button>
               </article>
             ))}
           </div>
         </div>
       </section>
+
+      <Dialog open={!!checkoutPriceId} onOpenChange={(o) => !o && setCheckoutPriceId(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0">
+          <DialogHeader className="px-6 pt-6">
+            <DialogTitle className="text-xl font-extrabold uppercase tracking-tight">
+              Checkout — {checkoutTitle}
+            </DialogTitle>
+          </DialogHeader>
+          <PaymentTestModeBanner />
+          <div className="p-2">
+            {checkoutPriceId && <StripeEmbeddedCheckout priceId={checkoutPriceId} />}
+          </div>
+        </DialogContent>
+      </Dialog>
+
 
       {/* Methodology */}
       <section id="methodology" className="px-6 md:px-10 py-24 md:py-32 bg-white/[0.03]">
