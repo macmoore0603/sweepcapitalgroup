@@ -214,12 +214,12 @@ function Index() {
               {
                 num: "03",
                 tag: "Done-For-You",
-                title: "Mac Trades For You",
+                title: "Managed by Mac",
                 price: "$500",
                 priceId: "mentorship_managed_onetime",
-                desc: "Sit back while I trade your account. Guaranteed $2,000 minimum profit in a 3–4 week window — or your money back, no questions asked.",
-                features: ["Fully managed account", "Guaranteed $2k minimum profit", "3–4 week window", "Weekly performance updates"],
-                cta: "Have Mac Trade For Me",
+                desc: "I personally manage and trade your account on your behalf. Guaranteed $2,000 minimum profit in a 3–4 week window — or your money back, no questions asked.",
+                features: ["I trade your account for you", "Guaranteed $2k minimum profit", "3–4 week performance window", "Weekly transparent updates", "Money-back guarantee"],
+                cta: "Let Mac Manage It",
                 featured: false,
               },
               {
