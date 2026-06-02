@@ -126,7 +126,7 @@ function LeadershipPage() {
                   {leader.image ? (
                     <img
                       src={leader.image}
-                      alt={leader.name}
+                      alt={`Portrait of ${leader.name}, ${leader.title} of Lexus Nexus Capital Group`}
                       width={800}
                       height={1000}
                       loading="lazy"
