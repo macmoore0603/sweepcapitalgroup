@@ -6,8 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: "Admin Sign In — Lexus Nexus Capital Group" },
-      { name: "description", content: "Admin sign in for the Lexus Nexus lead management dashboard." },
+      { title: "Admin Sign In — Momentum Trading" },
+      { name: "description", content: "Admin sign in for the Momentum lead management dashboard." },
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),
@@ -41,7 +41,7 @@ function LoginPage() {
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <header className="px-6 md:px-10 py-6 border-b border-border">
         <Link to="/" className="font-extrabold tracking-tighter text-xl uppercase">
-          Lexus Nexus
+          Momentum
         </Link>
       </header>
       <main className="flex-1 grid place-items-center px-6 py-16">
