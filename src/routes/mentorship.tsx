@@ -10,13 +10,13 @@ import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 export const Route = createFileRoute("/mentorship")({
   head: () => ({
     meta: [
-      { title: "Mentorship — Momentum Trading" },
+      { title: "Mentorship — Momentum Capital Group" },
       {
         name: "description",
         content:
-          "Four one-time mentorship options from Momentum Trading. Course, full step-by-step coaching, managed trading, or the complete package — the most affordable on the market.",
+          "Four one-time mentorship options from Momentum Capital Group. Course, full step-by-step coaching, managed trading, or the complete package — the most affordable on the market.",
       },
-      { property: "og:title", content: "Mentorship — Momentum Trading" },
+      { property: "og:title", content: "Mentorship — Momentum Capital Group" },
       {
         property: "og:description",
         content:
@@ -200,7 +200,7 @@ export default function MentorshipPage() {
       {/* Nav */}
       <nav className="sticky top-0 z-50 flex items-center justify-between px-6 md:px-10 py-5 bg-background/80 backdrop-blur-md border-b border-border">
         <Link to="/" className="flex items-center gap-3">
-          <img src={logo} alt="Momentum Trading logo" width={32} height={32} className="h-8 w-8 object-contain" />
+          <img src={logo} alt="Momentum Capital Group logo" width={32} height={32} className="h-8 w-8 object-contain" />
           <span className="font-extrabold tracking-tighter text-xl uppercase">Momentum</span>
           <span className="hidden sm:inline font-mono text-[10px] text-accent border border-accent/40 px-1.5 py-0.5">
             CAPITAL GROUP
@@ -401,8 +401,8 @@ export default function MentorshipPage() {
       <footer className="px-6 md:px-10 py-10 border-t border-border">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
           <div className="flex items-center gap-3">
-            <img src={logo} alt="Momentum Trading logo" width={24} height={24} className="h-6 w-6 object-contain opacity-60" />
-            <span>© 2026 Momentum Trading — Atlanta, GA</span>
+            <img src={logo} alt="Momentum Capital Group logo" width={24} height={24} className="h-6 w-6 object-contain opacity-60" />
+            <span>© 2026 Momentum Capital Group — Atlanta, GA</span>
           </div>
           <span>Mac Moore — Founder, Owner &amp; CEO</span>
         </div>

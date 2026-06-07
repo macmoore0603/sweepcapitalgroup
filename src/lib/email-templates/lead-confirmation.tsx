@@ -11,7 +11,7 @@ import {
 } from '@react-email/components'
 import type { TemplateEntry } from './registry'
 
-const SITE_NAME = 'Momentum Trading'
+const SITE_NAME = 'Momentum Capital Group'
 
 interface LeadConfirmationProps {
   name?: string

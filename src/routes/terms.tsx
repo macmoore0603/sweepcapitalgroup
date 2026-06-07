@@ -4,10 +4,10 @@ import logo from "../assets/lnc-logo.png";
 export const Route = createFileRoute("/terms")({
   head: () => ({
     meta: [
-      { title: "Terms & Conditions — Momentum Trading" },
-      { name: "description", content: "Terms and Conditions for Momentum Trading and Sierra messaging services." },
-      { property: "og:title", content: "Terms & Conditions — Momentum Trading" },
-      { property: "og:description", content: "Terms and Conditions for Momentum Trading and Sierra messaging services." },
+      { title: "Terms & Conditions — Momentum Capital Group" },
+      { name: "description", content: "Terms and Conditions for Momentum Capital Group and Sierra messaging services." },
+      { property: "og:title", content: "Terms & Conditions — Momentum Capital Group" },
+      { property: "og:description", content: "Terms and Conditions for Momentum Capital Group and Sierra messaging services." },
       { name: "robots", content: "index, follow" },
     ],
   }),
@@ -20,7 +20,7 @@ function TermsPage() {
       {/* Header */}
       <header className="sticky top-0 z-50 flex items-center justify-between px-6 md:px-10 py-5 bg-background/80 backdrop-blur-md border-b border-border">
         <Link to="/" className="flex items-center gap-3">
-          <img src={logo} alt="Momentum Trading logo" width={32} height={32} className="h-8 w-8 object-contain" />
+          <img src={logo} alt="Momentum Capital Group logo" width={32} height={32} className="h-8 w-8 object-contain" />
           <span className="font-extrabold tracking-tighter text-xl uppercase">Momentum</span>
         </Link>
         <span className="font-mono text-[10px] text-accent border border-accent/40 px-1.5 py-0.5 uppercase tracking-widest">
@@ -40,7 +40,7 @@ function TermsPage() {
         <div className="space-y-16">
           <Section title="Agreement to Terms">
             <p>
-              These Terms and Conditions (“Terms”, “Agreement”) constitute a legally binding agreement between you (“User”, “you”, or “your”) and Momentum Trading (“Momentum”, “we”, “us”, or “our”) regarding your access to and use of our website, applications, AI assistant Sierra, and all related services (collectively, the “Services”).
+              These Terms and Conditions (“Terms”, “Agreement”) constitute a legally binding agreement between you (“User”, “you”, or “your”) and Momentum Capital Group (“Momentum”, “we”, “us”, or “our”) regarding your access to and use of our website, applications, AI assistant Sierra, and all related services (collectively, the “Services”).
             </p>
             <p>
               By accessing or using our Services, you agree to be bound by these Terms. If you do not agree to all of the Terms, you may not access or use the Services.
@@ -48,7 +48,7 @@ function TermsPage() {
           </Section>
 
           <Section title="Description of Services">
-            <p>Momentum Trading provides the following:</p>
+            <p>Momentum Capital Group provides the following:</p>
             <ul className="list-disc pl-5 space-y-2 mt-3">
               <li>Institutional-grade trading mentorship and education programs.</li>
               <li>Capital allocation and proprietary desk funding for qualified traders.</li>
@@ -100,7 +100,7 @@ function TermsPage() {
 
           <Section title="Intellectual Property">
             <p>
-              All content, trademarks, logos, software, and materials available through our Services are the property of Momentum Trading or its licensors and are protected by copyright, trademark, and other intellectual property laws. You may not reproduce, distribute, modify, or create derivative works without our express written permission.
+              All content, trademarks, logos, software, and materials available through our Services are the property of Momentum Capital Group or its licensors and are protected by copyright, trademark, and other intellectual property laws. You may not reproduce, distribute, modify, or create derivative works without our express written permission.
             </p>
             <p>
               You retain ownership of any content you submit to Sierra or through our Services. By submitting content, you grant us a limited, non-exclusive license to use, store, and process that content solely for the purpose of providing the Services.
@@ -118,7 +118,7 @@ function TermsPage() {
 
           <Section title="Limitation of Liability">
             <p>
-              TO THE MAXIMUM EXTENT PERMITTED BY LAW, MOMENTUM TRADING, ITS OFFICERS, DIRECTORS, EMPLOYEES, AND AFFILIATES SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING LOSS OF PROFITS, DATA, OR GOODWILL, ARISING OUT OF OR RELATING TO YOUR USE OF OR INABILITY TO USE THE SERVICES.
+              TO THE MAXIMUM EXTENT PERMITTED BY LAW, MOMENTUM CAPITAL GROUP, ITS OFFICERS, DIRECTORS, EMPLOYEES, AND AFFILIATES SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING LOSS OF PROFITS, DATA, OR GOODWILL, ARISING OUT OF OR RELATING TO YOUR USE OF OR INABILITY TO USE THE SERVICES.
             </p>
             <p>
               Our total cumulative liability to you for any claim arising from these Terms or the Services shall not exceed the greater of (a) the amount you paid us in the twelve (12) months preceding the claim, or (b) one hundred U.S. dollars ($100).
@@ -127,7 +127,7 @@ function TermsPage() {
 
           <Section title="Indemnification">
             <p>
-              You agree to indemnify, defend, and hold harmless Momentum Trading and its officers, directors, employees, and agents from any claims, damages, losses, liabilities, costs, and expenses (including reasonable attorneys' fees) arising out of or relating to your use of the Services, violation of these Terms, or infringement of any third-party right.
+              You agree to indemnify, defend, and hold harmless Momentum Capital Group and its officers, directors, employees, and agents from any claims, damages, losses, liabilities, costs, and expenses (including reasonable attorneys' fees) arising out of or relating to your use of the Services, violation of these Terms, or infringement of any third-party right.
             </p>
           </Section>
 
@@ -157,7 +157,7 @@ function TermsPage() {
 
           <Section title="Entire Agreement">
             <p>
-              These Terms, together with our Privacy Policy and any other policies referenced herein, constitute the entire agreement between you and Momentum Trading regarding the Services and supersede all prior agreements, understandings, and communications.
+              These Terms, together with our Privacy Policy and any other policies referenced herein, constitute the entire agreement between you and Momentum Capital Group regarding the Services and supersede all prior agreements, understandings, and communications.
             </p>
           </Section>
 
@@ -166,7 +166,7 @@ function TermsPage() {
               If you have any questions about these Terms, please contact us:
             </p>
             <div className="mt-4 space-y-2 font-mono text-sm">
-              <p><strong>Momentum Trading</strong></p>
+              <p><strong>Momentum Capital Group</strong></p>
               <p>1131 Oaklake Terrace</p>
               <p>Watkinsville, GA 30677</p>
               <p>Email: <a href="mailto:mac@momentumcapitalgroup.com" className="text-accent hover:underline">mac@momentumcapitalgroup.com</a></p>
@@ -180,8 +180,8 @@ function TermsPage() {
       <footer className="px-6 md:px-10 py-10 border-t border-border">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
           <div className="flex items-center gap-3">
-            <img src={logo} alt="Momentum Trading logo" width={24} height={24} className="h-6 w-6 object-contain opacity-60" />
-            <span>© 2026 Momentum Trading — Atlanta, GA</span>
+            <img src={logo} alt="Momentum Capital Group logo" width={24} height={24} className="h-6 w-6 object-contain opacity-60" />
+            <span>© 2026 Momentum Capital Group — Atlanta, GA</span>
           </div>
           <div className="flex gap-6">
             <Link to="/terms" className="hover:text-foreground transition-colors">Terms</Link>

@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: "Admin Sign In — Momentum Trading" },
+      { title: "Admin Sign In — Momentum Capital Group" },
       { name: "description", content: "Admin sign in for the Momentum lead management dashboard." },
       { name: "robots", content: "noindex, nofollow" },
     ],

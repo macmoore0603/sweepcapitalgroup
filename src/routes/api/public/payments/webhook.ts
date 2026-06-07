@@ -5,7 +5,7 @@ import { createElement } from 'react'
 import { type StripeEnv, createStripeClient, verifyWebhook } from '@/lib/stripe.server'
 import { TEMPLATES } from '@/lib/email-templates/registry'
 
-const SITE_NAME = 'Momentum Trading'
+const SITE_NAME = 'Momentum Capital Group'
 const SENDER_DOMAIN = 'notify.momentumcapitalgroup.com'
 const FROM_DOMAIN = 'notify.momentumcapitalgroup.com'
 

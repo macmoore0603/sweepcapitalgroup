@@ -4,13 +4,13 @@ import logo from "../assets/lnc-logo.png";
 export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
-      { title: "About — Momentum Trading" },
+      { title: "About — Momentum Capital Group" },
       {
         name: "description",
         content:
-          "Momentum Trading is a private trading mentorship based in Atlanta, Georgia, owned and led by founder Mac Moore.",
+          "Momentum Capital Group is a private trading mentorship based in Atlanta, Georgia, owned and led by founder Mac Moore.",
       },
-      { property: "og:title", content: "About — Momentum Trading" },
+      { property: "og:title", content: "About — Momentum Capital Group" },
       {
         property: "og:description",
         content:
@@ -27,7 +27,7 @@ function AboutPage() {
       {/* Navigation */}
       <nav className="sticky top-0 z-50 flex items-center justify-between px-6 md:px-10 py-5 bg-background/80 backdrop-blur-md border-b border-border">
         <Link to="/" className="flex items-center gap-3">
-          <img src={logo} alt="Momentum Trading logo" width={32} height={32} className="h-8 w-8 object-contain" />
+          <img src={logo} alt="Momentum Capital Group logo" width={32} height={32} className="h-8 w-8 object-contain" />
           <span className="font-extrabold tracking-tighter text-xl uppercase">Momentum</span>
           <span className="hidden sm:inline font-mono text-[10px] text-accent border border-accent/40 px-1.5 py-0.5">
             CAPITAL GROUP
@@ -55,7 +55,7 @@ function AboutPage() {
             </span>
           </h1>
           <p className="max-w-[60ch] text-base md:text-lg text-muted-foreground text-pretty">
-            Momentum Trading is a private trading mentorship and capital allocation practice
+            Momentum Capital Group is a private trading mentorship and capital allocation practice
             headquartered in Atlanta, Georgia. We are founded, owned, and personally led by Mac Moore.
           </p>
         </div>
@@ -86,7 +86,7 @@ function AboutPage() {
           <div className="flex flex-col gap-6">
             <h2 className="text-3xl md:text-4xl font-extrabold tracking-tighter uppercase">Who we are</h2>
             <p className="text-muted-foreground text-base md:text-lg leading-relaxed text-pretty">
-              Momentum Trading operates out of Atlanta, Georgia as a deliberately small,
+              Momentum Capital Group operates out of Atlanta, Georgia as a deliberately small,
               relationship-driven trading practice. We are not a fund-of-funds, not a course, and not a
               signals service. We are a private office where serious capital allocators are mentored
               one cohort at a time.
@@ -127,8 +127,8 @@ function AboutPage() {
       <footer className="px-6 md:px-10 py-10 border-t border-border">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
           <div className="flex items-center gap-3">
-            <img src={logo} alt="Momentum Trading logo" width={24} height={24} className="h-6 w-6 object-contain opacity-60" />
-            <span>© 2026 Momentum Trading — Atlanta, GA</span>
+            <img src={logo} alt="Momentum Capital Group logo" width={24} height={24} className="h-6 w-6 object-contain opacity-60" />
+            <span>© 2026 Momentum Capital Group — Atlanta, GA</span>
           </div>
           <span>Mac Moore — Founder, Owner &amp; CEO</span>
         </div>
