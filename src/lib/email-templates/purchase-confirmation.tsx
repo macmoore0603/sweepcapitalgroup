@@ -10,7 +10,7 @@ import {
 } from '@react-email/components'
 import type { TemplateEntry } from './registry'
 
-const SITE_NAME = 'Lexus Nexus Capital Group'
+const SITE_NAME = 'Momentum Trading'
 
 interface PurchaseConfirmationProps {
   name?: string

@@ -5,9 +5,9 @@ import { createElement } from 'react'
 import { type StripeEnv, createStripeClient, verifyWebhook } from '@/lib/stripe.server'
 import { TEMPLATES } from '@/lib/email-templates/registry'
 
-const SITE_NAME = 'Lexus Nexus Capital Group'
-const SENDER_DOMAIN = 'notify.lexusnexuscapital.com'
-const FROM_DOMAIN = 'notify.lexusnexuscapital.com'
+const SITE_NAME = 'Momentum Trading'
+const SENDER_DOMAIN = 'notify.momentumtrading.co'
+const FROM_DOMAIN = 'notify.momentumtrading.co'
 
 function generateToken(): string {
   const bytes = new Uint8Array(32)

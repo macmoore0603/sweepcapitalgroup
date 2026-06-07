@@ -4,10 +4,10 @@ import logo from "../assets/lnc-logo.png";
 export const Route = createFileRoute("/privacy")({
   head: () => ({
     meta: [
-      { title: "Privacy Policy — Lexus Nexus Capital Group" },
-      { name: "description", content: "Privacy Policy for Lexus Nexus Capital Group and Sierra messaging services." },
-      { property: "og:title", content: "Privacy Policy — Lexus Nexus Capital Group" },
-      { property: "og:description", content: "Privacy Policy for Lexus Nexus Capital Group and Sierra messaging services." },
+      { title: "Privacy Policy — Momentum Trading" },
+      { name: "description", content: "Privacy Policy for Momentum Trading and Sierra messaging services." },
+      { property: "og:title", content: "Privacy Policy — Momentum Trading" },
+      { property: "og:description", content: "Privacy Policy for Momentum Trading and Sierra messaging services." },
       { name: "robots", content: "index, follow" },
     ],
   }),
@@ -20,8 +20,8 @@ function PrivacyPage() {
       {/* Header */}
       <header className="sticky top-0 z-50 flex items-center justify-between px-6 md:px-10 py-5 bg-background/80 backdrop-blur-md border-b border-border">
         <Link to="/" className="flex items-center gap-3">
-          <img src={logo} alt="Lexus Nexus Capital Group logo" width={32} height={32} className="h-8 w-8 object-contain" />
-          <span className="font-extrabold tracking-tighter text-xl uppercase">Lexus Nexus</span>
+          <img src={logo} alt="Momentum Trading logo" width={32} height={32} className="h-8 w-8 object-contain" />
+          <span className="font-extrabold tracking-tighter text-xl uppercase">Momentum</span>
         </Link>
         <span className="font-mono text-[10px] text-accent border border-accent/40 px-1.5 py-0.5 uppercase tracking-widest">
           Privacy Policy
@@ -40,7 +40,7 @@ function PrivacyPage() {
         <div className="space-y-16">
           <Section title="Introduction">
             <p>
-              Lexus Nexus Capital Group (“Lexus Nexus”, “we”, “us”, or “our”) respects your privacy and is committed to protecting your personal data. This Privacy Policy explains how we collect, use, store, and protect information when you use our website, services, or communicate with Sierra, our AI assistant via SMS, voice, or other messaging channels.
+              Momentum Trading (“Momentum”, “we”, “us”, or “our”) respects your privacy and is committed to protecting your personal data. This Privacy Policy explains how we collect, use, store, and protect information when you use our website, services, or communicate with Sierra, our AI assistant via SMS, voice, or other messaging channels.
             </p>
             <p>
               By accessing or using our services, you consent to the practices described in this Privacy Policy. If you do not agree with any part of this policy, please do not use our services.
@@ -148,10 +148,10 @@ function PrivacyPage() {
               If you have any questions, concerns, or requests regarding this Privacy Policy or your personal data, please contact us:
             </p>
             <div className="mt-4 space-y-2 font-mono text-sm">
-              <p><strong>Lexus Nexus Capital Group</strong></p>
+              <p><strong>Momentum Trading</strong></p>
               <p>1131 Oaklake Terrace</p>
               <p>Watkinsville, GA 30677</p>
-              <p>Email: <a href="mailto:mac@lexusnexuscapital.com" className="text-accent hover:underline">mac@lexusnexuscapital.com</a></p>
+              <p>Email: <a href="mailto:mac@momentumtrading.co" className="text-accent hover:underline">mac@momentumtrading.co</a></p>
               <p>Phone: <a href="tel:+14782978388" className="text-accent hover:underline">(478) 297-8388</a></p>
             </div>
           </Section>
@@ -162,8 +162,8 @@ function PrivacyPage() {
       <footer className="px-6 md:px-10 py-10 border-t border-border">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
           <div className="flex items-center gap-3">
-            <img src={logo} alt="Lexus Nexus Capital Group logo" width={24} height={24} className="h-6 w-6 object-contain opacity-60" />
-            <span>© 2026 Lexus Nexus Capital Group — Atlanta, GA</span>
+            <img src={logo} alt="Momentum Trading logo" width={24} height={24} className="h-6 w-6 object-contain opacity-60" />
+            <span>© 2026 Momentum Trading — Atlanta, GA</span>
           </div>
           <div className="flex gap-6">
             <Link to="/terms" className="hover:text-foreground transition-colors">Terms</Link>

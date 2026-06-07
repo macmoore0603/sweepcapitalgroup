@@ -11,7 +11,7 @@ import {
 } from '@react-email/components'
 import type { TemplateEntry } from './registry'
 
-const SITE_NAME = 'Lexus Nexus Capital Group'
+const SITE_NAME = 'Momentum Trading'
 
 interface LeadConfirmationProps {
   name?: string
@@ -93,7 +93,7 @@ export const template = {
   previewData: {
     name: 'Jane Doe',
     tier: 'Course + Coaching — $1,500',
-    bookingUrl: 'https://lexusnexuscapital.com/book?lead=preview&token=preview',
+    bookingUrl: 'https://momentumtrading.co/book?lead=preview&token=preview',
   },
 } satisfies TemplateEntry
 

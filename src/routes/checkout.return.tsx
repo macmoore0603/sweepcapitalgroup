@@ -12,7 +12,7 @@ export const Route = createFileRoute("/checkout/return")({
   }),
   component: CheckoutReturn,
   head: () => ({
-    meta: [{ title: "Order status — Lexus Nexus Capital" }],
+    meta: [{ title: "Order status — Momentum Trading" }],
   }),
 });
 

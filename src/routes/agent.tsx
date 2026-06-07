@@ -23,7 +23,7 @@ import { PLATFORMS, PLATFORM_LABEL, MIN_POSTS_PER_DAY, type Platform } from "@/l
 export const Route = createFileRoute("/agent")({
   head: () => ({
     meta: [
-      { title: "Social Agent — Lexus Nexus Capital Group" },
+      { title: "Social Agent — Momentum Trading" },
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),
@@ -97,7 +97,7 @@ function Dashboard() {
     <div className="min-h-screen bg-background text-foreground">
       <header className="border-b border-border px-6 md:px-10 py-5 flex items-center justify-between">
         <Link to="/" className="font-extrabold tracking-tighter text-xl uppercase">
-          Lexus Nexus · Social Agent
+          Momentum · Social Agent
         </Link>
         <span className="font-mono text-[11px] text-muted-foreground uppercase tracking-[0.3em]">
           ≥{MIN_POSTS_PER_DAY} posts / day enforced
