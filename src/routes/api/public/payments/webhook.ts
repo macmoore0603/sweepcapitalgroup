@@ -6,8 +6,8 @@ import { type StripeEnv, createStripeClient, verifyWebhook } from '@/lib/stripe.
 import { TEMPLATES } from '@/lib/email-templates/registry'
 
 const SITE_NAME = 'Momentum Trading'
-const SENDER_DOMAIN = 'notify.momentumtrading.co'
-const FROM_DOMAIN = 'notify.momentumtrading.co'
+const SENDER_DOMAIN = 'notify.momentumcapitalgroup.com'
+const FROM_DOMAIN = 'notify.momentumcapitalgroup.com'
 
 function generateToken(): string {
   const bytes = new Uint8Array(32)

@@ -6,8 +6,8 @@ import { z } from 'zod'
 import { TEMPLATES } from '@/lib/email-templates/registry'
 
 const SITE_NAME = 'Momentum Trading'
-const SENDER_DOMAIN = 'notify.momentumtrading.co'
-const FROM_DOMAIN = 'notify.momentumtrading.co'
+const SENDER_DOMAIN = 'notify.momentumcapitalgroup.com'
+const FROM_DOMAIN = 'notify.momentumcapitalgroup.com'
 
 const optionalStr = (max: number) =>
   z.string().trim().max(max).optional().transform((v) => (v && v.length > 0 ? v : undefined))

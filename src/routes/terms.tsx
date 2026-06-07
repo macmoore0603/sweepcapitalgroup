@@ -169,7 +169,7 @@ function TermsPage() {
               <p><strong>Momentum Trading</strong></p>
               <p>1131 Oaklake Terrace</p>
               <p>Watkinsville, GA 30677</p>
-              <p>Email: <a href="mailto:mac@momentumtrading.co" className="text-accent hover:underline">mac@momentumtrading.co</a></p>
+              <p>Email: <a href="mailto:mac@momentumcapitalgroup.com" className="text-accent hover:underline">mac@momentumcapitalgroup.com</a></p>
               <p>Phone: <a href="tel:+14782978388" className="text-accent hover:underline">(478) 297-8388</a></p>
             </div>
           </Section>
