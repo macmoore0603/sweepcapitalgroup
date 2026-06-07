@@ -318,18 +318,18 @@ function Index() {
               {[
                 {
                   n: "01",
-                  title: "Liquidity Hunting",
-                  desc: "Trading against the herd. We identify institutional traps and position ourselves alongside primary liquidity providers.",
+                  title: "Session Sweep",
+                  desc: "We map prior session highs and lows, wait for liquidity to be taken, and enter on the reversal — trading where institutions are forced to fill, not where retail expects price to go.",
                 },
                 {
                   n: "02",
-                  title: "Volatility Arbitrage",
-                  desc: "Harnessing delta-neutral strategies to capitalize on market inefficiencies during high-impact news cycles.",
+                  title: "5–15 Gap",
+                  desc: "A precision entry model on the 5- and 15-minute timeframes. We isolate the displacement gap left behind by aggressive orderflow and execute on the retest with defined risk.",
                 },
                 {
                   n: "03",
-                  title: "Stoic Execution",
-                  desc: "Removing the biological error. Our traders operate on a rule-based framework that eliminates emotional variance.",
+                  title: "Power of 3",
+                  desc: "Accumulation, manipulation, distribution. Every session follows the same three-phase footprint — once you can read it, entries become mechanical and exits become obvious.",
                 },
               ].map((m) => (
                 <div key={m.n} className="flex gap-6">
