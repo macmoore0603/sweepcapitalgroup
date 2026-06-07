@@ -133,8 +133,8 @@ function Index() {
               EDGE.
             </h1>
             <p className="max-w-[54ch] text-base md:text-lg text-muted-foreground text-pretty mt-4">
-              An institutional-grade mentorship for serious capital allocators. We do not promise wealth; we provide
-              the mathematical framework and psychological rigor required to extract it from the market.
+              Strategies. Risk Management. Real Results. Build skill. Trade smart. Create freedom — through three
+              repeatable institutional setups: the Session Sweep, the 5–15 Gap, and the Power of 3.
             </p>
             <div className="flex flex-wrap gap-4 mt-8">
               <a href="#apply" className="px-7 md:px-8 py-4 bg-foreground text-background font-extrabold text-sm uppercase tracking-widest hover:bg-accent transition-colors">
