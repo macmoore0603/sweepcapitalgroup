@@ -107,11 +107,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:site", content: "@MomentumTrading" },
       { name: "twitter:title", content: "Momentum Trading — Institutional Trading" },
       { name: "twitter:description", content: "Private, institutional-grade day trading mentorship and capital allocation for serious investors. Discipline is the only edge." },
-      { property: "og:image", content: "https://momentumtrading.co/og-card.jpg" },
+      { property: "og:image", content: "https://momentumcapitalgroup.com/og-card.jpg" },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
       { property: "og:image:alt", content: "Momentum Trading — Success is the only edge." },
-      { name: "twitter:image", content: "https://momentumtrading.co/og-card.jpg" },
+      { name: "twitter:image", content: "https://momentumcapitalgroup.com/og-card.jpg" },
       { name: "twitter:image:alt", content: "Momentum Trading — Success is the only edge." },
     ],
     links: [

@@ -93,7 +93,7 @@ export const template = {
   previewData: {
     name: 'Jane Doe',
     tier: 'Course + Coaching — $1,500',
-    bookingUrl: 'https://momentumtrading.co/book?lead=preview&token=preview',
+    bookingUrl: 'https://momentumcapitalgroup.com/book?lead=preview&token=preview',
   },
 } satisfies TemplateEntry
 
