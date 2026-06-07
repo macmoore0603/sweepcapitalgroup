@@ -161,7 +161,7 @@ export const autofillDay = createServerFn({ method: "POST" })
       data: {
         goal:
           data.goalHint ??
-          `Educational post for Momentum Trading about disciplined trading, capital preservation, or the mentorship program. Pick a fresh angle.`,
+          `Educational post for Momentum Capital Group about disciplined trading, capital preservation, or the mentorship program. Pick a fresh angle.`,
         platforms: [account.platform as Platform],
       },
     });

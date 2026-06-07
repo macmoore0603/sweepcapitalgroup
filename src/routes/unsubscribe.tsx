@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 
 export const Route = createFileRoute('/unsubscribe')({
   component: UnsubscribePage,
-  head: () => ({ meta: [{ title: 'Unsubscribe — Momentum Trading' }] }),
+  head: () => ({ meta: [{ title: 'Unsubscribe — Momentum Capital Group' }] }),
 })
 
 type State =
@@ -74,7 +74,7 @@ function UnsubscribePage() {
           <>
             <p className="text-sm text-muted-foreground mb-6">
               Click below to confirm you want to stop receiving emails from
-              Momentum Trading.
+              Momentum Capital Group.
             </p>
             <button
               onClick={confirm}

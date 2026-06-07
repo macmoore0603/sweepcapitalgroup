@@ -21,7 +21,7 @@ const STATUS_LABEL: Record<LeadStatus, string> = {
 export const Route = createFileRoute("/admin")({
   head: () => ({
     meta: [
-      { title: "Lead Dashboard — Momentum Trading" },
+      { title: "Lead Dashboard — Momentum Capital Group" },
       { name: "description", content: "Internal lead management dashboard." },
       { name: "robots", content: "noindex, nofollow" },
     ],
@@ -502,18 +502,18 @@ function LeadRow({
       year: "numeric",
     });
     const timeLine = slot.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
-    const subject = `Your Momentum Trading intake call — ${dateLine}`;
+    const subject = `Your Momentum Capital Group intake call — ${dateLine}`;
     const body = [
       `${lead.full_name},`,
       "",
-      `Confirming your introductory call with Momentum Trading.`,
+      `Confirming your introductory call with Momentum Capital Group.`,
       "",
       `Date:  ${dateLine}`,
       `Time:  ${timeLine} (${Intl.DateTimeFormat().resolvedOptions().timeZone})`,
       "",
       `A secure dial-in link will follow shortly. Reply to this email if you need to reschedule.`,
       "",
-      `— Momentum Trading`,
+      `— Momentum Capital Group`,
     ].join("\n");
     window.location.href = `mailto:${encodeURIComponent(lead.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     onMarkConfirmed();

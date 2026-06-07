@@ -23,7 +23,7 @@ import { PLATFORMS, PLATFORM_LABEL, MIN_POSTS_PER_DAY, type Platform } from "@/l
 export const Route = createFileRoute("/agent")({
   head: () => ({
     meta: [
-      { title: "Social Agent — Momentum Trading" },
+      { title: "Social Agent — Momentum Capital Group" },
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),
