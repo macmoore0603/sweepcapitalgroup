@@ -104,7 +104,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:description", content: "Private, institutional-grade day trading mentorship and capital allocation for serious investors. Discipline is the only edge." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@MomentumCapitalGroup" },
+      { name: "twitter:site", content: "@SweepCapitalGroup" },
       { name: "twitter:title", content: "Sweep Capital Group — Institutional Trading" },
       { name: "twitter:description", content: "Private, institutional-grade day trading mentorship and capital allocation for serious investors. Discipline is the only edge." },
       { property: "og:image", content: "https://sweepcapitalgroup.com/og-card.jpg" },
