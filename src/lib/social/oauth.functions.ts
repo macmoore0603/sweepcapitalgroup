@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { signState } from "./crypto";
 
-const PUBLIC_URL = "https://lexusnexuscapital.lovable.app";
+const PUBLIC_URL = "https://sweepcapitalgroup.lovable.app";
 
 export const getOAuthStartUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

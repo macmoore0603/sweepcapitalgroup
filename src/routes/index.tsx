@@ -8,7 +8,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { supabase } from "@/integrations/supabase/client";
 import methodologyImg from "../assets/methodology.jpg";
 import heroBg from "../assets/hero-bg.jpg";
-import logo from "../assets/lnc-logo.png";
+import logoAsset from "../assets/scg-logo.png.asset.json";
+const logo = logoAsset.url;
 import macMoore from "../assets/mac-moore.png";
 import { CallScheduler, SchedulingConfirmation } from "@/components/booking";
 import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";

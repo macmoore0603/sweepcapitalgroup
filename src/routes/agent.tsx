@@ -300,7 +300,7 @@ function AccountsPanel({
           <input
             value={handle}
             onChange={(e) => setHandle(e.target.value)}
-            placeholder="lexusnexuscapital"
+            placeholder="sweepcapitalgroup"
             className="w-full bg-background border border-border rounded px-2 py-2 text-sm"
           />
         </label>

@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import logo from "../assets/lnc-logo.png";
+import logoAsset from "../assets/scg-logo.png.asset.json";
+const logo = logoAsset.url;
 import macMoore from "../assets/mac-moore.png";
 
 export const Route = createFileRoute("/leadership")({
