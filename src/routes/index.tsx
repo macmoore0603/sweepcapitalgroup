@@ -417,7 +417,7 @@ function Index() {
               <div className="pt-8 flex flex-col gap-3 font-mono text-[10px] text-muted-foreground tracking-widest">
                 <span>ATLANTA, GEORGIA</span>
                 <span>MAC MOORE — FOUNDER &amp; OWNER</span>
-                <span>EST. MMXXIV — MOMENTUM</span>
+                <span>EST. MMXXIV — SWEEP</span>
               </div>
             </div>
             <ApplicationForm />
