@@ -21,7 +21,7 @@ const STATUS_LABEL: Record<LeadStatus, string> = {
 export const Route = createFileRoute("/admin")({
   head: () => ({
     meta: [
-      { title: "Lead Dashboard — Momentum Capital Group" },
+      { title: "Lead Dashboard — Sweep Capital Group" },
       { name: "description", content: "Internal lead management dashboard." },
       { name: "robots", content: "noindex, nofollow" },
     ],
@@ -244,7 +244,7 @@ function AdminPage() {
       <header className="px-6 md:px-10 py-5 border-b border-border flex items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <Link to="/" className="font-extrabold tracking-tighter text-lg uppercase">
-            Momentum
+            Sweep
           </Link>
           <span className="font-mono text-[10px] text-accent border border-accent/40 px-1.5 py-0.5 uppercase tracking-widest">
             Lead Dashboard
@@ -502,18 +502,18 @@ function LeadRow({
       year: "numeric",
     });
     const timeLine = slot.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
-    const subject = `Your Momentum Capital Group intake call — ${dateLine}`;
+    const subject = `Your Sweep Capital Group intake call — ${dateLine}`;
     const body = [
       `${lead.full_name},`,
       "",
-      `Confirming your introductory call with Momentum Capital Group.`,
+      `Confirming your introductory call with Sweep Capital Group.`,
       "",
       `Date:  ${dateLine}`,
       `Time:  ${timeLine} (${Intl.DateTimeFormat().resolvedOptions().timeZone})`,
       "",
       `A secure dial-in link will follow shortly. Reply to this email if you need to reschedule.`,
       "",
-      `— Momentum Capital Group`,
+      `— Sweep Capital Group`,
     ].join("\n");
     window.location.href = `mailto:${encodeURIComponent(lead.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     onMarkConfirmed();

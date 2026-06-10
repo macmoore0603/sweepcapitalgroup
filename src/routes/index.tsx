@@ -32,8 +32,8 @@ function Index() {
       {/* Navigation */}
       <nav className="sticky top-0 z-50 flex items-center justify-between px-6 md:px-10 py-5 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="flex items-center gap-3">
-          <img src={logo} alt="Momentum Capital Group logo" width={32} height={32} className="h-8 w-8 object-contain" />
-          <span className="font-extrabold tracking-tighter text-xl uppercase">Momentum</span>
+          <img src={logo} alt="Sweep Capital Group logo" width={32} height={32} className="h-8 w-8 object-contain" />
+          <span className="font-extrabold tracking-tighter text-xl uppercase">Sweep</span>
           <span className="hidden sm:inline font-mono text-[10px] text-accent border border-accent/40 px-1.5 py-0.5">
             CAPITAL GROUP
           </span>
@@ -62,7 +62,7 @@ function Index() {
             <SheetContent side="right" className="bg-background border-border w-[280px] sm:w-[340px]">
               <SheetHeader>
                 <SheetTitle className="font-extrabold tracking-tighter text-xl uppercase text-left">
-                  Momentum
+                  Sweep
                 </SheetTitle>
               </SheetHeader>
               <nav className="flex flex-col mt-8 font-mono text-xs uppercase tracking-widest">
@@ -353,7 +353,7 @@ function Index() {
             <div className="aspect-[4/5] w-full bg-gradient-to-br from-accent/30 via-muted to-background border border-border overflow-hidden">
               <img
                 src={macMoore}
-                alt="Mac Moore — Founder of Momentum Capital Group"
+                alt="Mac Moore — Founder of Sweep Capital Group"
                 width={800}
                 height={1000}
                 loading="lazy"
@@ -373,7 +373,7 @@ function Index() {
             </h2>
             <p className="text-muted-foreground text-base md:text-lg leading-relaxed text-pretty">
               Three years behind the screens of institutional desks taught Mac one lesson worth repeating:
-              the market does not reward intelligence — it rewards success. He founded Momentum Capital Group
+              the market does not reward intelligence — it rewards success. He founded Sweep Capital Group
               Group in Atlanta to compress that lesson into a deliberate, repeatable framework for the
               traders he chooses to mentor.
             </p>
@@ -410,7 +410,7 @@ function Index() {
                 </span>
               </h2>
               <p className="text-muted-foreground text-sm font-mono uppercase leading-relaxed tracking-wider">
-                Momentum Capital Group accepts a maximum of twelve mentees per quarter. This ensures the integrity
+                Sweep Capital Group accepts a maximum of twelve mentees per quarter. This ensures the integrity
                 of our instruction and the quality of our network.
               </p>
               <div className="pt-8 flex flex-col gap-3 font-mono text-[10px] text-muted-foreground tracking-widest">
@@ -444,7 +444,7 @@ function Index() {
             <div className="flex flex-col gap-2">
               <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Mailing Address</span>
               <address className="not-italic text-foreground leading-relaxed">
-                Momentum Capital Group<br />
+                Sweep Capital Group<br />
                 1131 Oaklake Terrace<br />
                 Watkinsville, GA 30677
               </address>
@@ -463,8 +463,8 @@ function Index() {
       <footer className="px-6 md:px-10 py-10 border-t border-border">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
           <div className="flex items-center gap-3">
-            <img src={logo} alt="Momentum Capital Group logo" width={24} height={24} className="h-6 w-6 object-contain opacity-60" />
-            <span>© 2026 Momentum Capital Group — Atlanta, GA</span>
+            <img src={logo} alt="Sweep Capital Group logo" width={24} height={24} className="h-6 w-6 object-contain opacity-60" />
+            <span>© 2026 Sweep Capital Group — Atlanta, GA</span>
           </div>
           <div className="flex gap-6">
             <Link to="/terms" className="hover:text-foreground transition-colors">Terms</Link>

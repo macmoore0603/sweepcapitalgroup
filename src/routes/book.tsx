@@ -11,7 +11,7 @@ export const Route = createFileRoute("/book")({
   component: BookPage,
   head: () => ({
     meta: [
-      { title: "Schedule your onboarding call — Momentum Capital Group" },
+      { title: "Schedule your onboarding call — Sweep Capital Group" },
       { name: "robots", content: "noindex,nofollow" },
     ],
   }),
@@ -79,8 +79,8 @@ function Shell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-background text-foreground font-sans">
       <nav className="flex items-center justify-between px-6 md:px-10 py-5 border-b border-border">
         <Link to="/" className="flex items-center gap-3">
-          <img src={logo} alt="Momentum Capital Group" width={32} height={32} className="h-8 w-8 object-contain" />
-          <span className="font-extrabold tracking-tighter text-xl uppercase">Momentum</span>
+          <img src={logo} alt="Sweep Capital Group" width={32} height={32} className="h-8 w-8 object-contain" />
+          <span className="font-extrabold tracking-tighter text-xl uppercase">Sweep</span>
         </Link>
       </nav>
       <main className="max-w-2xl mx-auto px-6 md:px-10 py-16 md:py-24">{children}</main>
