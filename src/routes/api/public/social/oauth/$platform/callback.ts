@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { encryptTokenToDb, verifyState } from "@/lib/social/crypto";
 
-const PUBLIC_URL = "https://lexusnexuscapital.lovable.app";
+const PUBLIC_URL = "https://sweepcapitalgroup.lovable.app";
 
 export const Route = createFileRoute("/api/public/social/oauth/$platform/callback")({
   server: {

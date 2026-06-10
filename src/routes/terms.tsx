@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import logo from "../assets/lnc-logo.png";
+import logoAsset from "../assets/scg-logo.png.asset.json";
+const logo = logoAsset.url;
 
 export const Route = createFileRoute("/terms")({
   head: () => ({
@@ -118,7 +119,7 @@ function TermsPage() {
 
           <Section title="Limitation of Liability">
             <p>
-              TO THE MAXIMUM EXTENT PERMITTED BY LAW, MOMENTUM CAPITAL GROUP, ITS OFFICERS, DIRECTORS, EMPLOYEES, AND AFFILIATES SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING LOSS OF PROFITS, DATA, OR GOODWILL, ARISING OUT OF OR RELATING TO YOUR USE OF OR INABILITY TO USE THE SERVICES.
+              TO THE MAXIMUM EXTENT PERMITTED BY LAW, SWEEP CAPITAL GROUP, ITS OFFICERS, DIRECTORS, EMPLOYEES, AND AFFILIATES SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING LOSS OF PROFITS, DATA, OR GOODWILL, ARISING OUT OF OR RELATING TO YOUR USE OF OR INABILITY TO USE THE SERVICES.
             </p>
             <p>
               Our total cumulative liability to you for any claim arising from these Terms or the Services shall not exceed the greater of (a) the amount you paid us in the twelve (12) months preceding the claim, or (b) one hundred U.S. dollars ($100).
