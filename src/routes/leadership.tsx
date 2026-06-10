@@ -5,17 +5,17 @@ import macMoore from "../assets/mac-moore.png";
 export const Route = createFileRoute("/leadership")({
   head: () => ({
     meta: [
-      { title: "Leadership — Momentum Capital Group" },
+      { title: "Leadership — Sweep Capital Group" },
       {
         name: "description",
         content:
-          "Meet the leadership of Momentum Capital Group: founder Mac Moore and partner Christopher Nguyen, leading a private trading practice from Atlanta, Georgia.",
+          "Meet the leadership of Sweep Capital Group: founder Mac Moore and partner Sam Teese, leading a private trading practice from Atlanta, Georgia.",
       },
-      { property: "og:title", content: "Leadership — Momentum Capital Group" },
+      { property: "og:title", content: "Leadership — Sweep Capital Group" },
       {
         property: "og:description",
         content:
-          "Founder Mac Moore and partner Christopher Nguyen lead a private trading mentorship out of Atlanta, Georgia.",
+          "Founder Mac Moore and partner Sam Teese lead a private trading mentorship out of Atlanta, Georgia.",
       },
     ],
   }),
@@ -40,7 +40,7 @@ const LEADERS: Leader[] = [
     location: "Atlanta, Georgia",
     image: macMoore,
     bio: [
-      "Three years on the desk taught Mac one lesson worth repeating: the market does not reward intelligence — it rewards discipline. He founded Momentum Capital Group in Atlanta to compress that lesson into a deliberate, repeatable framework for the traders he chooses to mentor.",
+      "Three years on the desk taught Mac one lesson worth repeating: the market does not reward intelligence — it rewards discipline. He founded Sweep Capital Group in Atlanta to compress that lesson into a deliberate, repeatable framework for the traders he chooses to mentor.",
       "Every mentee is selected personally, briefed personally, and held personally accountable to the same standards Mac runs his own book against.",
     ],
     stats: [
@@ -50,12 +50,12 @@ const LEADERS: Leader[] = [
     ],
   },
   {
-    name: "Christopher Nguyen",
+    name: "Sam Teese",
     title: "Co-Founder & Director of Asset Management",
     initials: "CN",
     location: "Atlanta, Georgia",
     bio: [
-      "Christopher co-founded Momentum Capital Group alongside Mac Moore, leading strategy design, risk architecture, and mentee selection. His focus is the quantitative underwriting of every position — building the rails that keep the firm's discipline measurable rather than theoretical.",
+      "Christopher co-founded Sweep Capital Group alongside Mac Moore, leading strategy design, risk architecture, and mentee selection. His focus is the quantitative underwriting of every position — building the rails that keep the firm's discipline measurable rather than theoretical.",
       "He works directly with each cohort on execution review and post-trade analysis, translating data into the next quarter's playbook.",
     ],
     stats: [
@@ -72,8 +72,8 @@ function LeadershipPage() {
       {/* Navigation */}
       <nav className="sticky top-0 z-50 flex items-center justify-between px-6 md:px-10 py-5 bg-background/80 backdrop-blur-md border-b border-border">
         <Link to="/" className="flex items-center gap-3">
-          <img src={logo} alt="Momentum Capital Group logo" width={32} height={32} className="h-8 w-8 object-contain" />
-          <span className="font-extrabold tracking-tighter text-xl uppercase">Momentum</span>
+          <img src={logo} alt="Sweep Capital Group logo" width={32} height={32} className="h-8 w-8 object-contain" />
+          <span className="font-extrabold tracking-tighter text-xl uppercase">Sweep</span>
           <span className="hidden sm:inline font-mono text-[10px] text-accent border border-accent/40 px-1.5 py-0.5">
             CAPITAL GROUP
           </span>
@@ -105,7 +105,7 @@ function LeadershipPage() {
             </span>
           </h1>
           <p className="max-w-[60ch] text-base md:text-lg text-muted-foreground text-pretty">
-            Momentum Capital Group is led by a deliberately small team out of Atlanta, Georgia. Every
+            Sweep Capital Group is led by a deliberately small team out of Atlanta, Georgia. Every
             mentee works directly with the people listed below — not a sales floor, not a junior analyst.
           </p>
         </div>
@@ -126,7 +126,7 @@ function LeadershipPage() {
                   {leader.image ? (
                     <img
                       src={leader.image}
-                      alt={`Portrait of ${leader.name}, ${leader.title} of Momentum Capital Group`}
+                      alt={`Portrait of ${leader.name}, ${leader.title} of Sweep Capital Group`}
                       width={800}
                       height={1000}
                       loading="lazy"
@@ -212,8 +212,8 @@ function LeadershipPage() {
       <footer className="px-6 md:px-10 py-10 border-t border-border">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
           <div className="flex items-center gap-3">
-            <img src={logo} alt="Momentum Capital Group logo" width={24} height={24} className="h-6 w-6 object-contain opacity-60" />
-            <span>© 2026 Momentum Capital Group — Atlanta, GA</span>
+            <img src={logo} alt="Sweep Capital Group logo" width={24} height={24} className="h-6 w-6 object-contain opacity-60" />
+            <span>© 2026 Sweep Capital Group — Atlanta, GA</span>
           </div>
           <span>Mac Moore — Founder, Owner &amp; CEO</span>
         </div>

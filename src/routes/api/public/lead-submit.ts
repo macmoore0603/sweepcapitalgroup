@@ -5,9 +5,9 @@ import { createElement } from 'react'
 import { z } from 'zod'
 import { TEMPLATES } from '@/lib/email-templates/registry'
 
-const SITE_NAME = 'Momentum Capital Group'
-const SENDER_DOMAIN = 'notify.momentumcapitalgroup.com'
-const FROM_DOMAIN = 'notify.momentumcapitalgroup.com'
+const SITE_NAME = 'Sweep Capital Group'
+const SENDER_DOMAIN = 'notify.sweepcapitalgroup.com'
+const FROM_DOMAIN = 'notify.sweepcapitalgroup.com'
 
 const optionalStr = (max: number) =>
   z.string().trim().max(max).optional().transform((v) => (v && v.length > 0 ? v : undefined))

@@ -5,9 +5,9 @@ import { createElement } from 'react'
 import { type StripeEnv, createStripeClient, verifyWebhook } from '@/lib/stripe.server'
 import { TEMPLATES } from '@/lib/email-templates/registry'
 
-const SITE_NAME = 'Momentum Capital Group'
-const SENDER_DOMAIN = 'notify.momentumcapitalgroup.com'
-const FROM_DOMAIN = 'notify.momentumcapitalgroup.com'
+const SITE_NAME = 'Sweep Capital Group'
+const SENDER_DOMAIN = 'notify.sweepcapitalgroup.com'
+const FROM_DOMAIN = 'notify.sweepcapitalgroup.com'
 
 function generateToken(): string {
   const bytes = new Uint8Array(32)
