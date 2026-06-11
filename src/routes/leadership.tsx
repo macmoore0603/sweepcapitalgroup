@@ -53,10 +53,10 @@ const LEADERS: Leader[] = [
   {
     name: "Sam Teese",
     title: "Co-Founder & Director of Asset Management",
-    initials: "CN",
+    initials: "ST",
     location: "Atlanta, Georgia",
     bio: [
-      "Christopher co-founded Sweep Capital Group alongside Mac Moore, leading strategy design, risk architecture, and mentee selection. His focus is the quantitative underwriting of every position — building the rails that keep the firm's discipline measurable rather than theoretical.",
+      "Sam co-founded Sweep Capital Group alongside Mac Moore, leading strategy design, risk architecture, and mentee selection. His focus is the quantitative underwriting of every position — building the rails that keep the firm's discipline measurable rather than theoretical.",
       "He works directly with each cohort on execution review and post-trade analysis, translating data into the next quarter's playbook.",
     ],
     stats: [

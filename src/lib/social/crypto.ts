@@ -7,6 +7,7 @@ import {
   createHmac,
   randomBytes,
   scryptSync,
+  timingSafeEqual,
 } from "crypto";
 
 function tokenKey(): Buffer {
@@ -62,7 +63,9 @@ export function verifyState<T = Record<string, unknown>>(token: string): T | nul
   const [body, sig] = token.split(".");
   if (!body || !sig) return null;
   const expected = createHmac("sha256", k).update(body).digest("base64url");
-  if (expected.length !== sig.length || expected !== sig) return null;
+  const expectedBuf = Buffer.from(expected, "ascii");
+  const sigBuf = Buffer.from(sig, "ascii");
+  if (expectedBuf.length !== sigBuf.length || !timingSafeEqual(expectedBuf, sigBuf)) return null;
   try {
     const parsed = JSON.parse(Buffer.from(body, "base64url").toString("utf8")) as {
       exp?: number;

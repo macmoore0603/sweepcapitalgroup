@@ -113,11 +113,26 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:image:alt", content: "Sweep Capital Group — Success is the only edge." },
       { name: "twitter:image", content: "https://sweepcapitalgroup.com/og-card.jpg" },
       { name: "twitter:image:alt", content: "Sweep Capital Group — Success is the only edge." },
+      { property: "og:site_name", content: "Sweep Capital Group" },
     ],
     links: [
       {
         rel: "stylesheet",
         href: appCss,
+      },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          name: "Sweep Capital Group",
+          url: "https://sweepcapitalgroup.com",
+          logo: "https://sweepcapitalgroup.com/og-card.jpg",
+          sameAs: ["https://twitter.com/SweepCapitalGroup"],
+          description: "Private, institutional-grade day trading mentorship and capital allocation for serious investors.",
+        }),
       },
     ],
   }),
