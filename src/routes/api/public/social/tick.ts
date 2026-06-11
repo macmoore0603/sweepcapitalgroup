@@ -10,7 +10,17 @@ import { MIN_POSTS_PER_DAY, type PostingWindow, type Platform } from "@/lib/soci
 export const Route = createFileRoute("/api/public/social/tick")({
   server: {
     handlers: {
-      POST: async () => {
+      POST: async ({ request }) => {
+        const expected = process.env.SUPABASE_SERVICE_ROLE_KEY;
+        const authHeader = request.headers.get("Authorization");
+        const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7).trim() : null;
+        if (!expected || !token || token !== expected) {
+          return new Response(JSON.stringify({ error: "Unauthorized" }), {
+            status: 401,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+
         const result = { claimed: 0, published: 0, failed: 0, topUpsCreated: 0 };
 
         // 1. Claim due posts
