@@ -1,0 +1,15 @@
+# Sweep Capital Group
+
+> Private, institutional-grade day trading mentorship and capital allocation for serious investors. Discipline is the only edge.
+
+Sweep Capital Group is a private trading firm based in Atlanta offering a structured mentorship cohort, post-trade review, and capital allocation for vetted operators.
+
+## Pages
+
+- [Home](/): Overview of the firm, philosophy, and how to apply.
+- [About](/about): Origin, principles, and how Sweep Capital Group operates.
+- [Leadership](/leadership): Co-founders Mac Moore and Sam Teese.
+- [Mentorship](/mentorship): Cohort structure, curriculum, and outcomes.
+- [Book a Call](/book): Schedule an intro conversation.
+- [Privacy](/privacy): Privacy policy.
+- [Terms](/terms): Terms of service.

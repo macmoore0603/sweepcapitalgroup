@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /login
+Disallow: /agent
+Disallow: /api/
+Disallow: /lovable/
+Disallow: /email/
+Disallow: /unsubscribe
+
+Sitemap: https://sweepcapitalgroup.com/sitemap.xml
