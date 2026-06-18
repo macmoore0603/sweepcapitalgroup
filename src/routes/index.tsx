@@ -446,8 +446,8 @@ function Index() {
               <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Mailing Address</span>
               <address className="not-italic text-foreground leading-relaxed">
                 Sweep Capital Group<br />
-                1131 Oaklake Terrace<br />
-                Watkinsville, GA 30677
+                947 Hank Aaron Dr SE<br />
+                Atlanta, GA 30315
               </address>
             </div>
             <div className="flex flex-col gap-2">
