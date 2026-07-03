@@ -44,6 +44,48 @@ export type Database = {
         }
         Relationships: []
       }
+      checkout_intents: {
+        Row: {
+          amount_cents: number | null
+          completed_at: string | null
+          created_at: string
+          currency: string | null
+          email: string | null
+          environment: string
+          id: string
+          product_name: string | null
+          recovery_sent_at: string | null
+          status: string
+          stripe_session_id: string
+        }
+        Insert: {
+          amount_cents?: number | null
+          completed_at?: string | null
+          created_at?: string
+          currency?: string | null
+          email?: string | null
+          environment: string
+          id?: string
+          product_name?: string | null
+          recovery_sent_at?: string | null
+          status?: string
+          stripe_session_id: string
+        }
+        Update: {
+          amount_cents?: number | null
+          completed_at?: string | null
+          created_at?: string
+          currency?: string | null
+          email?: string | null
+          environment?: string
+          id?: string
+          product_name?: string | null
+          recovery_sent_at?: string | null
+          status?: string
+          stripe_session_id?: string
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
@@ -194,6 +236,45 @@ export type Database = {
         }
         Relationships: []
       }
+      nurture_state: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          last_sent_at: string | null
+          lead_id: string | null
+          name: string | null
+          next_send_at: string
+          step: number
+          stopped: boolean
+          tier: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          last_sent_at?: string | null
+          lead_id?: string | null
+          name?: string | null
+          next_send_at?: string
+          step?: number
+          stopped?: boolean
+          tier?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          last_sent_at?: string | null
+          lead_id?: string | null
+          name?: string | null
+          next_send_at?: string
+          step?: number
+          stopped?: boolean
+          tier?: string | null
+        }
+        Relationships: []
+      }
       post_metrics: {
         Row: {
           comments: number
@@ -231,6 +312,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      revenue_events: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          currency: string
+          email: string | null
+          environment: string
+          id: string
+          product_name: string | null
+          stripe_session_id: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          currency?: string
+          email?: string | null
+          environment: string
+          id?: string
+          product_name?: string | null
+          stripe_session_id: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          currency?: string
+          email?: string | null
+          environment?: string
+          id?: string
+          product_name?: string | null
+          stripe_session_id?: string
+        }
+        Relationships: []
       }
       scheduled_posts: {
         Row: {

@@ -136,33 +136,75 @@ async function sendPurchaseConfirmation(session: any) {
   }
 }
 
+async function recordRevenue(session: any, env: StripeEnv) {
+  try {
+    const supabaseUrl = process.env.SUPABASE_URL
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!supabaseUrl || !supabaseServiceKey) return
+    const supabase: any = createClient(supabaseUrl, supabaseServiceKey)
+    const email = session?.customer_details?.email || session?.customer_email || null
+    const item = session?.line_items?.data?.[0]
+    await supabase.from('revenue_events').upsert({
+      stripe_session_id: session.id,
+      email,
+      amount_cents: session.amount_total ?? 0,
+      currency: session.currency ?? 'usd',
+      product_name: item?.description ?? null,
+      environment: env,
+    }, { onConflict: 'stripe_session_id' })
+    await supabase.from('checkout_intents')
+      .update({ status: 'completed', completed_at: new Date().toISOString() })
+      .eq('stripe_session_id', session.id)
+  } catch (e) { console.error('recordRevenue', e) }
+}
+
+async function recordIntent(session: any, env: StripeEnv) {
+  try {
+    const supabaseUrl = process.env.SUPABASE_URL
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!supabaseUrl || !supabaseServiceKey) return
+    const supabase: any = createClient(supabaseUrl, supabaseServiceKey)
+    const email = session?.customer_details?.email || session?.customer_email || null
+    const item = session?.line_items?.data?.[0]
+    await supabase.from('checkout_intents').upsert({
+      stripe_session_id: session.id,
+      email,
+      product_name: item?.description ?? null,
+      amount_cents: session.amount_total ?? null,
+      currency: session.currency ?? 'usd',
+      environment: env,
+      status: 'open',
+    }, { onConflict: 'stripe_session_id' })
+  } catch (e) { console.error('recordIntent', e) }
+}
+
 async function handleEvent(event: { type: string; data: { object: any } }, env: StripeEnv) {
   switch (event.type) {
     case 'checkout.session.completed':
     case 'checkout.session.async_payment_succeeded': {
       const session = event.data.object
       if (session.payment_status === 'paid' || session.payment_status === 'no_payment_required') {
+        let full = session
         if (!session.line_items?.data?.length) {
           try {
             const stripe = createStripeClient(env)
-            const full = await stripe.checkout.sessions.retrieve(session.id, {
-              expand: ['line_items'],
-            })
-            await sendPurchaseConfirmation(full)
-          } catch (e) {
-            console.error('Failed to expand session', e)
-            await sendPurchaseConfirmation(session)
-          }
-        } else {
-          await sendPurchaseConfirmation(session)
+            full = await stripe.checkout.sessions.retrieve(session.id, { expand: ['line_items'] })
+          } catch (e) { console.error('Failed to expand session', e) }
         }
+        await sendPurchaseConfirmation(full)
+        await recordRevenue(full, env)
       }
+      break
+    }
+    case 'checkout.session.expired': {
+      await recordIntent(event.data.object, env)
       break
     }
     default:
       console.log('Unhandled webhook event:', event.type)
   }
 }
+
 
 export const Route = createFileRoute('/api/public/payments/webhook')({
   server: {

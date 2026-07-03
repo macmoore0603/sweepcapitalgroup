@@ -18,6 +18,7 @@ import {
   quotaToday,
 } from "@/lib/social/posts.functions";
 import { getOAuthStartUrl } from "@/lib/social/oauth.functions";
+import { getRevenueSummary } from "@/lib/revenue.functions";
 import { PLATFORMS, PLATFORM_LABEL, MIN_POSTS_PER_DAY, type Platform } from "@/lib/social/types";
 
 export const Route = createFileRoute("/agent")({
@@ -105,6 +106,7 @@ function Dashboard() {
       </header>
 
       <main className="px-6 md:px-10 py-10 space-y-12 max-w-6xl mx-auto">
+        <RevenuePanel />
         <QuotaPanel quota={quotaQuery.data?.accounts ?? []} loading={quotaQuery.isLoading} />
         <AccountsPanel
           accounts={accountsQuery.data?.accounts ?? []}
@@ -124,6 +126,47 @@ function Dashboard() {
           onChange={() => qc.invalidateQueries({ queryKey: ["social"] })}
         />
       </main>
+    </div>
+  );
+}
+
+function RevenuePanel() {
+  const fetchSummary = useServerFn(getRevenueSummary);
+  const q = useQuery({ queryKey: ["revenue", "summary"], queryFn: () => fetchSummary(), refetchInterval: 60_000 });
+  const d = q.data;
+  const fmt = (c: number) => `$${(c / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+  const pct = d ? Math.min(100, Math.round((d.monthCents / d.targetCents) * 100)) : 0;
+  const pacePct = d ? Math.round((d.paceCents / d.targetCents) * 100) : 0;
+  return (
+    <section className="space-y-4 border border-border rounded-lg p-6 bg-card">
+      <div className="flex items-baseline justify-between">
+        <h2 className="text-lg font-semibold">Revenue Agent · Month-to-date</h2>
+        <span className="font-mono text-[11px] text-muted-foreground uppercase tracking-[0.3em]">Target {d ? fmt(d.targetCents) : "$10,000"}/mo</span>
+      </div>
+      {q.isLoading || !d ? <p className="text-sm text-muted-foreground">Loading…</p> : (
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <Stat label="MTD revenue" value={fmt(d.monthCents)} sub={`${d.salesCount} sale${d.salesCount === 1 ? "" : "s"}`} />
+            <Stat label="Pace" value={fmt(d.paceCents)} sub={`${pacePct}% of target`} />
+            <Stat label="Open checkouts" value={String(d.openIntents)} sub="chased in <1h" />
+            <Stat label="Active nurture" value={String(d.activeNurture)} sub="in email drip" />
+          </div>
+          <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+            <div className="h-full bg-primary" style={{ width: `${pct}%` }} />
+          </div>
+          <p className="text-xs text-muted-foreground">Auto: abandoned-cart recovery, 3-step nurture drip, social auto-fill. Runs every 15 min.</p>
+        </>
+      )}
+    </section>
+  );
+}
+
+function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
+  return (
+    <div className="border border-border rounded p-3">
+      <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</div>
+      <div className="text-xl font-semibold mt-1">{value}</div>
+      {sub && <div className="text-[11px] text-muted-foreground mt-0.5">{sub}</div>}
     </div>
   );
 }
