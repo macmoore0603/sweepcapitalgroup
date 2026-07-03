@@ -170,6 +170,8 @@ function Stat({ label, value, sub }: { label: string; value: string; sub?: strin
     </div>
   );
 }
+
+type QuotaRow = {
   id: string;
   platform: string;
   handle: string;
