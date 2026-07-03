@@ -11,8 +11,15 @@ export interface TemplateEntry {
 
 import { template as leadConfirmation } from './lead-confirmation'
 import { template as purchaseConfirmation } from './purchase-confirmation'
+import { template as abandonedCheckout } from './abandoned-checkout'
+import { template as nurtureDay3 } from './nurture-day3'
+import { template as nurtureDay7 } from './nurture-day7'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'lead-confirmation': leadConfirmation,
   'purchase-confirmation': purchaseConfirmation,
+  'abandoned-checkout': abandonedCheckout,
+  'nurture-day3': nurtureDay3,
+  'nurture-day7': nurtureDay7,
 }
+
