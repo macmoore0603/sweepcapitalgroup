@@ -181,6 +181,17 @@ export const Route = createFileRoute('/api/public/lead-submit')({
           return Response.json({ success: true, email_sent: false })
         }
 
+        // 6. Seed nurture drip (first follow-up in 3 days)
+        try {
+          await supabase.from('nurture_state').upsert({
+            email: normalizedEmail,
+            name: full_name,
+            tier,
+            step: 0,
+            next_send_at: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+          }, { onConflict: 'email' })
+        } catch (e) { console.error('nurture seed', e) }
+
         return Response.json({ success: true, email_sent: true })
       },
     },

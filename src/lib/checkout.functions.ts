@@ -32,8 +32,28 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       ui_mode: "embedded_page",
       return_url: data.returnUrl,
       managed_payments: { enabled: true },
+      expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
       ...(data.customerEmail && { customer_email: data.customerEmail }),
     } as any);
+
+    // Fire-and-forget: record intent so Revenue Agent can chase abandons
+    try {
+      const url = process.env.SUPABASE_URL;
+      const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      if (url && key) {
+        const { createClient } = await import("@supabase/supabase-js");
+        const sb: any = createClient(url, key);
+        await sb.from("checkout_intents").upsert({
+          stripe_session_id: session.id,
+          email: data.customerEmail ?? null,
+          product_name: (stripePrice as any).nickname ?? data.priceId,
+          amount_cents: stripePrice.unit_amount ?? null,
+          currency: stripePrice.currency,
+          environment: data.environment,
+          status: "open",
+        }, { onConflict: "stripe_session_id" });
+      }
+    } catch (e) { console.error("intent seed", e); }
 
     return session.client_secret;
   });
