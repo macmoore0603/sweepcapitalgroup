@@ -18,7 +18,7 @@ import {
   quotaToday,
 } from "@/lib/social/posts.functions";
 import { getOAuthStartUrl } from "@/lib/social/oauth.functions";
-import { getRevenueSummary } from "@/lib/revenue.functions";
+import { getRevenueSummary, getRevenueSettings, updateRevenueSettings } from "@/lib/revenue.functions";
 import { PLATFORMS, PLATFORM_LABEL, MIN_POSTS_PER_DAY, type Platform } from "@/lib/social/types";
 
 export const Route = createFileRoute("/agent")({
