@@ -346,6 +346,30 @@ export type Database = {
         }
         Relationships: []
       }
+      revenue_settings: {
+        Row: {
+          id: number
+          nurture_day_offsets: Json
+          recovery_window_minutes: number
+          target_cents: number
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          nurture_day_offsets?: Json
+          recovery_window_minutes?: number
+          target_cents?: number
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          nurture_day_offsets?: Json
+          recovery_window_minutes?: number
+          target_cents?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       scheduled_posts: {
         Row: {
           account_id: string
