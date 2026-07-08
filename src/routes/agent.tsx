@@ -163,6 +163,101 @@ function RevenuePanel() {
   );
 }
 
+function SettingsPanel() {
+  const qc = useQueryClient();
+  const fetchSettings = useServerFn(getRevenueSettings);
+  const saveSettings = useServerFn(updateRevenueSettings);
+  const q = useQuery({ queryKey: ["revenue", "settings"], queryFn: () => fetchSettings() });
+
+  const [targetDollars, setTargetDollars] = useState("");
+  const [offsetsStr, setOffsetsStr] = useState("");
+  const [recoveryMin, setRecoveryMin] = useState("");
+
+  useEffect(() => {
+    if (!q.data) return;
+    setTargetDollars(String(Math.round(q.data.target_cents / 100)));
+    setOffsetsStr(q.data.nurture_day_offsets.join(", "));
+    setRecoveryMin(String(q.data.recovery_window_minutes));
+  }, [q.data]);
+
+  const save = useMutation({
+    mutationFn: () => {
+      const offsets = offsetsStr
+        .split(/[,\s]+/)
+        .map((s) => parseInt(s, 10))
+        .filter((n) => Number.isFinite(n) && n >= 1);
+      const target = Math.round(parseFloat(targetDollars || "0") * 100);
+      const recovery = parseInt(recoveryMin, 10);
+      if (!Number.isFinite(target) || target < 100_000) throw new Error("Target must be at least $1,000");
+      if (offsets.length < 1 || offsets.length > 2) throw new Error("Enter 1 or 2 nurture day offsets (we have templates for day 3 & day 7)");
+      if (!Number.isFinite(recovery) || recovery < 5) throw new Error("Recovery window must be ≥ 5 minutes");
+      return saveSettings({ data: { target_cents: target, nurture_day_offsets: offsets, recovery_window_minutes: recovery } });
+    },
+    onSuccess: () => {
+      toast.success("Settings saved");
+      qc.invalidateQueries({ queryKey: ["revenue"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Save failed"),
+  });
+
+  return (
+    <section className="space-y-4 border border-border rounded-lg p-6 bg-card">
+      <div className="flex items-baseline justify-between">
+        <h2 className="text-lg font-semibold">Revenue Agent · Settings</h2>
+        <span className="font-mono text-[11px] text-muted-foreground uppercase tracking-[0.3em]">Admins only</span>
+      </div>
+      {q.isLoading ? (
+        <p className="text-sm text-muted-foreground">Loading…</p>
+      ) : (
+        <form
+          onSubmit={(e) => { e.preventDefault(); save.mutate(); }}
+          className="grid grid-cols-1 md:grid-cols-3 gap-4"
+        >
+          <label className="space-y-1">
+            <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Monthly target ($)</span>
+            <input
+              type="number" min={1000} step={100}
+              value={targetDollars}
+              onChange={(e) => setTargetDollars(e.target.value)}
+              className="w-full bg-background border border-border rounded px-2 py-2 text-sm"
+            />
+          </label>
+          <label className="space-y-1">
+            <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Nurture days (comma-sep)</span>
+            <input
+              value={offsetsStr}
+              onChange={(e) => setOffsetsStr(e.target.value)}
+              placeholder="3, 7"
+              className="w-full bg-background border border-border rounded px-2 py-2 text-sm"
+            />
+            <span className="text-[11px] text-muted-foreground">Days after signup for each drip email (max 2 — day-3 & day-7 templates).</span>
+          </label>
+          <label className="space-y-1">
+            <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Recovery window (min)</span>
+            <input
+              type="number" min={5} max={10080}
+              value={recoveryMin}
+              onChange={(e) => setRecoveryMin(e.target.value)}
+              className="w-full bg-background border border-border rounded px-2 py-2 text-sm"
+            />
+            <span className="text-[11px] text-muted-foreground">Wait this long after an abandoned Stripe session before emailing.</span>
+          </label>
+          <div className="md:col-span-3 flex justify-end">
+            <button
+              type="submit"
+              disabled={save.isPending}
+              className="bg-primary text-primary-foreground px-4 py-2 rounded text-sm font-medium disabled:opacity-50"
+            >
+              {save.isPending ? "Saving…" : "Save settings"}
+            </button>
+          </div>
+        </form>
+      )}
+    </section>
+  );
+}
+
+
 function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <div className="border border-border rounded p-3">
