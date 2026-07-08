@@ -2,10 +2,27 @@ import { createFileRoute } from '@tanstack/react-router'
 import { enqueueTemplateEmail, serverSupabase } from '@/lib/email/send.server'
 
 const SITE_URL = 'https://sweepcapitalgroup.com'
+const DEFAULT_OFFSETS = [3, 7]
+const DEFAULT_RECOVERY_MIN = 60
 
-async function processAbandoned() {
+async function loadSettings(supabase: any) {
+  const { data } = await supabase
+    .from('revenue_settings')
+    .select('nurture_day_offsets,recovery_window_minutes')
+    .eq('id', 1).maybeSingle()
+  const offsetsRaw = data?.nurture_day_offsets
+  const offsets = Array.isArray(offsetsRaw)
+    ? offsetsRaw.map((n: any) => Number(n)).filter((n) => Number.isFinite(n) && n > 0)
+    : DEFAULT_OFFSETS
+  return {
+    offsets: (offsets.length ? offsets : DEFAULT_OFFSETS).slice().sort((a, b) => a - b),
+    recoveryMin: data?.recovery_window_minutes ?? DEFAULT_RECOVERY_MIN,
+  }
+}
+
+async function processAbandoned(recoveryMin: number) {
   const supabase: any = serverSupabase()
-  const cutoff = new Date(Date.now() - 60 * 60 * 1000).toISOString()
+  const cutoff = new Date(Date.now() - recoveryMin * 60 * 1000).toISOString()
   const { data: intents } = await supabase
     .from('checkout_intents')
     .select('*')
@@ -31,24 +48,22 @@ async function processAbandoned() {
   return sent
 }
 
-async function processNurture() {
+async function processNurture(offsets: number[]) {
   const supabase: any = serverSupabase()
   const now = new Date().toISOString()
+  const maxStep = Math.min(offsets.length, 2) // we have templates for up to 2 nurture emails
   const { data: rows } = await supabase
     .from('nurture_state')
     .select('*')
     .eq('stopped', false)
     .lt('next_send_at', now)
-    .lt('step', 3)
+    .lt('step', maxStep + 1)
     .limit(25)
   let sent = 0
   for (const s of rows ?? []) {
     const nextStep = s.step + 1
-    let template: string | null = null
-    let nextDays = 0
-    if (nextStep === 1) { template = 'nurture-day3'; nextDays = 4 }
-    else if (nextStep === 2) { template = 'nurture-day7'; nextDays = 30 }
-    else { template = null }
+    const templates = ['nurture-day3', 'nurture-day7']
+    const template = nextStep <= maxStep ? templates[nextStep - 1] : null
     if (template) {
       const r = await enqueueTemplateEmail({
         templateName: template,
@@ -59,15 +74,18 @@ async function processNurture() {
       })
       if ((r as any).queued) sent++
     }
+    const nextOffset = offsets[nextStep] ?? 0 // days until step after next
+    const gapDays = nextOffset > 0 ? Math.max(1, nextOffset - (offsets[nextStep - 1] ?? 0)) : 0
     await supabase.from('nurture_state').update({
       step: nextStep,
       last_sent_at: now,
-      next_send_at: new Date(Date.now() + nextDays * 24 * 60 * 60 * 1000).toISOString(),
-      stopped: nextStep >= 3,
+      next_send_at: new Date(Date.now() + gapDays * 24 * 60 * 60 * 1000).toISOString(),
+      stopped: nextStep >= maxStep,
     }).eq('id', s.id)
   }
   return sent
 }
+
 
 async function topUpSocial() {
   // Best-effort ping to the existing social tick
