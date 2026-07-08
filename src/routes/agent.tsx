@@ -107,6 +107,8 @@ function Dashboard() {
 
       <main className="px-6 md:px-10 py-10 space-y-12 max-w-6xl mx-auto">
         <RevenuePanel />
+        <SettingsPanel />
+
         <QuotaPanel quota={quotaQuery.data?.accounts ?? []} loading={quotaQuery.isLoading} />
         <AccountsPanel
           accounts={accountsQuery.data?.accounts ?? []}
