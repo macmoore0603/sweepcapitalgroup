@@ -260,6 +260,78 @@ function SettingsPanel() {
   );
 }
 
+function OutboundPanel() {
+  const qc = useQueryClient();
+  const fetchStats = useServerFn(getOutboundStats);
+  const upload = useServerFn(uploadOutboundContacts);
+  const q = useQuery({ queryKey: ["outbound", "stats"], queryFn: () => fetchStats(), refetchInterval: 30_000 });
+  const [csv, setCsv] = useState("");
+
+  const up = useMutation({
+    mutationFn: () => upload({ data: { csv } }),
+    onSuccess: (r) => {
+      toast.success(`Added ${r.inserted} · skipped ${r.skipped} · total ${r.total}`);
+      setCsv("");
+      qc.invalidateQueries({ queryKey: ["outbound"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Upload failed"),
+  });
+
+  const s = q.data?.stats;
+  return (
+    <section className="space-y-4 border border-border rounded-lg p-6 bg-card">
+      <div className="flex items-baseline justify-between">
+        <h2 className="text-lg font-semibold">Cold Outbound · 3-step drip</h2>
+        <span className="font-mono text-[11px] text-muted-foreground uppercase tracking-[0.3em]">Runs every 15 min</span>
+      </div>
+      {q.isLoading || !s ? <p className="text-sm text-muted-foreground">Loading…</p> : (
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
+          <Stat label="Total" value={String(s.total)} sub="in pipeline" />
+          <Stat label="Queued" value={String(s.queued)} sub="awaiting step 1" />
+          <Stat label="Contacted" value={String(s.contacted)} sub="in drip" />
+          <Stat label="Replied" value={String(s.replied)} sub="hand-raised" />
+          <Stat label="Converted" value={String(s.converted)} sub="paid" />
+        </div>
+      )}
+      <form onSubmit={(e) => { e.preventDefault(); up.mutate(); }} className="space-y-2">
+        <label className="block space-y-1">
+          <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Upload contacts (CSV or one email per line)</span>
+          <textarea
+            value={csv}
+            onChange={(e) => setCsv(e.target.value)}
+            rows={5}
+            placeholder="email,name,company,role&#10;sam@acme.com,Sam,Acme,Trader&#10;jane@corp.io"
+            className="w-full bg-background border border-border rounded px-2 py-2 text-sm font-mono"
+          />
+        </label>
+        <div className="flex justify-between items-center">
+          <p className="text-[11px] text-muted-foreground">Suppressed/unsubscribed emails are auto-filtered. First send staggered ≤4h; steps at day 0, 2, 5.</p>
+          <button
+            type="submit"
+            disabled={up.isPending || !csv.trim()}
+            className="bg-primary text-primary-foreground px-4 py-2 rounded text-sm font-medium disabled:opacity-50"
+          >
+            {up.isPending ? "Uploading…" : "Add to drip"}
+          </button>
+        </div>
+      </form>
+      {q.data?.recent?.length ? (
+        <div className="pt-2">
+          <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-2">Recent activity</div>
+          <ul className="text-xs space-y-1 font-mono">
+            {q.data.recent.map((r: any) => (
+              <li key={r.email} className="flex justify-between gap-4 border-b border-border/50 py-1">
+                <span className="truncate">{r.email}{r.company ? ` · ${r.company}` : ""}</span>
+                <span className="text-muted-foreground shrink-0">step {r.step}/3 · {r.status}{r.last_error ? ` · ${r.last_error.slice(0, 40)}` : ""}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
 
 function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
