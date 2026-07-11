@@ -275,6 +275,57 @@ export type Database = {
         }
         Relationships: []
       }
+      outbound_contacts: {
+        Row: {
+          added_by: string | null
+          company: string | null
+          created_at: string
+          email: string
+          id: string
+          last_error: string | null
+          last_sent_at: string | null
+          name: string | null
+          next_send_at: string
+          role: string | null
+          source: string | null
+          status: string
+          step: number
+          updated_at: string
+        }
+        Insert: {
+          added_by?: string | null
+          company?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          last_error?: string | null
+          last_sent_at?: string | null
+          name?: string | null
+          next_send_at?: string
+          role?: string | null
+          source?: string | null
+          status?: string
+          step?: number
+          updated_at?: string
+        }
+        Update: {
+          added_by?: string | null
+          company?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          last_error?: string | null
+          last_sent_at?: string | null
+          name?: string | null
+          next_send_at?: string
+          role?: string | null
+          source?: string | null
+          status?: string
+          step?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       post_metrics: {
         Row: {
           comments: number
