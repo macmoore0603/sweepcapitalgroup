@@ -131,12 +131,13 @@ export const Route = createFileRoute('/api/public/revenue/tick')({
     handlers: {
       POST: async () => {
         const settings = await loadSettings(serverSupabase()).catch(() => ({ offsets: DEFAULT_OFFSETS, recoveryMin: DEFAULT_RECOVERY_MIN }))
-        const [abandoned, nurture] = await Promise.all([
+        const [abandoned, nurture, outbound] = await Promise.all([
           processAbandoned(settings.recoveryMin).catch((e) => { console.error('abandoned', e); return 0 }),
           processNurture(settings.offsets).catch((e) => { console.error('nurture', e); return 0 }),
+          processOutbound().catch((e) => { console.error('outbound', e); return 0 }),
         ])
         await topUpSocial()
-        return Response.json({ ok: true, abandoned, nurture, at: new Date().toISOString() })
+        return Response.json({ ok: true, abandoned, nurture, outbound, at: new Date().toISOString() })
       },
       GET: async () => Response.json({ ok: true }),
     },
