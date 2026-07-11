@@ -87,13 +87,44 @@ async function processNurture(offsets: number[]) {
 }
 
 
-async function topUpSocial() {
-  // Best-effort ping to the existing social tick
-  try {
-    await fetch(`${process.env.SUPABASE_URL?.replace('.supabase.co', '') ?? ''}`).catch(() => {})
-  } catch {}
-  return 0
+async function processOutbound() {
+  const supabase: any = serverSupabase()
+  const now = new Date().toISOString()
+  const { data: rows } = await supabase
+    .from('outbound_contacts')
+    .select('*')
+    .in('status', ['queued', 'contacted'])
+    .lt('next_send_at', now)
+    .lt('step', 3)
+    .limit(30)
+  let sent = 0
+  const STEP_GAP_DAYS = [2, 3] // gaps between step 1→2, 2→3
+  for (const c of rows ?? []) {
+    const nextStep = (c.step ?? 0) + 1
+    const template = `outbound-${nextStep}`
+    const r = await enqueueTemplateEmail({
+      templateName: template,
+      recipientEmail: c.email,
+      data: { name: c.name, company: c.company },
+      idempotencyKey: `outbound-${c.id}-${nextStep}`,
+      label: template,
+    })
+    const queued = (r as any).queued === true
+    if (queued) sent++
+    const suppressed = (r as any).skipped === 'suppressed'
+    const gap = STEP_GAP_DAYS[nextStep - 1] ?? 0
+    await supabase.from('outbound_contacts').update({
+      step: nextStep,
+      last_sent_at: now,
+      status: suppressed ? 'stopped' : (nextStep >= 3 ? 'contacted' : 'contacted'),
+      next_send_at: gap > 0 ? new Date(Date.now() + gap * 24 * 60 * 60 * 1000).toISOString() : now,
+      last_error: (r as any).error ?? null,
+    }).eq('id', c.id)
+  }
+  return sent
 }
+
+async function topUpSocial() { return 0 }
 
 export const Route = createFileRoute('/api/public/revenue/tick')({
   server: {
