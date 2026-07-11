@@ -19,6 +19,7 @@ import {
 } from "@/lib/social/posts.functions";
 import { getOAuthStartUrl } from "@/lib/social/oauth.functions";
 import { getRevenueSummary, getRevenueSettings, updateRevenueSettings } from "@/lib/revenue.functions";
+import { uploadOutboundContacts, getOutboundStats } from "@/lib/outbound.functions";
 import { PLATFORMS, PLATFORM_LABEL, MIN_POSTS_PER_DAY, type Platform } from "@/lib/social/types";
 
 export const Route = createFileRoute("/agent")({
@@ -108,6 +109,8 @@ function Dashboard() {
       <main className="px-6 md:px-10 py-10 space-y-12 max-w-6xl mx-auto">
         <RevenuePanel />
         <SettingsPanel />
+        <OutboundPanel />
+
 
         <QuotaPanel quota={quotaQuery.data?.accounts ?? []} loading={quotaQuery.isLoading} />
         <AccountsPanel
