@@ -42,6 +42,10 @@ function LoginPage() {
       return;
     }
     toast.success("Welcome back.");
+    if (next && isSafeRelative(next)) {
+      window.location.href = next;
+      return;
+    }
     navigate({ to: "/admin" });
   };
 
