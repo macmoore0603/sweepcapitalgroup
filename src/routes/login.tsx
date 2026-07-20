@@ -4,6 +4,9 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/login")({
+  validateSearch: (s: Record<string, unknown>) => ({
+    next: typeof s.next === "string" ? s.next : "",
+  }),
   head: () => ({
     meta: [
       { title: "Admin Sign In — Sweep Capital Group" },
@@ -14,8 +17,13 @@ export const Route = createFileRoute("/login")({
   component: LoginPage,
 });
 
+function isSafeRelative(next: string) {
+  return next.startsWith("/") && !next.startsWith("//");
+}
+
 function LoginPage() {
   const navigate = useNavigate();
+  const { next } = Route.useSearch();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -34,6 +42,10 @@ function LoginPage() {
       return;
     }
     toast.success("Welcome back.");
+    if (next && isSafeRelative(next)) {
+      window.location.href = next;
+      return;
+    }
     navigate({ to: "/admin" });
   };
 
