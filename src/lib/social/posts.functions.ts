@@ -18,34 +18,46 @@ type DraftedPost = {
 async function callLovableAI(
   systemPrompt: string,
   userPrompt: string,
-  model = "google/gemini-2.5-flash",
+  model?: string,
 ): Promise<string> {
-  const apiKey = process.env.LOVABLE_API_KEY;
-  if (!apiKey) throw new Error("LOVABLE_API_KEY missing");
+  // Prefer NVIDIA (OpenAI-compatible) when NVIDIA_API_KEY is set; fall back to Lovable AI Gateway.
+  const nvidiaKey = process.env.NVIDIA_API_KEY;
+  const useNvidia = Boolean(nvidiaKey);
+  const apiKey = useNvidia ? nvidiaKey! : process.env.LOVABLE_API_KEY;
+  if (!apiKey) throw new Error("No AI provider key set (NVIDIA_API_KEY or LOVABLE_API_KEY)");
 
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const url = useNvidia
+    ? "https://integrate.api.nvidia.com/v1/chat/completions"
+    : "https://ai.gateway.lovable.dev/v1/chat/completions";
+  const chosenModel =
+    model ?? (useNvidia ? "meta/llama-3.1-70b-instruct" : "google/gemini-2.5-flash");
+
+  const res = await fetch(url, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model,
+      model: chosenModel,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
       ],
+      temperature: 0.7,
+      max_tokens: 800,
     }),
   });
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`AI gateway error ${res.status}: ${text.slice(0, 200)}`);
+    throw new Error(`${useNvidia ? "NVIDIA" : "AI gateway"} error ${res.status}: ${text.slice(0, 200)}`);
   }
   const json = (await res.json()) as {
     choices?: Array<{ message?: { content?: string } }>;
   };
   return json.choices?.[0]?.message?.content?.trim() ?? "";
 }
+
 
 export const draftForPlatforms = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
