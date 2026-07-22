@@ -86,6 +86,30 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_reports: {
+        Row: {
+          created_at: string
+          id: string
+          metrics: Json
+          report_date: string
+          summary: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          metrics?: Json
+          report_date: string
+          summary: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          metrics?: Json
+          report_date?: string
+          summary?: string
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
@@ -172,6 +196,53 @@ export type Database = {
           used_at?: string | null
         }
         Relationships: []
+      }
+      inbound_replies: {
+        Row: {
+          auto_reply_sent: boolean
+          body: string | null
+          confidence: number | null
+          created_at: string
+          from_email: string
+          id: string
+          intent: string | null
+          raw: Json | null
+          related_contact_id: string | null
+          subject: string | null
+        }
+        Insert: {
+          auto_reply_sent?: boolean
+          body?: string | null
+          confidence?: number | null
+          created_at?: string
+          from_email: string
+          id?: string
+          intent?: string | null
+          raw?: Json | null
+          related_contact_id?: string | null
+          subject?: string | null
+        }
+        Update: {
+          auto_reply_sent?: boolean
+          body?: string | null
+          confidence?: number | null
+          created_at?: string
+          from_email?: string
+          id?: string
+          intent?: string | null
+          raw?: Json | null
+          related_contact_id?: string | null
+          subject?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inbound_replies_related_contact_id_fkey"
+            columns: ["related_contact_id"]
+            isOneToOne: false
+            referencedRelation: "outbound_contacts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       leads: {
         Row: {
@@ -278,6 +349,8 @@ export type Database = {
       outbound_contacts: {
         Row: {
           added_by: string | null
+          ai_angle: string | null
+          ai_first_message: string | null
           company: string | null
           created_at: string
           email: string
@@ -294,6 +367,8 @@ export type Database = {
         }
         Insert: {
           added_by?: string | null
+          ai_angle?: string | null
+          ai_first_message?: string | null
           company?: string | null
           created_at?: string
           email: string
@@ -310,6 +385,8 @@ export type Database = {
         }
         Update: {
           added_by?: string | null
+          ai_angle?: string | null
+          ai_first_message?: string | null
           company?: string | null
           created_at?: string
           email?: string
