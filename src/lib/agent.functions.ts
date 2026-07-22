@@ -117,7 +117,7 @@ export const seedContentCalendar = createServerFn({ method: 'POST' })
           await supabase.from('scheduled_posts').insert({
             account_id: acct.id,
             user_id: userId,
-            body: g.body,
+            body: g.sanitized,
             platform_post_id: null,
             media_urls: [],
             source: 'ai-calendar',
