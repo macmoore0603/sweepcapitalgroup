@@ -81,10 +81,8 @@ export const Route = createFileRoute('/api/public/inbound/reply')({
         } else if (intent === 'interested' || intent === 'objection') {
           if (contact) await supabase.from('outbound_contacts').update({ status: 'replied' }).eq('id', contact.id)
           if (autoReply && autoReply.length > 10) {
-            // Fire-and-forget reply using transactional pipeline
-            const templateName = 'lead-confirmation' // reuse an existing template shell
             const r = await enqueueTemplateEmail({
-              templateName,
+              templateName: 'ops-note',
               recipientEmail: fromEmail,
               data: { name: 'there', customMessage: autoReply },
               idempotencyKey: `auto-reply-${fromEmail}-${Date.now()}`,
@@ -92,6 +90,7 @@ export const Route = createFileRoute('/api/public/inbound/reply')({
             }).catch(() => ({}))
             sent = (r as any).queued === true
           }
+
         }
 
         await supabase.from('inbound_replies').insert({
