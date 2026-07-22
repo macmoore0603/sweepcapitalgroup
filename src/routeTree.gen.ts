@@ -37,6 +37,7 @@ import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/e
 import { Route as ApiPublicSocialTickRouteImport } from './routes/api/public/social/tick'
 import { Route as ApiPublicRevenueTickRouteImport } from './routes/api/public/revenue/tick'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
+import { Route as ApiPublicInboundReplyRouteImport } from './routes/api/public/inbound/reply'
 import { Route as ApiPublicSocialOauthPlatformCallbackRouteImport } from './routes/api/public/social/oauth/$platform/callback'
 
 const UnsubscribeRoute = UnsubscribeRouteImport.update({
@@ -186,6 +187,11 @@ const ApiPublicPaymentsWebhookRoute =
     path: '/api/public/payments/webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicInboundReplyRoute = ApiPublicInboundReplyRouteImport.update({
+  id: '/api/public/inbound/reply',
+  path: '/api/public/inbound/reply',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicSocialOauthPlatformCallbackRoute =
   ApiPublicSocialOauthPlatformCallbackRouteImport.update({
     id: '/api/public/social/oauth/$platform/callback',
@@ -216,6 +222,7 @@ export interface FileRoutesByFullPath {
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/api/public/lead-submit': typeof ApiPublicLeadSubmitRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/api/public/inbound/reply': typeof ApiPublicInboundReplyRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/revenue/tick': typeof ApiPublicRevenueTickRoute
   '/api/public/social/tick': typeof ApiPublicSocialTickRoute
@@ -247,6 +254,7 @@ export interface FileRoutesByTo {
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/api/public/lead-submit': typeof ApiPublicLeadSubmitRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/api/public/inbound/reply': typeof ApiPublicInboundReplyRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/revenue/tick': typeof ApiPublicRevenueTickRoute
   '/api/public/social/tick': typeof ApiPublicSocialTickRoute
@@ -279,6 +287,7 @@ export interface FileRoutesById {
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/api/public/lead-submit': typeof ApiPublicLeadSubmitRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/api/public/inbound/reply': typeof ApiPublicInboundReplyRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/revenue/tick': typeof ApiPublicRevenueTickRoute
   '/api/public/social/tick': typeof ApiPublicSocialTickRoute
@@ -312,6 +321,7 @@ export interface FileRouteTypes {
     | '/.mcp/invoke-tool/$tool'
     | '/api/public/lead-submit'
     | '/lovable/email/suppression'
+    | '/api/public/inbound/reply'
     | '/api/public/payments/webhook'
     | '/api/public/revenue/tick'
     | '/api/public/social/tick'
@@ -343,6 +353,7 @@ export interface FileRouteTypes {
     | '/.mcp/invoke-tool/$tool'
     | '/api/public/lead-submit'
     | '/lovable/email/suppression'
+    | '/api/public/inbound/reply'
     | '/api/public/payments/webhook'
     | '/api/public/revenue/tick'
     | '/api/public/social/tick'
@@ -374,6 +385,7 @@ export interface FileRouteTypes {
     | '/.mcp/invoke-tool/$tool'
     | '/api/public/lead-submit'
     | '/lovable/email/suppression'
+    | '/api/public/inbound/reply'
     | '/api/public/payments/webhook'
     | '/api/public/revenue/tick'
     | '/api/public/social/tick'
@@ -406,6 +418,7 @@ export interface RootRouteChildren {
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiPublicLeadSubmitRoute: typeof ApiPublicLeadSubmitRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
+  ApiPublicInboundReplyRoute: typeof ApiPublicInboundReplyRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicRevenueTickRoute: typeof ApiPublicRevenueTickRoute
   ApiPublicSocialTickRoute: typeof ApiPublicSocialTickRoute
@@ -613,6 +626,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/inbound/reply': {
+      id: '/api/public/inbound/reply'
+      path: '/api/public/inbound/reply'
+      fullPath: '/api/public/inbound/reply'
+      preLoaderRoute: typeof ApiPublicInboundReplyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/social/oauth/$platform/callback': {
       id: '/api/public/social/oauth/$platform/callback'
       path: '/api/public/social/oauth/$platform/callback'
@@ -647,6 +667,7 @@ const rootRouteChildren: RootRouteChildren = {
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiPublicLeadSubmitRoute: ApiPublicLeadSubmitRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
+  ApiPublicInboundReplyRoute: ApiPublicInboundReplyRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicRevenueTickRoute: ApiPublicRevenueTickRoute,
   ApiPublicSocialTickRoute: ApiPublicSocialTickRoute,
