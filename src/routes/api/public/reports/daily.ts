@@ -70,7 +70,7 @@ export const Route = createFileRoute('/api/public/reports/daily')({
 
         const adminEmail = (settingsQ.data as any)?.admin_email || 'macmoore@lexusnexuscapital.com'
         await enqueueTemplateEmail({
-          templateName: 'lead-confirmation',
+          templateName: 'ops-note',
           recipientEmail: adminEmail,
           data: {
             name: 'Mac',
