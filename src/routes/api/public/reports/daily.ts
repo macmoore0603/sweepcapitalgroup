@@ -67,8 +67,8 @@ export const Route = createFileRoute('/api/public/reports/daily')({
           { report_date: today, summary, metrics },
           { onConflict: 'report_date' },
         )
+        const adminEmail = 'macmoore@lexusnexuscapital.com'
 
-        const adminEmail = (settingsQ.data as any)?.admin_email || 'macmoore@lexusnexuscapital.com'
         await enqueueTemplateEmail({
           templateName: 'ops-note',
           recipientEmail: adminEmail,
