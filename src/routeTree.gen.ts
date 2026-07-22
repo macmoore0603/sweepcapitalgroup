@@ -36,6 +36,7 @@ import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/l
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as ApiPublicSocialTickRouteImport } from './routes/api/public/social/tick'
 import { Route as ApiPublicRevenueTickRouteImport } from './routes/api/public/revenue/tick'
+import { Route as ApiPublicReportsDailyRouteImport } from './routes/api/public/reports/daily'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicInboundReplyRouteImport } from './routes/api/public/inbound/reply'
 import { Route as ApiPublicSocialOauthPlatformCallbackRouteImport } from './routes/api/public/social/oauth/$platform/callback'
@@ -181,6 +182,11 @@ const ApiPublicRevenueTickRoute = ApiPublicRevenueTickRouteImport.update({
   path: '/api/public/revenue/tick',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicReportsDailyRoute = ApiPublicReportsDailyRouteImport.update({
+  id: '/api/public/reports/daily',
+  path: '/api/public/reports/daily',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPaymentsWebhookRoute =
   ApiPublicPaymentsWebhookRouteImport.update({
     id: '/api/public/payments/webhook',
@@ -224,6 +230,7 @@ export interface FileRoutesByFullPath {
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/inbound/reply': typeof ApiPublicInboundReplyRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/api/public/reports/daily': typeof ApiPublicReportsDailyRoute
   '/api/public/revenue/tick': typeof ApiPublicRevenueTickRoute
   '/api/public/social/tick': typeof ApiPublicSocialTickRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -256,6 +263,7 @@ export interface FileRoutesByTo {
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/inbound/reply': typeof ApiPublicInboundReplyRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/api/public/reports/daily': typeof ApiPublicReportsDailyRoute
   '/api/public/revenue/tick': typeof ApiPublicRevenueTickRoute
   '/api/public/social/tick': typeof ApiPublicSocialTickRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -289,6 +297,7 @@ export interface FileRoutesById {
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/inbound/reply': typeof ApiPublicInboundReplyRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/api/public/reports/daily': typeof ApiPublicReportsDailyRoute
   '/api/public/revenue/tick': typeof ApiPublicRevenueTickRoute
   '/api/public/social/tick': typeof ApiPublicSocialTickRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -323,6 +332,7 @@ export interface FileRouteTypes {
     | '/lovable/email/suppression'
     | '/api/public/inbound/reply'
     | '/api/public/payments/webhook'
+    | '/api/public/reports/daily'
     | '/api/public/revenue/tick'
     | '/api/public/social/tick'
     | '/lovable/email/queue/process'
@@ -355,6 +365,7 @@ export interface FileRouteTypes {
     | '/lovable/email/suppression'
     | '/api/public/inbound/reply'
     | '/api/public/payments/webhook'
+    | '/api/public/reports/daily'
     | '/api/public/revenue/tick'
     | '/api/public/social/tick'
     | '/lovable/email/queue/process'
@@ -387,6 +398,7 @@ export interface FileRouteTypes {
     | '/lovable/email/suppression'
     | '/api/public/inbound/reply'
     | '/api/public/payments/webhook'
+    | '/api/public/reports/daily'
     | '/api/public/revenue/tick'
     | '/api/public/social/tick'
     | '/lovable/email/queue/process'
@@ -420,6 +432,7 @@ export interface RootRouteChildren {
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicInboundReplyRoute: typeof ApiPublicInboundReplyRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
+  ApiPublicReportsDailyRoute: typeof ApiPublicReportsDailyRoute
   ApiPublicRevenueTickRoute: typeof ApiPublicRevenueTickRoute
   ApiPublicSocialTickRoute: typeof ApiPublicSocialTickRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
@@ -619,6 +632,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicRevenueTickRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/reports/daily': {
+      id: '/api/public/reports/daily'
+      path: '/api/public/reports/daily'
+      fullPath: '/api/public/reports/daily'
+      preLoaderRoute: typeof ApiPublicReportsDailyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/payments/webhook': {
       id: '/api/public/payments/webhook'
       path: '/api/public/payments/webhook'
@@ -669,6 +689,7 @@ const rootRouteChildren: RootRouteChildren = {
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicInboundReplyRoute: ApiPublicInboundReplyRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
+  ApiPublicReportsDailyRoute: ApiPublicReportsDailyRoute,
   ApiPublicRevenueTickRoute: ApiPublicRevenueTickRoute,
   ApiPublicSocialTickRoute: ApiPublicSocialTickRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
