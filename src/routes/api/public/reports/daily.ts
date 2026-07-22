@@ -15,14 +15,14 @@ export const Route = createFileRoute('/api/public/reports/daily')({
         const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString()
         const today = new Date().toISOString().slice(0, 10)
 
-        const [leadsQ, revQ, outQ, postsQ, repliesQ, settingsQ] = await Promise.all([
+        const [leadsQ, revQ, outQ, postsQ, repliesQ] = await Promise.all([
           supabase.from('leads').select('id,tier,status,created_at').gte('created_at', since),
           supabase.from('revenue_events').select('amount_cents,event_type,created_at').gte('created_at', since),
           supabase.from('outbound_contacts').select('status,step,last_sent_at').gte('last_sent_at', since),
           supabase.from('scheduled_posts').select('status,published_at').gte('created_at', since),
           supabase.from('inbound_replies').select('intent,created_at').gte('created_at', since),
-          supabase.from('revenue_settings').select('monthly_target_cents,admin_email').limit(1).maybeSingle(),
         ])
+
 
         const leads = leadsQ.data ?? []
         const rev = revQ.data ?? []
