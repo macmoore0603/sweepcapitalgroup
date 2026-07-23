@@ -116,6 +116,8 @@ function Dashboard() {
         <RevenuePanel />
         <SettingsPanel />
         <OutboundPanel />
+        <AutonomyPanel />
+
 
 
         <QuotaPanel quota={quotaQuery.data?.accounts ?? []} loading={quotaQuery.isLoading} />
