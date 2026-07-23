@@ -341,6 +341,91 @@ function OutboundPanel() {
 }
 
 
+function AutonomyPanel() {
+  const qc = useQueryClient();
+  const enrich = useServerFn(enrichOutboundAngles);
+  const seed = useServerFn(seedContentCalendar);
+  const fetchReport = useServerFn(getLatestDailyReport);
+  const fetchReplies = useServerFn(listInboundReplies);
+
+  const report = useQuery({ queryKey: ["agent", "report"], queryFn: () => fetchReport() });
+  const replies = useQuery({ queryKey: ["agent", "replies"], queryFn: () => fetchReplies(), refetchInterval: 60_000 });
+
+  const runEnrich = useMutation({
+    mutationFn: () => enrich({ data: { limit: 20 } }),
+    onSuccess: (r) => toast.success(`Enriched ${r.updated}/${r.total} contacts with AI angles`),
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Enrich failed"),
+  });
+
+  const runSeed = useMutation({
+    mutationFn: () => seed({ data: { days: 30, postsPerDay: 3 } }),
+    onSuccess: (r) => {
+      toast.success(`Seeded ${r.created} posts across ${r.days} days`);
+      qc.invalidateQueries({ queryKey: ["social"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Seed failed"),
+  });
+
+  return (
+    <section className="space-y-4 border border-border rounded-lg p-6 bg-card">
+      <div className="flex items-baseline justify-between">
+        <h2 className="text-lg font-semibold">Autonomy Controls</h2>
+        <span className="font-mono text-[11px] text-muted-foreground uppercase tracking-[0.3em]">NVIDIA Llama 3.1 70B</span>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <button
+          onClick={() => runEnrich.mutate()}
+          disabled={runEnrich.isPending}
+          className="bg-primary text-primary-foreground px-4 py-2 rounded text-sm font-medium disabled:opacity-50"
+        >
+          {runEnrich.isPending ? "Enriching…" : "Enrich next 20 contacts"}
+        </button>
+        <button
+          onClick={() => runSeed.mutate()}
+          disabled={runSeed.isPending}
+          className="border border-border px-4 py-2 rounded text-sm font-medium disabled:opacity-50"
+        >
+          {runSeed.isPending ? "Seeding…" : "Seed 30-day content calendar"}
+        </button>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-4 pt-2">
+        <div className="border border-border rounded p-4">
+          <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-2">Latest daily report</div>
+          {report.data?.report ? (
+            <>
+              <div className="text-xs text-muted-foreground mb-2">{report.data.report.report_date}</div>
+              <pre className="text-xs whitespace-pre-wrap font-mono max-h-64 overflow-auto">{report.data.report.summary}</pre>
+            </>
+          ) : (
+            <p className="text-sm text-muted-foreground">No report yet. Cron runs daily at 08:00 UTC.</p>
+          )}
+        </div>
+        <div className="border border-border rounded p-4">
+          <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-2">Recent inbound replies</div>
+          {replies.data?.replies?.length ? (
+            <ul className="text-xs space-y-1 font-mono max-h-64 overflow-auto">
+              {replies.data.replies.map((r: any) => (
+                <li key={r.id} className="border-b border-border/50 py-1">
+                  <div className="flex justify-between gap-2">
+                    <span className="truncate">{r.from_email}</span>
+                    <span className={`shrink-0 ${r.intent === "interested" ? "text-accent" : r.intent === "stop" ? "text-destructive" : "text-muted-foreground"}`}>
+                      {r.intent}
+                    </span>
+                  </div>
+                  <div className="text-muted-foreground truncate">{r.subject || "(no subject)"}</div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-muted-foreground">No inbound replies yet. Point your inbound email webhook at /api/public/inbound/reply.</p>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <div className="border border-border rounded p-3">
