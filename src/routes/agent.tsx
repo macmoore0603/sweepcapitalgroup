@@ -20,6 +20,12 @@ import {
 import { getOAuthStartUrl } from "@/lib/social/oauth.functions";
 import { getRevenueSummary, getRevenueSettings, updateRevenueSettings } from "@/lib/revenue.functions";
 import { uploadOutboundContacts, getOutboundStats } from "@/lib/outbound.functions";
+import {
+  enrichOutboundAngles,
+  seedContentCalendar,
+  getLatestDailyReport,
+  listInboundReplies,
+} from "@/lib/agent.functions";
 import { PLATFORMS, PLATFORM_LABEL, MIN_POSTS_PER_DAY, type Platform } from "@/lib/social/types";
 
 export const Route = createFileRoute("/agent")({
