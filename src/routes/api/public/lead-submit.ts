@@ -101,7 +101,7 @@ export const Route = createFileRoute('/api/public/lead-submit')({
           .maybeSingle()
 
         if (suppressed) {
-          return Response.json({ success: true, email_sent: false })
+          return Response.json({ success: true, email_sent: false, lead_id: insertedLead.id, booking_token: insertedLead.booking_token })
         }
 
         // 3. Get or create unsubscribe token
@@ -134,7 +134,7 @@ export const Route = createFileRoute('/api/public/lead-submit')({
         const templateName = source === 'playbook' ? 'playbook-guide' : 'lead-confirmation'
         const template = TEMPLATES[templateName]
         if (!template) {
-          return Response.json({ success: true, email_sent: false })
+          return Response.json({ success: true, email_sent: false, lead_id: insertedLead.id, booking_token: insertedLead.booking_token })
         }
         const data = { name: full_name, tier, bookingUrl, siteUrl: origin }
         const element = createElement(template.component, data)
@@ -181,7 +181,7 @@ export const Route = createFileRoute('/api/public/lead-submit')({
             status: 'failed',
             error_message: 'Failed to enqueue email',
           })
-          return Response.json({ success: true, email_sent: false })
+          return Response.json({ success: true, email_sent: false, lead_id: insertedLead.id, booking_token: insertedLead.booking_token })
         }
 
         // 6. Seed nurture drip (first follow-up in 3 days)
