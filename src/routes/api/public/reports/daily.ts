@@ -16,8 +16,8 @@ export const Route = createFileRoute('/api/public/reports/daily')({
         const today = new Date().toISOString().slice(0, 10)
 
         const [leadsQ, revQ, outQ, postsQ, repliesQ] = await Promise.all([
-          supabase.from('leads').select('id,tier,status,created_at').gte('created_at', since),
-          supabase.from('revenue_events').select('amount_cents,event_type,created_at').gte('created_at', since),
+          supabase.from('leads').select('id,status,created_at').gte('created_at', since),
+          supabase.from('revenue_events').select('amount_cents,product_name,created_at').gte('created_at', since),
           supabase.from('outbound_contacts').select('status,step,last_sent_at').gte('last_sent_at', since),
           supabase.from('scheduled_posts').select('status,published_at').gte('created_at', since),
           supabase.from('inbound_replies').select('intent,created_at').gte('created_at', since),

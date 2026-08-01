@@ -105,7 +105,12 @@ async function processOutbound() {
     const r = await enqueueTemplateEmail({
       templateName: template,
       recipientEmail: c.email,
-      data: { name: c.name, company: c.company },
+      data: {
+        name: c.name,
+        company: c.company,
+        // Personalized opener written by the AI enrichment pass (step 1 only)
+        aiMessage: nextStep === 1 ? c.ai_first_message ?? undefined : undefined,
+      },
       idempotencyKey: `outbound-${c.id}-${nextStep}`,
       label: template,
     })

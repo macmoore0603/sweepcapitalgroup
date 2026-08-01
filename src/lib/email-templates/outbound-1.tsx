@@ -1,20 +1,24 @@
 import { Body, Container, Head, Html, Preview, Text } from '@react-email/components'
 import type { TemplateEntry } from './registry'
 
-interface Props { name?: string; company?: string }
+interface Props { name?: string; company?: string; aiMessage?: string }
 
-const Email = ({ name, company }: Props) => (
+const Email = ({ name, company, aiMessage }: Props) => (
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>Quick question about your trading edge</Preview>
     <Body style={main}>
       <Container style={container}>
         <Text style={text}>{name ? `Hey ${name},` : 'Hey,'}</Text>
-        <Text style={text}>
-          Saw {company ? `${company}` : 'your profile'} and figured I'd reach out. We run a
-          mentorship for traders who are tired of guessing — three setups, one framework,
-          audited results.
-        </Text>
+        {aiMessage ? (
+          <Text style={text}>{aiMessage}</Text>
+        ) : (
+          <Text style={text}>
+            Saw {company ? `${company}` : 'your profile'} and figured I'd reach out. We run a
+            mentorship for traders who are tired of guessing — three setups, one framework,
+            audited results.
+          </Text>
+        )}
         <Text style={text}>
           Not a pitch — just curious: what's the biggest hole in your trading process right now?
         </Text>
