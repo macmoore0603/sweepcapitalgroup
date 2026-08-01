@@ -129,17 +129,19 @@ export const Route = createFileRoute('/api/public/lead-submit')({
           if (stored?.token) unsubscribeToken = stored.token
         }
 
-        // 4. Render template
-        const template = TEMPLATES['lead-confirmation']
+        // 4. Render template (lead magnet opt-ins get the playbook email)
+        const templateName = source === 'playbook' ? 'playbook-guide' : 'lead-confirmation'
+        const template = TEMPLATES[templateName]
         if (!template) {
           return Response.json({ success: true, email_sent: false })
         }
-        const data = { name: full_name, tier, bookingUrl }
+        const data = { name: full_name, tier, bookingUrl, siteUrl: origin }
         const element = createElement(template.component, data)
         const html = await render(element)
         const plainText = await render(element, { plainText: true })
         const subject =
           typeof template.subject === 'function' ? template.subject(data) : template.subject
+
 
         const messageId = crypto.randomUUID()
 
