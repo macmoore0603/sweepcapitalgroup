@@ -24,6 +24,7 @@ const submitSchema = z.object({
   utm_content: optionalStr(255),
   referrer: optionalStr(2048),
   landing_page: optionalStr(2048),
+  source: optionalStr(40),
 })
 
 function generateToken(): string {
@@ -58,7 +59,7 @@ export const Route = createFileRoute('/api/public/lead-submit')({
         const {
           full_name, email, tier, notes,
           utm_source, utm_medium, utm_campaign, utm_term, utm_content,
-          referrer, landing_page,
+          referrer, landing_page, source,
         } = parsed.data
         const normalizedEmail = email.toLowerCase()
 
@@ -148,7 +149,7 @@ export const Route = createFileRoute('/api/public/lead-submit')({
         // 5. Log pending + enqueue
         await supabase.from('email_send_log').insert({
           message_id: messageId,
-          template_name: 'lead-confirmation',
+          template_name: templateName,
           recipient_email: email,
           status: 'pending',
         })
@@ -164,7 +165,7 @@ export const Route = createFileRoute('/api/public/lead-submit')({
             html,
             text: plainText,
             purpose: 'transactional',
-            label: 'lead-confirmation',
+            label: templateName,
             idempotency_key: `lead-${messageId}`,
             unsubscribe_token: unsubscribeToken,
             queued_at: new Date().toISOString(),
@@ -175,7 +176,7 @@ export const Route = createFileRoute('/api/public/lead-submit')({
           console.error('Enqueue failed', { error: enqueueError })
           await supabase.from('email_send_log').insert({
             message_id: messageId,
-            template_name: 'lead-confirmation',
+            template_name: templateName,
             recipient_email: email,
             status: 'failed',
             error_message: 'Failed to enqueue email',
@@ -194,7 +195,12 @@ export const Route = createFileRoute('/api/public/lead-submit')({
           }, { onConflict: 'email' })
         } catch (e) { console.error('nurture seed', e) }
 
-        return Response.json({ success: true, email_sent: true })
+        return Response.json({
+          success: true,
+          email_sent: true,
+          lead_id: insertedLead.id,
+          booking_token: insertedLead.booking_token,
+        })
       },
     },
   },
