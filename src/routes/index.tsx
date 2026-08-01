@@ -498,23 +498,30 @@ function ApplicationForm() {
       return;
     }
     setSubmitting(true);
-    const { data, error } = await supabase
-      .from("leads")
-      .insert({
-        full_name: parsed.data.full_name,
-        email: parsed.data.email,
-        capital_size: parsed.data.capital_size ?? null,
-      })
-      .select("id, booking_token")
-      .single();
-    setSubmitting(false);
-    if (error || !data) {
+    let payload: any = null;
+    try {
+      const res = await fetch("/api/public/lead-submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          full_name: parsed.data.full_name,
+          email: parsed.data.email,
+          tier: parsed.data.capital_size || "Application",
+          ...utmPayload(),
+        }),
+      });
+      payload = await res.json();
+      if (!res.ok || !payload?.success) throw new Error(payload?.error ?? "failed");
+    } catch {
+      setSubmitting(false);
       toast.error("Submission failed. Please try again.");
       return;
     }
-    toast.success("Application received. Please book your introductory call.");
-    setLeadId(data.id);
-    setBookingToken(data.booking_token);
+    setSubmitting(false);
+    toast.success("Application received. Check your email, then book your call.");
+    setLeadId(payload.lead_id);
+    setBookingToken(payload.booking_token);
+
   };
 
   const [rescheduling, setRescheduling] = useState(false);
