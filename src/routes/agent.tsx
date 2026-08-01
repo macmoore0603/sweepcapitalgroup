@@ -44,11 +44,11 @@ function AgentPage() {
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-      if (!session) navigate({ to: "/login" });
+      if (!session) navigate({ to: "/login", search: { next: window.location.pathname } });
       else setAuthed(true);
     });
     supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) navigate({ to: "/login" });
+      if (!data.session) navigate({ to: "/login", search: { next: window.location.pathname } });
       else setAuthed(true);
     });
     return () => sub.subscription.unsubscribe();

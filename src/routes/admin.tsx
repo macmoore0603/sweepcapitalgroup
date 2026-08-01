@@ -48,7 +48,7 @@ function AdminPage() {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
       if (!active) return;
       if (!session) {
-        navigate({ to: "/login" });
+        navigate({ to: "/login", search: { next: window.location.pathname } });
         return;
       }
       setUserEmail(session.user.email ?? null);
@@ -75,7 +75,7 @@ function AdminPage() {
       const { data } = await supabase.auth.getSession();
       if (!active) return;
       if (!data.session) {
-        navigate({ to: "/login" });
+        navigate({ to: "/login", search: { next: window.location.pathname } });
         return;
       }
       setUserEmail(data.session.user.email ?? null);
@@ -213,7 +213,7 @@ function AdminPage() {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    navigate({ to: "/login" });
+    navigate({ to: "/login", search: { next: window.location.pathname } });
   };
 
   if (!authChecked) {
