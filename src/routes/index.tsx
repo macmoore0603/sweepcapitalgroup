@@ -5,7 +5,7 @@ import { z } from "zod";
 import { Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { supabase } from "@/integrations/supabase/client";
+
 import methodologyImg from "../assets/methodology.jpg";
 import heroBg from "../assets/hero-bg.jpg";
 import logoAsset from "../assets/scg-logo.png.asset.json";
@@ -24,6 +24,100 @@ const leadSchema = z.object({
   email: z.string().trim().email("Invalid email").max(255),
   capital_size: z.string().trim().max(100).optional(),
 });
+
+/** Attribution captured from the current URL so the agent can score channels. */
+function utmPayload() {
+  if (typeof window === "undefined") return {};
+  const p = new URLSearchParams(window.location.search);
+  const pick = (k: string) => p.get(k) ?? undefined;
+  return {
+    utm_source: pick("utm_source"),
+    utm_medium: pick("utm_medium"),
+    utm_campaign: pick("utm_campaign"),
+    utm_term: pick("utm_term"),
+    utm_content: pick("utm_content"),
+    referrer: document.referrer || undefined,
+    landing_page: window.location.href.slice(0, 2048),
+  };
+}
+
+function PlaybookOptIn() {
+  const [email, setEmail] = useState("");
+  const [sending, setSending] = useState(false);
+  const [done, setDone] = useState(false);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const parsed = z.string().trim().email().max(255).safeParse(email);
+    if (!parsed.success) {
+      toast.error("Enter a valid email");
+      return;
+    }
+    setSending(true);
+    try {
+      const res = await fetch("/api/public/lead-submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          full_name: parsed.data.split("@")[0].slice(0, 100) || "Trader",
+          email: parsed.data,
+          tier: "Free Playbook",
+          source: "playbook",
+          ...utmPayload(),
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json?.success) throw new Error();
+      setDone(true);
+      toast.success("Sent. Check your inbox for the playbook.");
+    } catch {
+      toast.error("Something went wrong. Try again.");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <section className="px-6 md:px-10 py-20 border-t border-border bg-card/30">
+      <div className="max-w-3xl mx-auto text-center space-y-6">
+        <span className="font-mono text-[10px] uppercase tracking-widest text-accent">Free Download</span>
+        <h2 className="text-3xl md:text-4xl font-extrabold tracking-tighter uppercase">
+          The Session Sweep Playbook
+        </h2>
+        <p className="text-muted-foreground leading-relaxed">
+          The exact framework we trade — Session Sweep, the 5–15 Gap, and Power of 3 — written out in
+          full. No cost, no call required. Sent to your inbox in under a minute.
+        </p>
+        {done ? (
+          <p className="font-mono text-xs uppercase tracking-widest text-accent">
+            On its way — check your inbox.
+          </p>
+        ) : (
+          <form onSubmit={submit} className="flex flex-col sm:flex-row gap-4 max-w-xl mx-auto pt-2">
+            <input
+              required
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              maxLength={255}
+              placeholder="you@email.com"
+              aria-label="Email address for the free playbook"
+              className="flex-1 bg-transparent border-b border-border py-4 focus:outline-none focus:border-accent text-lg placeholder:text-muted-foreground/40"
+            />
+            <button
+              type="submit"
+              disabled={sending}
+              className="px-8 py-4 bg-foreground text-background font-extrabold uppercase tracking-[0.2em] text-xs hover:bg-accent transition-colors duration-500 disabled:opacity-50"
+            >
+              {sending ? "Sending…" : "Send it"}
+            </button>
+          </form>
+        )}
+      </div>
+    </section>
+  );
+}
+
 
 function Index() {
   const [checkoutPriceId, setCheckoutPriceId] = useState<string | null>(null);
@@ -425,6 +519,9 @@ function Index() {
         </div>
       </section>
 
+      <PlaybookOptIn />
+
+
       {/* Contact */}
       <section id="contact" className="px-6 md:px-10 py-20 md:py-28 border-t border-border bg-white/[0.02]">
         <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-12 md:gap-20">
@@ -498,23 +595,30 @@ function ApplicationForm() {
       return;
     }
     setSubmitting(true);
-    const { data, error } = await supabase
-      .from("leads")
-      .insert({
-        full_name: parsed.data.full_name,
-        email: parsed.data.email,
-        capital_size: parsed.data.capital_size ?? null,
-      })
-      .select("id, booking_token")
-      .single();
-    setSubmitting(false);
-    if (error || !data) {
+    let payload: any = null;
+    try {
+      const res = await fetch("/api/public/lead-submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          full_name: parsed.data.full_name,
+          email: parsed.data.email,
+          tier: parsed.data.capital_size || "Application",
+          ...utmPayload(),
+        }),
+      });
+      payload = await res.json();
+      if (!res.ok || !payload?.success) throw new Error(payload?.error ?? "failed");
+    } catch {
+      setSubmitting(false);
       toast.error("Submission failed. Please try again.");
       return;
     }
-    toast.success("Application received. Please book your introductory call.");
-    setLeadId(data.id);
-    setBookingToken(data.booking_token);
+    setSubmitting(false);
+    toast.success("Application received. Check your email, then book your call.");
+    setLeadId(payload.lead_id);
+    setBookingToken(payload.booking_token);
+
   };
 
   const [rescheduling, setRescheduling] = useState(false);

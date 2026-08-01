@@ -24,6 +24,7 @@ const submitSchema = z.object({
   utm_content: optionalStr(255),
   referrer: optionalStr(2048),
   landing_page: optionalStr(2048),
+  source: optionalStr(40),
 })
 
 function generateToken(): string {
@@ -58,7 +59,7 @@ export const Route = createFileRoute('/api/public/lead-submit')({
         const {
           full_name, email, tier, notes,
           utm_source, utm_medium, utm_campaign, utm_term, utm_content,
-          referrer, landing_page,
+          referrer, landing_page, source,
         } = parsed.data
         const normalizedEmail = email.toLowerCase()
 
@@ -100,7 +101,7 @@ export const Route = createFileRoute('/api/public/lead-submit')({
           .maybeSingle()
 
         if (suppressed) {
-          return Response.json({ success: true, email_sent: false })
+          return Response.json({ success: true, email_sent: false, lead_id: insertedLead.id, booking_token: insertedLead.booking_token })
         }
 
         // 3. Get or create unsubscribe token
@@ -129,24 +130,26 @@ export const Route = createFileRoute('/api/public/lead-submit')({
           if (stored?.token) unsubscribeToken = stored.token
         }
 
-        // 4. Render template
-        const template = TEMPLATES['lead-confirmation']
+        // 4. Render template (lead magnet opt-ins get the playbook email)
+        const templateName = source === 'playbook' ? 'playbook-guide' : 'lead-confirmation'
+        const template = TEMPLATES[templateName]
         if (!template) {
-          return Response.json({ success: true, email_sent: false })
+          return Response.json({ success: true, email_sent: false, lead_id: insertedLead.id, booking_token: insertedLead.booking_token })
         }
-        const data = { name: full_name, tier, bookingUrl }
+        const data = { name: full_name, tier, bookingUrl, siteUrl: origin }
         const element = createElement(template.component, data)
         const html = await render(element)
         const plainText = await render(element, { plainText: true })
         const subject =
           typeof template.subject === 'function' ? template.subject(data) : template.subject
 
+
         const messageId = crypto.randomUUID()
 
         // 5. Log pending + enqueue
         await supabase.from('email_send_log').insert({
           message_id: messageId,
-          template_name: 'lead-confirmation',
+          template_name: templateName,
           recipient_email: email,
           status: 'pending',
         })
@@ -162,7 +165,7 @@ export const Route = createFileRoute('/api/public/lead-submit')({
             html,
             text: plainText,
             purpose: 'transactional',
-            label: 'lead-confirmation',
+            label: templateName,
             idempotency_key: `lead-${messageId}`,
             unsubscribe_token: unsubscribeToken,
             queued_at: new Date().toISOString(),
@@ -173,12 +176,12 @@ export const Route = createFileRoute('/api/public/lead-submit')({
           console.error('Enqueue failed', { error: enqueueError })
           await supabase.from('email_send_log').insert({
             message_id: messageId,
-            template_name: 'lead-confirmation',
+            template_name: templateName,
             recipient_email: email,
             status: 'failed',
             error_message: 'Failed to enqueue email',
           })
-          return Response.json({ success: true, email_sent: false })
+          return Response.json({ success: true, email_sent: false, lead_id: insertedLead.id, booking_token: insertedLead.booking_token })
         }
 
         // 6. Seed nurture drip (first follow-up in 3 days)
@@ -192,7 +195,12 @@ export const Route = createFileRoute('/api/public/lead-submit')({
           }, { onConflict: 'email' })
         } catch (e) { console.error('nurture seed', e) }
 
-        return Response.json({ success: true, email_sent: true })
+        return Response.json({
+          success: true,
+          email_sent: true,
+          lead_id: insertedLead.id,
+          booking_token: insertedLead.booking_token,
+        })
       },
     },
   },

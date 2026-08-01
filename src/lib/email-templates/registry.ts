@@ -18,6 +18,7 @@ import { template as outbound1 } from './outbound-1'
 import { template as outbound2 } from './outbound-2'
 import { template as outbound3 } from './outbound-3'
 import { template as opsNote } from './ops-note'
+import { template as playbookGuide } from './playbook-guide'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'lead-confirmation': leadConfirmation,
@@ -29,6 +30,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'outbound-2': outbound2,
   'outbound-3': outbound3,
   'ops-note': opsNote,
+  'playbook-guide': playbookGuide,
 }
 
 
