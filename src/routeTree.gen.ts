@@ -13,6 +13,7 @@ import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as PlaybookRouteImport } from './routes/playbook'
 import { Route as MentorshipRouteImport } from './routes/mentorship'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as LoginRouteImport } from './routes/login'
@@ -59,6 +60,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlaybookRoute = PlaybookRouteImport.update({
+  id: '/playbook',
+  path: '/playbook',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MentorshipRoute = MentorshipRouteImport.update({
@@ -215,6 +221,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/mcp': typeof McpRoute
   '/mentorship': typeof MentorshipRoute
+  '/playbook': typeof PlaybookRoute
   '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
@@ -248,6 +255,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/mcp': typeof McpRoute
   '/mentorship': typeof MentorshipRoute
+  '/playbook': typeof PlaybookRoute
   '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
@@ -282,6 +290,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/mcp': typeof McpRoute
   '/mentorship': typeof MentorshipRoute
+  '/playbook': typeof PlaybookRoute
   '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
@@ -317,6 +326,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/mcp'
     | '/mentorship'
+    | '/playbook'
     | '/privacy'
     | '/sitemap.xml'
     | '/terms'
@@ -350,6 +360,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/mcp'
     | '/mentorship'
+    | '/playbook'
     | '/privacy'
     | '/sitemap.xml'
     | '/terms'
@@ -383,6 +394,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/mcp'
     | '/mentorship'
+    | '/playbook'
     | '/privacy'
     | '/sitemap.xml'
     | '/terms'
@@ -417,6 +429,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   McpRoute: typeof McpRoute
   MentorshipRoute: typeof MentorshipRoute
+  PlaybookRoute: typeof PlaybookRoute
   PrivacyRoute: typeof PrivacyRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
@@ -469,6 +482,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/playbook': {
+      id: '/playbook'
+      path: '/playbook'
+      fullPath: '/playbook'
+      preLoaderRoute: typeof PlaybookRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mentorship': {
@@ -673,6 +693,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   McpRoute: McpRoute,
   MentorshipRoute: MentorshipRoute,
+  PlaybookRoute: PlaybookRoute,
   PrivacyRoute: PrivacyRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
