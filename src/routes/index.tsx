@@ -14,6 +14,8 @@ import macMoore from "../assets/mac-moore.png";
 import { CallScheduler, SchedulingConfirmation } from "@/components/booking";
 import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
+import { ExitIntentPlaybook } from "@/components/ExitIntentPlaybook";
+
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -520,6 +522,8 @@ function Index() {
       </section>
 
       <PlaybookOptIn />
+      <ExitIntentPlaybook />
+
 
 
       {/* Contact */}
