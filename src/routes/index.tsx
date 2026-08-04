@@ -355,6 +355,51 @@ function Index() {
         </div>
       </section>
 
+      {/* How it works */}
+      <section id="process" className="px-6 md:px-10 py-24 md:py-28 border-t border-border">
+        <div className="max-w-7xl mx-auto">
+          <span className="font-mono text-accent text-[11px] uppercase tracking-[0.3em]">Process</span>
+          <h2 className="mt-4 text-4xl md:text-6xl font-extrabold tracking-tighter">
+            THREE STEPS TO YOUR FIRST FUNDED SESSION.
+          </h2>
+          <div className="grid md:grid-cols-3 gap-px bg-border mt-14 border border-border">
+            {[
+              {
+                n: "01",
+                title: "Apply",
+                body: "Two minutes. Tell us your capital, experience, and what you want out of the desk. No screening fee, no pressure.",
+              },
+              {
+                n: "02",
+                title: "Onboarding Call",
+                body: "A 15-minute call to map the Session Sweep, 5–15 Gap, and Power of 3 onto the sessions and pairs you actually trade.",
+              },
+              {
+                n: "03",
+                title: "Trade the Framework",
+                body: "One sweep, one gap, one direction per session — with review, risk limits, and direct access until it's repeatable.",
+              },
+            ].map((step) => (
+              <div key={step.n} className="bg-background p-8 md:p-10 flex flex-col gap-4">
+                <span className="font-mono text-[11px] text-accent tracking-widest">{step.n}</span>
+                <h3 className="text-2xl font-extrabold tracking-tight uppercase">{step.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{step.body}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-12">
+            <a
+              href="#apply"
+              className="inline-block px-8 py-4 bg-foreground text-background font-extrabold text-sm uppercase tracking-widest hover:bg-accent transition-colors"
+            >
+              Start Application
+            </a>
+          </div>
+        </div>
+      </section>
+
+
+
       {/* Tiers */}
       <section id="tiers" className="px-6 md:px-10 py-24 md:py-32">
         <div className="max-w-7xl mx-auto">
