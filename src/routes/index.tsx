@@ -17,9 +17,95 @@ import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { ExitIntentPlaybook } from "@/components/ExitIntentPlaybook";
 
 
+const FAQS: { q: string; a: string }[] = [
+  {
+    q: "What exactly do I get with The Edge ($500)?",
+    a: "Lifetime access to the full Sweep Capital Group course: Session Sweep, the 5–15 Gap, and Power of 3 — taught step by step with live chart breakdowns and the exact rules we trade.",
+  },
+  {
+    q: "Is this a one-time payment or a subscription?",
+    a: "Every tier is a single one-time payment. No monthly fees, no upsells, no recurring billing.",
+  },
+  {
+    q: "Do I need experience to start?",
+    a: "No. The curriculum starts from market structure basics and builds to the full Session Sweep model, so complete beginners and experienced traders both have a clear path.",
+  },
+  {
+    q: "How much capital do I need?",
+    a: "You can learn and practice on a demo or a small funded evaluation account. Most mentees start with a prop firm challenge rather than large personal capital.",
+  },
+  {
+    q: "Are results guaranteed?",
+    a: "No. Trading futures involves substantial risk of loss and past performance does not guarantee future results. We teach a process and a risk framework, not outcomes.",
+  },
+  {
+    q: "How fast do I get access after paying?",
+    a: "Immediately. Checkout sends a confirmation email with your access details and a link to book your onboarding call.",
+  },
+];
+
 export const Route = createFileRoute("/")({
   component: Index,
+  head: () => ({
+    meta: [
+      { title: "Sweep Capital Group — Futures Trading Mentorship in Atlanta" },
+      {
+        name: "description",
+        content:
+          "Learn the Session Sweep, 5–15 Gap and Power of 3 models. One-time payment futures mentorship from Sweep Capital Group — twelve mentees per quarter.",
+      },
+      { property: "og:title", content: "Sweep Capital Group — Futures Trading Mentorship" },
+      {
+        property: "og:description",
+        content:
+          "Session Sweep, the 5–15 Gap and Power of 3 — taught step by step. One-time payment, no subscriptions.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: FAQS.map((f) => ({
+            "@type": "Question",
+            name: f.q,
+            acceptedAnswer: { "@type": "Answer", text: f.a },
+          })),
+        }),
+      },
+    ],
+  }),
 });
+
+function FAQSection() {
+  return (
+    <section id="faq" className="px-6 md:px-10 py-24 md:py-32 border-t border-border">
+      <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-12 md:gap-20">
+        <div className="flex flex-col gap-4">
+          <span className="font-mono text-accent text-[11px] uppercase tracking-[0.3em]">FAQ</span>
+          <h2 className="text-4xl md:text-5xl font-extrabold tracking-tighter uppercase leading-[0.95]">
+            Straight{" "}
+            <span className="italic font-semibold text-accent" style={{ fontFamily: "var(--font-serif)" }}>
+              Answers.
+            </span>
+          </h2>
+        </div>
+        <dl className="flex flex-col divide-y divide-border border-t border-border">
+          {FAQS.map((f) => (
+            <div key={f.q} className="py-6 flex flex-col gap-2">
+              <dt className="font-mono text-[11px] uppercase tracking-widest text-foreground">{f.q}</dt>
+              <dd className="text-sm text-muted-foreground leading-relaxed">{f.a}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+    </section>
+  );
+}
+
 
 const leadSchema = z.object({
   full_name: z.string().trim().min(2, "Name is required").max(100),
@@ -521,7 +607,10 @@ function Index() {
         </div>
       </section>
 
+      <FAQSection />
+
       <PlaybookOptIn />
+
       <ExitIntentPlaybook />
 
 
