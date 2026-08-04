@@ -607,7 +607,10 @@ function Index() {
         </div>
       </section>
 
+      <FAQSection />
+
       <PlaybookOptIn />
+
       <ExitIntentPlaybook />
 
 
