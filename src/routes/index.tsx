@@ -651,7 +651,7 @@ function Index() {
       </section>
 
       {/* Footer */}
-      <footer className="px-6 md:px-10 py-10 border-t border-border">
+      <footer className="px-6 md:px-10 py-10 pb-24 md:pb-10 border-t border-border">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
           <div className="flex items-center gap-3">
             <img src={logo} alt="Sweep Capital Group logo" width={24} height={24} className="h-6 w-6 object-contain opacity-60" />
@@ -663,9 +663,26 @@ function Index() {
           </div>
         </div>
       </footer>
+
+      {/* Mobile sticky CTA */}
+      <div className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-background/95 backdrop-blur px-4 py-3 flex items-center gap-3">
+        <a
+          href="#tiers"
+          className="flex-1 text-center bg-accent text-accent-foreground font-mono text-[11px] uppercase tracking-widest py-3 rounded-sm font-bold"
+        >
+          View Tiers
+        </a>
+        <a
+          href="#apply"
+          className="flex-1 text-center border border-border text-foreground font-mono text-[11px] uppercase tracking-widest py-3 rounded-sm"
+        >
+          Apply
+        </a>
+      </div>
     </div>
   );
 }
+
 
 function ApplicationForm() {
   const [fullName, setFullName] = useState("");
