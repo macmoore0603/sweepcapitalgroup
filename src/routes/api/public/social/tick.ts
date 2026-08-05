@@ -50,7 +50,7 @@ export const Route = createFileRoute("/api/public/social/tick")({
           for (const row of claimed ?? []) {
             const { data: account } = await supabaseAdmin
               .from("social_accounts")
-              .select("platform, platform_account_id, access_token_encrypted")
+              .select("platform, platform_account_id, access_token_encrypted, refresh_token_encrypted, expires_at")
               .eq("id", row.account_id)
               .single();
 
@@ -59,8 +59,26 @@ export const Route = createFileRoute("/api/public/social/tick")({
               body: row.body ?? "",
               mediaUrls: row.media_urls ?? [],
               accessTokenCipher: account?.access_token_encrypted ?? null,
+              refreshTokenCipher: account?.refresh_token_encrypted ?? null,
+              expiresAt: account?.expires_at ?? null,
               platformAccountId: account?.platform_account_id ?? null,
             });
+
+            // Persist refreshed tokens if the publisher rotated them.
+            if (publishResult.refreshedAccessToken) {
+              await supabaseAdmin
+                .from("social_accounts")
+                .update({
+                  access_token_encrypted: publishResult.refreshedAccessToken,
+                  ...(publishResult.refreshedRefreshToken
+                    ? { refresh_token_encrypted: publishResult.refreshedRefreshToken }
+                    : {}),
+                  ...(publishResult.refreshedExpiresAt
+                    ? { expires_at: publishResult.refreshedExpiresAt }
+                    : {}),
+                })
+                .eq("id", row.account_id);
+            }
 
             if (publishResult.ok) {
               result.published++;

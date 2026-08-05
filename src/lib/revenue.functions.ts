@@ -64,19 +64,22 @@ export const getRevenueSummary = createServerFn({ method: 'GET' })
     const startOfMonth = new Date()
     startOfMonth.setUTCDate(1); startOfMonth.setUTCHours(0, 0, 0, 0)
 
-    const [{ data: monthRows }, { data: openIntents }, { data: nurture }, { data: recent }] = await Promise.all([
+    const [{ data: monthRows }, { data: openIntents }, { data: nurture }, { data: recent }, { data: referralClicks }, { data: referralConversions }] = await Promise.all([
       supabase.from('revenue_events').select('amount_cents,created_at,product_name,email')
         .gte('created_at', startOfMonth.toISOString()),
       supabase.from('checkout_intents').select('id').eq('status', 'open'),
       supabase.from('nurture_state').select('id').eq('stopped', false),
       supabase.from('revenue_events').select('amount_cents,product_name,email,created_at')
         .order('created_at', { ascending: false }).limit(10),
+      supabase.from('referral_clicks').select('id').gte('created_at', startOfMonth.toISOString()),
+      supabase.from('referral_conversions').select('amount_cents').gte('created_at', startOfMonth.toISOString()),
     ])
 
     const monthCents = (monthRows ?? []).reduce((s: number, r: any) => s + (r.amount_cents ?? 0), 0)
     const day = new Date().getUTCDate()
     const daysInMonth = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth() + 1, 0)).getUTCDate()
     const paceCents = Math.round((monthCents / Math.max(day, 1)) * daysInMonth)
+    const referralMonthCents = (referralConversions ?? []).reduce((s: number, r: any) => s + (r.amount_cents ?? 0), 0)
 
     return {
       monthCents,
@@ -87,6 +90,9 @@ export const getRevenueSummary = createServerFn({ method: 'GET' })
       activeNurture: nurture?.length ?? 0,
       recent: recent ?? [],
       settings,
+      referralClicks: referralClicks?.length ?? 0,
+      referralConversions: referralConversions?.length ?? 0,
+      referralMonthCents,
     }
   })
 

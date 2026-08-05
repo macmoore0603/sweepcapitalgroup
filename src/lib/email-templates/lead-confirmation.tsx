@@ -5,6 +5,7 @@ import {
   Head,
   Heading,
   Html,
+  Link,
   Preview,
   Section,
   Text,
@@ -17,9 +18,10 @@ interface LeadConfirmationProps {
   name?: string
   tier?: string
   bookingUrl?: string
+  referralUrl?: string
 }
 
-const LeadConfirmationEmail = ({ name, tier, bookingUrl }: LeadConfirmationProps) => (
+const LeadConfirmationEmail = ({ name, tier, bookingUrl, referralUrl }: LeadConfirmationProps) => (
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>Pick a time for your onboarding call — takes 30 seconds.</Preview>
@@ -74,6 +76,16 @@ const LeadConfirmationEmail = ({ name, tier, bookingUrl }: LeadConfirmationProps
           you get immediate access to course materials and your first 1-on-1 session.
         </Text>
 
+        {referralUrl ? (
+          <Section style={referralSection}>
+            <Text style={cardLabel}>Share the framework</Text>
+            <Text style={text}>
+              Know another trader who would benefit from the Session Sweep Playbook? Send them your personal link:
+            </Text>
+            <Link href={referralUrl} style={referralLink}>{referralUrl}</Link>
+          </Section>
+        ) : null}
+
         <Text style={footer}>
           Reply directly to this email if you have any questions.
           <br />— The {SITE_NAME} Team
@@ -94,6 +106,7 @@ export const template = {
     name: 'Jane Doe',
     tier: 'Course + Coaching — $1,500',
     bookingUrl: 'https://sweepcapitalgroup.com/book?lead=preview&token=preview',
+    referralUrl: 'https://sweepcapitalgroup.com/ref/janedoe7a2b',
   },
 } satisfies TemplateEntry
 
@@ -182,4 +195,15 @@ const footer = {
   color: '#888',
   margin: '32px 0 0',
   lineHeight: '1.6',
+}
+const referralSection = {
+  border: '1px dashed #c8a24a',
+  padding: '18px 20px',
+  margin: '24px 0 8px',
+  backgroundColor: '#faf8f2',
+}
+const referralLink = {
+  color: '#8a6d2f',
+  fontSize: '13px',
+  wordBreak: 'break-all' as const,
 }

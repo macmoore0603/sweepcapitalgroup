@@ -1,9 +1,9 @@
 import { Body, Container, Head, Heading, Html, Preview, Section, Text, Link } from '@react-email/components'
 import type { TemplateEntry } from './registry'
 
-interface Props { name?: string; siteUrl?: string; bookingUrl?: string }
+interface Props { name?: string; siteUrl?: string; bookingUrl?: string; referralUrl?: string }
 
-const Email = ({ name, siteUrl, bookingUrl }: Props) => (
+const Email = ({ name, siteUrl, bookingUrl, referralUrl }: Props) => (
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>Your Session Sweep Playbook — three setups, one framework</Preview>
@@ -49,6 +49,16 @@ const Email = ({ name, siteUrl, bookingUrl }: Props) => (
           </Link>.
         </Text>
 
+        {referralUrl ? (
+          <Section style={referralSection}>
+            <Text style={h2}>Share the playbook</Text>
+            <Text style={text}>
+              Know another trader who needs a clear framework? Send them your personal link:
+            </Text>
+            <Link href={referralUrl} style={referralLink}>{referralUrl}</Link>
+          </Section>
+        ) : null}
+
         <Text style={text}>— Sweep Capital Group</Text>
         <Text style={small}>
           Educational content only. Trading involves substantial risk of loss and is not suitable for everyone.
@@ -62,7 +72,7 @@ export const template = {
   component: Email,
   subject: 'Your Session Sweep Playbook (inside)',
   displayName: 'Lead Magnet · Session Sweep Playbook',
-  previewData: { name: 'Sam', siteUrl: 'https://sweepcapitalgroup.com' },
+  previewData: { name: 'Sam', siteUrl: 'https://sweepcapitalgroup.com', referralUrl: 'https://sweepcapitalgroup.com/ref/smith7a2b' },
 } satisfies TemplateEntry
 
 const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
@@ -73,3 +83,14 @@ const card = { borderLeft: '3px solid #c8a24a', paddingLeft: '14px', margin: '18
 const text = { fontSize: '15px', color: '#333', lineHeight: '23px' }
 const link = { color: '#8a6d2f' }
 const small = { fontSize: '11px', color: '#999', marginTop: '22px' }
+const referralSection = {
+  border: '1px dashed #c8a24a',
+  padding: '16px 18px',
+  margin: '22px 0',
+  backgroundColor: '#faf8f2',
+}
+const referralLink = {
+  color: '#8a6d2f',
+  fontSize: '13px',
+  wordBreak: 'break-all' as const,
+}

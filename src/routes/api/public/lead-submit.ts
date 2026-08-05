@@ -25,7 +25,14 @@ const submitSchema = z.object({
   referrer: optionalStr(2048),
   landing_page: optionalStr(2048),
   source: optionalStr(40),
+  ref: optionalStr(40),
 })
+
+function generateReferralCode(name: string): string {
+  const clean = name.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 8)
+  const suffix = Math.random().toString(36).slice(2, 6)
+  return `${clean || 'trader'}${suffix}`
+}
 
 function generateToken(): string {
   const bytes = new Uint8Array(32)
@@ -59,13 +66,25 @@ export const Route = createFileRoute('/api/public/lead-submit')({
         const {
           full_name, email, tier, notes,
           utm_source, utm_medium, utm_campaign, utm_term, utm_content,
-          referrer, landing_page, source,
+          referrer, landing_page, source, ref,
         } = parsed.data
         const normalizedEmail = email.toLowerCase()
 
         const supabase: any = createClient(supabaseUrl, supabaseServiceKey)
 
-        // 1. Insert the lead and capture id + booking token
+        // 1. Build a unique referral code
+        let referralCode = generateReferralCode(full_name)
+        for (let i = 0; i < 5; i++) {
+          const { data: existing } = await supabase
+            .from('leads')
+            .select('referral_code')
+            .eq('referral_code', referralCode)
+            .maybeSingle()
+          if (!existing) break
+          referralCode = generateReferralCode(`${full_name}${i}`)
+        }
+
+        // 2. Insert the lead and capture id + booking token + referral code
         const { data: insertedLead, error: insertError } = await supabase
           .from('leads')
           .insert({
@@ -80,8 +99,10 @@ export const Route = createFileRoute('/api/public/lead-submit')({
             utm_content: utm_content ?? null,
             referrer: referrer ?? null,
             landing_page: landing_page ?? null,
+            referral_code: referralCode,
+            referred_by: ref ?? null,
           })
-          .select('id, booking_token')
+          .select('id, booking_token, referral_code')
           .single()
         if (insertError || !insertedLead) {
           console.error('Lead insert failed', { error: insertError })
@@ -136,7 +157,8 @@ export const Route = createFileRoute('/api/public/lead-submit')({
         if (!template) {
           return Response.json({ success: true, email_sent: false, lead_id: insertedLead.id, booking_token: insertedLead.booking_token })
         }
-        const data = { name: full_name, tier, bookingUrl, siteUrl: origin }
+        const referralUrl = `${origin}/ref/${insertedLead.referral_code}`
+        const data = { name: full_name, tier, bookingUrl, siteUrl: origin, referralUrl }
         const element = createElement(template.component, data)
         const html = await render(element)
         const plainText = await render(element, { plainText: true })
@@ -181,7 +203,7 @@ export const Route = createFileRoute('/api/public/lead-submit')({
             status: 'failed',
             error_message: 'Failed to enqueue email',
           })
-          return Response.json({ success: true, email_sent: false, lead_id: insertedLead.id, booking_token: insertedLead.booking_token })
+          return Response.json({ success: true, email_sent: false, lead_id: insertedLead.id, booking_token: insertedLead.booking_token, referral_code: insertedLead.referral_code })
         }
 
         // 6. Seed nurture drip (first follow-up in 3 days)
@@ -200,6 +222,7 @@ export const Route = createFileRoute('/api/public/lead-submit')({
           email_sent: true,
           lead_id: insertedLead.id,
           booking_token: insertedLead.booking_token,
+          referral_code: insertedLead.referral_code,
         })
       },
     },
