@@ -25,20 +25,21 @@ export async function publishX(opts: {
     }
 
     let accessToken = decryptTokenFromDb(opts.accessTokenCipher);
-    let refreshToken = opts.refreshTokenCipher
+    const refreshToken = opts.refreshTokenCipher
       ? decryptTokenFromDb(opts.refreshTokenCipher)
       : undefined;
+    let latestRefreshToken = refreshToken;
 
     const expiresAt = opts.expiresAt ? new Date(opts.expiresAt).getTime() : 0;
-    const needsRefresh = refreshToken && (!expiresAt || expiresAt < Date.now() + 5 * 60 * 1000);
+    const needsRefresh = Boolean(refreshToken) && (!expiresAt || expiresAt < Date.now() + 5 * 60 * 1000);
 
-    if (needsRefresh) {
+    if (needsRefresh && refreshToken) {
       const refreshed = await refreshXToken(refreshToken);
       if (!refreshed.ok) {
         return { ok: false, error: `X token refresh failed: ${refreshed.error}` };
       }
       accessToken = refreshed.accessToken;
-      refreshToken = refreshed.refreshToken ?? refreshToken;
+      if (refreshed.refreshToken) latestRefreshToken = refreshed.refreshToken;
     }
 
     const res = await fetch("https://api.twitter.com/2/tweets", {
@@ -66,10 +67,10 @@ export async function publishX(opts: {
       ok: true,
       platformPostId: id,
       platformPostUrl: `https://x.com/i/web/status/${id}`,
-      ...(needsRefresh && refreshToken
+      ...(needsRefresh && latestRefreshToken
         ? {
             refreshedAccessToken: encryptTokenToDb(accessToken),
-            refreshedRefreshToken: refreshToken ? encryptTokenToDb(refreshToken) : undefined,
+            refreshedRefreshToken: encryptTokenToDb(latestRefreshToken),
           }
         : {}),
     };
