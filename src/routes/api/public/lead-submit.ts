@@ -66,13 +66,25 @@ export const Route = createFileRoute('/api/public/lead-submit')({
         const {
           full_name, email, tier, notes,
           utm_source, utm_medium, utm_campaign, utm_term, utm_content,
-          referrer, landing_page, source,
+          referrer, landing_page, source, ref,
         } = parsed.data
         const normalizedEmail = email.toLowerCase()
 
         const supabase: any = createClient(supabaseUrl, supabaseServiceKey)
 
-        // 1. Insert the lead and capture id + booking token
+        // 1. Build a unique referral code
+        let referralCode = generateReferralCode(full_name)
+        for (let i = 0; i < 5; i++) {
+          const { data: existing } = await supabase
+            .from('leads')
+            .select('referral_code')
+            .eq('referral_code', referralCode)
+            .maybeSingle()
+          if (!existing) break
+          referralCode = generateReferralCode(`${full_name}${i}`)
+        }
+
+        // 2. Insert the lead and capture id + booking token + referral code
         const { data: insertedLead, error: insertError } = await supabase
           .from('leads')
           .insert({
@@ -87,8 +99,10 @@ export const Route = createFileRoute('/api/public/lead-submit')({
             utm_content: utm_content ?? null,
             referrer: referrer ?? null,
             landing_page: landing_page ?? null,
+            referral_code: referralCode,
+            referred_by: ref ?? null,
           })
-          .select('id, booking_token')
+          .select('id, booking_token, referral_code')
           .single()
         if (insertError || !insertedLead) {
           console.error('Lead insert failed', { error: insertError })
