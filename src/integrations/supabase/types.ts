@@ -55,6 +55,7 @@ export type Database = {
           id: string
           product_name: string | null
           recovery_sent_at: string | null
+          referral_code: string | null
           status: string
           stripe_session_id: string
         }
@@ -68,6 +69,7 @@ export type Database = {
           id?: string
           product_name?: string | null
           recovery_sent_at?: string | null
+          referral_code?: string | null
           status?: string
           stripe_session_id: string
         }
@@ -81,6 +83,7 @@ export type Database = {
           id?: string
           product_name?: string | null
           recovery_sent_at?: string | null
+          referral_code?: string | null
           status?: string
           stripe_session_id?: string
         }
