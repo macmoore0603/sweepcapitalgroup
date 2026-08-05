@@ -23,6 +23,7 @@ import { Route as AgentRouteImport } from './routes/agent'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as RefCodeRouteImport } from './routes/ref.$code'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
@@ -110,6 +111,11 @@ const AboutRoute = AboutRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RefCodeRoute = RefCodeRouteImport.update({
+  id: '/ref/$code',
+  path: '/ref/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
@@ -231,6 +237,7 @@ export interface FileRoutesByFullPath {
   '/api/health': typeof ApiHealthRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/ref/$code': typeof RefCodeRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/api/public/lead-submit': typeof ApiPublicLeadSubmitRoute
@@ -265,6 +272,7 @@ export interface FileRoutesByTo {
   '/api/health': typeof ApiHealthRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/ref/$code': typeof RefCodeRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/api/public/lead-submit': typeof ApiPublicLeadSubmitRoute
@@ -300,6 +308,7 @@ export interface FileRoutesById {
   '/api/health': typeof ApiHealthRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/ref/$code': typeof RefCodeRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/api/public/lead-submit': typeof ApiPublicLeadSubmitRoute
@@ -336,6 +345,7 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/checkout/return'
     | '/email/unsubscribe'
+    | '/ref/$code'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/api/public/lead-submit'
@@ -370,6 +380,7 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/checkout/return'
     | '/email/unsubscribe'
+    | '/ref/$code'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/api/public/lead-submit'
@@ -404,6 +415,7 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/checkout/return'
     | '/email/unsubscribe'
+    | '/ref/$code'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/api/public/lead-submit'
@@ -439,6 +451,7 @@ export interface RootRouteChildren {
   ApiHealthRoute: typeof ApiHealthRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
+  RefCodeRoute: typeof RefCodeRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiPublicLeadSubmitRoute: typeof ApiPublicLeadSubmitRoute
@@ -552,6 +565,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ref/$code': {
+      id: '/ref/$code'
+      path: '/ref/$code'
+      fullPath: '/ref/$code'
+      preLoaderRoute: typeof RefCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/email/unsubscribe': {
@@ -704,6 +724,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiHealthRoute: ApiHealthRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
+  RefCodeRoute: RefCodeRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiPublicLeadSubmitRoute: ApiPublicLeadSubmitRoute,
