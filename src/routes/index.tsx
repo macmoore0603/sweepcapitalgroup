@@ -517,7 +517,7 @@ function Index() {
           </DialogHeader>
           <PaymentTestModeBanner />
           <div className="p-2">
-            {checkoutPriceId && <StripeEmbeddedCheckout priceId={checkoutPriceId} />}
+            {checkoutPriceId && <StripeEmbeddedCheckout priceId={checkoutPriceId} referralCode={utmPayload().ref} />}
           </div>
         </DialogContent>
       </Dialog>
