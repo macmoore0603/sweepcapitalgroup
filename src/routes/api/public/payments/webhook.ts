@@ -155,6 +155,22 @@ async function recordRevenue(session: any, env: StripeEnv) {
     await supabase.from('checkout_intents')
       .update({ status: 'completed', completed_at: new Date().toISOString() })
       .eq('stripe_session_id', session.id)
+
+    // Track referral conversion if a code was attached
+    const refCode = session?.client_reference_id ?? null
+    if (refCode) {
+      const { data: lead } = await supabase
+        .from('leads')
+        .select('id')
+        .eq('referral_code', refCode)
+        .maybeSingle()
+      await supabase.from('referral_conversions').insert({
+        code: refCode,
+        lead_id: lead?.id ?? null,
+        stripe_session_id: session.id,
+        amount_cents: session.amount_total ?? 0,
+      })
+    }
   } catch (e) { console.error('recordRevenue', e) }
 }
 
