@@ -164,6 +164,12 @@ function RevenuePanel() {
             <Stat label="Open checkouts" value={String(d.openIntents)} sub="chased in <1h" />
             <Stat label="Active nurture" value={String(d.activeNurture)} sub="in email drip" />
           </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm pt-2 border-t border-border">
+            <Stat label="Referral clicks" value={String(d.referralClicks ?? 0)} sub="this month" />
+            <Stat label="Referral sales" value={String(d.referralConversions ?? 0)} sub={`${fmt(d.referralMonthCents ?? 0)} attributed`} />
+            <Stat label="Referral rate" value={d.referralClicks ? `${Math.round(((d.referralConversions ?? 0) / d.referralClicks) * 1000) / 10}%` : "0%"} sub="click → sale" />
+            <Stat label="Viral revenue" value={fmt(d.referralMonthCents ?? 0)} sub="of MTD total" />
+          </div>
           <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
             <div className="h-full bg-primary" style={{ width: `${pct}%` }} />
           </div>
