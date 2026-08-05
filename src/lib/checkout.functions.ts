@@ -38,6 +38,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       managed_payments: { enabled: true },
       expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
       ...(data.customerEmail && { customer_email: data.customerEmail }),
+      ...(data.referralCode && { client_reference_id: data.referralCode }),
     } as any);
 
     // Fire-and-forget: record intent so Revenue Agent can chase abandons
@@ -55,6 +56,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
           currency: stripePrice.currency,
           environment: data.environment,
           status: "open",
+          referral_code: data.referralCode ?? null,
         }, { onConflict: "stripe_session_id" });
       }
     } catch (e) { console.error("intent seed", e); }
