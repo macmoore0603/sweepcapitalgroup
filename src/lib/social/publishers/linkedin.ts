@@ -35,8 +35,8 @@ export async function publishLinkedIn(opts: {
 
     if (needsRefresh && refreshToken) {
       const refreshed = await refreshLinkedInToken(refreshToken);
-      if (!refreshed.ok) {
-        return { ok: false, error: `LinkedIn token refresh failed: ${refreshed.error}` };
+      if (!refreshed.ok || !refreshed.accessToken) {
+        return { ok: false, error: `LinkedIn token refresh failed: ${refreshed.error ?? "no token"}` };
       }
       accessToken = refreshed.accessToken;
       if (refreshed.refreshToken) latestRefreshToken = refreshed.refreshToken;

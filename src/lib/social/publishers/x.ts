@@ -35,8 +35,8 @@ export async function publishX(opts: {
 
     if (needsRefresh && refreshToken) {
       const refreshed = await refreshXToken(refreshToken);
-      if (!refreshed.ok) {
-        return { ok: false, error: `X token refresh failed: ${refreshed.error}` };
+      if (!refreshed.ok || !refreshed.accessToken) {
+        return { ok: false, error: `X token refresh failed: ${refreshed.error ?? "no token"}` };
       }
       accessToken = refreshed.accessToken;
       if (refreshed.refreshToken) latestRefreshToken = refreshed.refreshToken;
