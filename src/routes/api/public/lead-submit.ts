@@ -25,7 +25,14 @@ const submitSchema = z.object({
   referrer: optionalStr(2048),
   landing_page: optionalStr(2048),
   source: optionalStr(40),
+  ref: optionalStr(40),
 })
+
+function generateReferralCode(name: string): string {
+  const clean = name.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 8)
+  const suffix = Math.random().toString(36).slice(2, 6)
+  return `${clean || 'trader'}${suffix}`
+}
 
 function generateToken(): string {
   const bytes = new Uint8Array(32)
