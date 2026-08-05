@@ -157,7 +157,8 @@ export const Route = createFileRoute('/api/public/lead-submit')({
         if (!template) {
           return Response.json({ success: true, email_sent: false, lead_id: insertedLead.id, booking_token: insertedLead.booking_token })
         }
-        const data = { name: full_name, tier, bookingUrl, siteUrl: origin }
+        const referralUrl = `${origin}/ref/${insertedLead.referral_code}`
+        const data = { name: full_name, tier, bookingUrl, siteUrl: origin, referralUrl }
         const element = createElement(template.component, data)
         const html = await render(element)
         const plainText = await render(element, { plainText: true })
@@ -202,7 +203,7 @@ export const Route = createFileRoute('/api/public/lead-submit')({
             status: 'failed',
             error_message: 'Failed to enqueue email',
           })
-          return Response.json({ success: true, email_sent: false, lead_id: insertedLead.id, booking_token: insertedLead.booking_token })
+          return Response.json({ success: true, email_sent: false, lead_id: insertedLead.id, booking_token: insertedLead.booking_token, referral_code: insertedLead.referral_code })
         }
 
         // 6. Seed nurture drip (first follow-up in 3 days)
@@ -221,6 +222,7 @@ export const Route = createFileRoute('/api/public/lead-submit')({
           email_sent: true,
           lead_id: insertedLead.id,
           booking_token: insertedLead.booking_token,
+          referral_code: insertedLead.referral_code,
         })
       },
     },
