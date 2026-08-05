@@ -124,6 +124,7 @@ function utmPayload() {
     utm_campaign: pick("utm_campaign"),
     utm_term: pick("utm_term"),
     utm_content: pick("utm_content"),
+    ref: pick("ref"),
     referrer: document.referrer || undefined,
     landing_page: window.location.href.slice(0, 2048),
   };

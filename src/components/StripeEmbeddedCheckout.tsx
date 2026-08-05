@@ -6,9 +6,10 @@ interface Props {
   priceId: string;
   customerEmail?: string;
   returnUrl?: string;
+  referralCode?: string;
 }
 
-export function StripeEmbeddedCheckout({ priceId, customerEmail, returnUrl }: Props) {
+export function StripeEmbeddedCheckout({ priceId, customerEmail, returnUrl, referralCode }: Props) {
   const fetchClientSecret = async (): Promise<string> => {
     const secret = await createCheckoutSession({
       data: {
@@ -18,6 +19,7 @@ export function StripeEmbeddedCheckout({ priceId, customerEmail, returnUrl }: Pr
           returnUrl ||
           `${window.location.origin}/checkout/return?session_id={CHECKOUT_SESSION_ID}`,
         environment: getStripeEnvironment(),
+        referralCode,
       },
     });
     if (!secret) throw new Error("Failed to create checkout session");
