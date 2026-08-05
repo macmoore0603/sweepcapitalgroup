@@ -529,8 +529,8 @@ function AccountsPanel({
   const [handle, setHandle] = useState("");
   const [minPerDay, setMinPerDay] = useState(MIN_POSTS_PER_DAY);
 
-  const connectIG = useMutation({
-    mutationFn: () => startOAuth({ data: { platform: "instagram" } }),
+  const connect = useMutation({
+    mutationFn: (p: "instagram" | "x" | "linkedin") => startOAuth({ data: { platform: p } }),
     onSuccess: (r) => {
       window.location.href = r.url;
     },
@@ -563,14 +563,28 @@ function AccountsPanel({
       <h2 className="text-lg font-semibold">Connected accounts</h2>
       <div className="flex flex-wrap gap-2">
         <button
-          onClick={() => connectIG.mutate()}
-          disabled={connectIG.isPending}
+          onClick={() => connect.mutate("instagram")}
+          disabled={connect.isPending}
           className="bg-foreground text-background px-4 py-2 rounded text-sm font-medium disabled:opacity-50"
         >
-          {connectIG.isPending ? "Redirecting…" : "Connect Instagram via Meta"}
+          {connect.variables === "instagram" && connect.isPending ? "Redirecting…" : "Connect Instagram"}
+        </button>
+        <button
+          onClick={() => connect.mutate("x")}
+          disabled={connect.isPending}
+          className="border border-border px-4 py-2 rounded text-sm font-medium disabled:opacity-50"
+        >
+          {connect.variables === "x" && connect.isPending ? "Redirecting…" : "Connect X"}
+        </button>
+        <button
+          onClick={() => connect.mutate("linkedin")}
+          disabled={connect.isPending}
+          className="border border-border px-4 py-2 rounded text-sm font-medium disabled:opacity-50"
+        >
+          {connect.variables === "linkedin" && connect.isPending ? "Redirecting…" : "Connect LinkedIn"}
         </button>
         <span className="text-xs text-muted-foreground self-center">
-          Other platforms light up once their API credentials are added.
+          TikTok / YouTube require developer app credentials next.
         </span>
       </div>
       <form
