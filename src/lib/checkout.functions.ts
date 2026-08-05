@@ -8,6 +8,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       customerEmail?: string;
       returnUrl: string;
       environment: StripeEnv;
+      referralCode?: string;
     }) => {
       if (!/^[a-zA-Z0-9_-]+$/.test(data.priceId)) throw new Error("Invalid priceId");
       if (data.environment !== "sandbox" && data.environment !== "live") {
@@ -15,6 +16,9 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       }
       if (!data.returnUrl || !/^https?:\/\//.test(data.returnUrl)) {
         throw new Error("Invalid returnUrl");
+      }
+      if (data.referralCode && !/^[a-zA-Z0-9]{4,20}$/.test(data.referralCode)) {
+        throw new Error("Invalid referralCode");
       }
       return data;
     },
