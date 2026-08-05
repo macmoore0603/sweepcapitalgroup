@@ -1,10 +1,14 @@
 import type { Platform } from "../types";
 import { publishInstagram } from "./instagram";
+import { publishX } from "./x";
+import { publishLinkedIn } from "./linkedin";
 
 export type PublishInput = {
   body: string;
   mediaUrls: string[];
   accessTokenCipher: string | null;
+  refreshTokenCipher?: string | null;
+  expiresAt?: string | null;
   platformAccountId: string | null;
 };
 
@@ -13,6 +17,9 @@ export type PublishResult = {
   platformPostId?: string;
   platformPostUrl?: string;
   error?: string;
+  refreshedAccessToken?: string;
+  refreshedRefreshToken?: string;
+  refreshedExpiresAt?: string;
 };
 
 export async function publishToPlatform(
@@ -35,7 +42,21 @@ export async function publishToPlatform(
         igUserId: input.platformAccountId,
       });
     case "x":
+      return publishX({
+        body: input.body,
+        mediaUrls: input.mediaUrls,
+        accessTokenCipher: input.accessTokenCipher,
+        refreshTokenCipher: input.refreshTokenCipher,
+        expiresAt: input.expiresAt,
+      });
     case "linkedin":
+      return publishLinkedIn({
+        body: input.body,
+        mediaUrls: input.mediaUrls,
+        accessTokenCipher: input.accessTokenCipher,
+        refreshTokenCipher: input.refreshTokenCipher,
+        expiresAt: input.expiresAt,
+      });
     case "tiktok":
     case "youtube":
       return {
