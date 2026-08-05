@@ -255,6 +255,8 @@ export type Database = {
           id: string
           landing_page: string | null
           notes: string | null
+          referral_code: string | null
+          referred_by: string | null
           referrer: string | null
           scheduled_at: string | null
           status: Database["public"]["Enums"]["lead_status"]
@@ -275,6 +277,8 @@ export type Database = {
           id?: string
           landing_page?: string | null
           notes?: string | null
+          referral_code?: string | null
+          referred_by?: string | null
           referrer?: string | null
           scheduled_at?: string | null
           status?: Database["public"]["Enums"]["lead_status"]
@@ -295,6 +299,8 @@ export type Database = {
           id?: string
           landing_page?: string | null
           notes?: string | null
+          referral_code?: string | null
+          referred_by?: string | null
           referrer?: string | null
           scheduled_at?: string | null
           status?: Database["public"]["Enums"]["lead_status"]
@@ -437,6 +443,68 @@ export type Database = {
             columns: ["post_id"]
             isOneToOne: false
             referencedRelation: "scheduled_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referral_clicks: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          ip: string | null
+          user_agent: string | null
+          utm_source: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          ip?: string | null
+          user_agent?: string | null
+          utm_source?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          ip?: string | null
+          user_agent?: string | null
+          utm_source?: string | null
+        }
+        Relationships: []
+      }
+      referral_conversions: {
+        Row: {
+          amount_cents: number
+          code: string
+          created_at: string
+          id: string
+          lead_id: string | null
+          stripe_session_id: string | null
+        }
+        Insert: {
+          amount_cents?: number
+          code: string
+          created_at?: string
+          id?: string
+          lead_id?: string | null
+          stripe_session_id?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          code?: string
+          created_at?: string
+          id?: string
+          lead_id?: string | null
+          stripe_session_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_conversions_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
             referencedColumns: ["id"]
           },
         ]
