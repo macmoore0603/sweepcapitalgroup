@@ -5,6 +5,7 @@ import {
   Head,
   Heading,
   Html,
+  Link,
   Preview,
   Section,
   Text,
@@ -194,4 +195,15 @@ const footer = {
   color: '#888',
   margin: '32px 0 0',
   lineHeight: '1.6',
+}
+const referralSection = {
+  border: '1px dashed #c8a24a',
+  padding: '18px 20px',
+  margin: '24px 0 8px',
+  backgroundColor: '#faf8f2',
+}
+const referralLink = {
+  color: '#8a6d2f',
+  fontSize: '13px',
+  wordBreak: 'break-all' as const,
 }
