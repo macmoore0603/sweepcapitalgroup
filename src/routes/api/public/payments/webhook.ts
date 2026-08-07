@@ -161,7 +161,7 @@ async function recordRevenue(session: any, env: StripeEnv) {
     if (refCode) {
       const { data: lead } = await supabase
         .from('leads')
-        .select('id')
+        .select('id, email, full_name')
         .eq('referral_code', refCode)
         .maybeSingle()
       await supabase.from('referral_conversions').insert({
@@ -170,6 +170,26 @@ async function recordRevenue(session: any, env: StripeEnv) {
         stripe_session_id: session.id,
         amount_cents: session.amount_total ?? 0,
       })
+
+      // Reward notice to the referrer
+      if (lead?.email) {
+        try {
+          const { enqueueTemplateEmail } = await import('@/lib/email/send.server')
+          await enqueueTemplateEmail({
+            templateName: 'referral-reward',
+            recipientEmail: lead.email,
+            idempotencyKey: `referral-${session.id}`,
+            label: 'referral-reward',
+            data: {
+              name: lead.full_name ?? undefined,
+              amount: formatAmount(session.amount_total, session.currency),
+              productName: item?.description ?? undefined,
+              referralUrl: `https://sweepcapitalgroup.com/ref/${refCode}`,
+              bookingUrl: 'https://sweepcapitalgroup.com/book',
+            },
+          })
+        } catch (e) { console.error('referral reward email', e) }
+      }
     }
   } catch (e) { console.error('recordRevenue', e) }
 }
