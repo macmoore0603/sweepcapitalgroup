@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as ReferRouteImport } from './routes/refer'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PlaybookRouteImport } from './routes/playbook'
 import { Route as MentorshipRouteImport } from './routes/mentorship'
@@ -56,6 +57,11 @@ const TermsRoute = TermsRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReferRoute = ReferRouteImport.update({
+  id: '/refer',
+  path: '/refer',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -229,6 +235,7 @@ export interface FileRoutesByFullPath {
   '/mentorship': typeof MentorshipRoute
   '/playbook': typeof PlaybookRoute
   '/privacy': typeof PrivacyRoute
+  '/refer': typeof ReferRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
@@ -264,6 +271,7 @@ export interface FileRoutesByTo {
   '/mentorship': typeof MentorshipRoute
   '/playbook': typeof PlaybookRoute
   '/privacy': typeof PrivacyRoute
+  '/refer': typeof ReferRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
@@ -300,6 +308,7 @@ export interface FileRoutesById {
   '/mentorship': typeof MentorshipRoute
   '/playbook': typeof PlaybookRoute
   '/privacy': typeof PrivacyRoute
+  '/refer': typeof ReferRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
@@ -337,6 +346,7 @@ export interface FileRouteTypes {
     | '/mentorship'
     | '/playbook'
     | '/privacy'
+    | '/refer'
     | '/sitemap.xml'
     | '/terms'
     | '/unsubscribe'
@@ -372,6 +382,7 @@ export interface FileRouteTypes {
     | '/mentorship'
     | '/playbook'
     | '/privacy'
+    | '/refer'
     | '/sitemap.xml'
     | '/terms'
     | '/unsubscribe'
@@ -407,6 +418,7 @@ export interface FileRouteTypes {
     | '/mentorship'
     | '/playbook'
     | '/privacy'
+    | '/refer'
     | '/sitemap.xml'
     | '/terms'
     | '/unsubscribe'
@@ -443,6 +455,7 @@ export interface RootRouteChildren {
   MentorshipRoute: typeof MentorshipRoute
   PlaybookRoute: typeof PlaybookRoute
   PrivacyRoute: typeof PrivacyRoute
+  ReferRoute: typeof ReferRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
@@ -488,6 +501,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/refer': {
+      id: '/refer'
+      path: '/refer'
+      fullPath: '/refer'
+      preLoaderRoute: typeof ReferRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -715,6 +735,7 @@ const rootRouteChildren: RootRouteChildren = {
   MentorshipRoute: MentorshipRoute,
   PlaybookRoute: PlaybookRoute,
   PrivacyRoute: PrivacyRoute,
+  ReferRoute: ReferRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   UnsubscribeRoute: UnsubscribeRoute,
