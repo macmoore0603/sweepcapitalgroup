@@ -139,6 +139,20 @@ function renderBody(
         tone="success"
       >
         {meta}
+        <div className="border border-accent/40 bg-accent/5 p-5 mt-4 space-y-3">
+          <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+            Bring a trader with you
+          </p>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Grab your personal referral link — you get credit every time someone you send joins.
+          </p>
+          <Link
+            to="/refer"
+            className="inline-block px-6 py-3 bg-foreground text-background font-extrabold text-[11px] uppercase tracking-widest hover:bg-accent transition-colors"
+          >
+            Get my referral link
+          </Link>
+        </div>
         <HomeLink />
       </Panel>
     );
