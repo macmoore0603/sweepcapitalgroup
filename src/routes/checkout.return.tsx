@@ -252,6 +252,49 @@ function Panel({
   );
 }
 
+function Upsell({ amount, email }: { amount: number; email: string | null }) {
+  const [open, setOpen] = useState(false);
+
+  // Tier detection by amount paid — no upsell for the all-inclusive package.
+  const offer =
+    amount > 0 && amount < 600
+      ? {
+          priceId: "mentorship_course_coaching_onetime",
+          label: "Add the Apprenticeship",
+          price: "$1,500",
+          body: "You have the framework. Add live 1-on-1 coaching and get your entries reviewed every week until the sweep setup is automatic.",
+        }
+      : amount >= 600 && amount < 1800
+        ? {
+            priceId: "mentorship_managed_onetime",
+            label: "Add Managed Trading",
+            price: "$500",
+            body: "Have your account personally traded alongside your coaching so you learn while the model runs live.",
+          }
+        : null;
+
+  if (!offer) return null;
+
+  return (
+    <div className="border border-accent/40 bg-accent/5 p-5 mt-4 space-y-3">
+      <p className="font-mono text-[11px] uppercase tracking-widest text-accent">
+        One-time upgrade · {offer.price}
+      </p>
+      <p className="text-sm text-muted-foreground leading-relaxed">{offer.body}</p>
+      {open ? (
+        <StripeEmbeddedCheckout priceId={offer.priceId} customerEmail={email ?? undefined} />
+      ) : (
+        <button
+          onClick={() => setOpen(true)}
+          className="px-6 py-3 bg-foreground text-background font-extrabold text-[11px] uppercase tracking-widest hover:bg-accent transition-colors"
+        >
+          {offer.label}
+        </button>
+      )}
+    </div>
+  );
+}
+
 function HomeLink() {
   return (
     <Link
@@ -262,3 +305,4 @@ function HomeLink() {
     </Link>
   );
 }
+
