@@ -139,6 +139,7 @@ function renderBody(
         tone="success"
       >
         {meta}
+        <Upsell amount={data.amountTotal} email={data.customerEmail} />
         <div className="border border-accent/40 bg-accent/5 p-5 mt-4 space-y-3">
           <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
             Bring a trader with you
@@ -157,6 +158,7 @@ function renderBody(
       </Panel>
     );
   }
+
 
   if (data.outcome === "pending") {
     return (
