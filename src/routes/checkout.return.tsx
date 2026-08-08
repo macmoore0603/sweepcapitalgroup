@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { getCheckoutSessionStatus } from "@/lib/checkout.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
+import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
+
 
 type Status = Awaited<ReturnType<typeof getCheckoutSessionStatus>>;
 
