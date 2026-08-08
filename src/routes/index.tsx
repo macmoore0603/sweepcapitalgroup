@@ -703,7 +703,9 @@ function Index() {
             <img src={logo} alt="Sweep Capital Group logo" width={24} height={24} className="h-6 w-6 object-contain opacity-60" />
             <span>© 2026 Sweep Capital Group — Atlanta, GA</span>
           </div>
-          <div className="flex gap-6">
+          <div className="flex flex-wrap justify-center gap-6">
+            <Link to="/playbook" className="hover:text-foreground transition-colors">Free Playbook</Link>
+            <Link to="/refer" className="hover:text-foreground transition-colors">Refer &amp; Earn</Link>
             <Link to="/terms" className="hover:text-foreground transition-colors">Terms</Link>
             <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
           </div>
