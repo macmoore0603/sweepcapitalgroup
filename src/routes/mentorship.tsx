@@ -134,7 +134,7 @@ const FAQ_GROUPS: FaqGroup[] = [
       },
       {
         q: "What does the Managed Trading guarantee cover?",
-        a: "If your account does not reach a $2,000 minimum net profit within the 3–4 week target window, we continue trading at no additional cost until it does, or we refund the $500 setup fee. Full terms in your written agreement.",
+        a: "If your account does not reach a $2,000 minimum net profit within the 3–4 week target window, we continue trading at no additional cost until it does, or we refund the $750 setup fee. Full terms in your written agreement.",
       },
       {
         q: "Are returns guaranteed for self-trading tiers?",
