@@ -71,7 +71,7 @@ const TIERS: Tier[] = [
   {
     id: "managed",
     name: "Managed Trading",
-    price: "$500",
+    price: "$750",
     priceId: "mentorship_managed_onetime",
     tagline: "I trade for you. Guaranteed $2k minimum in 3–4 weeks.",
     features: [
