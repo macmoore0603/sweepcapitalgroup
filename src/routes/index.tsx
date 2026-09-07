@@ -444,7 +444,7 @@ function Index() {
                 num: "03",
                 tag: "Done-For-You",
                 title: "Managed Trading",
-                price: "$500",
+                price: "$750",
                 priceId: "mentorship_managed_onetime",
                 desc: "Your account is personally managed and traded on your behalf. Guaranteed $2,000 minimum profit in a 3–4 week window — or your money back, no questions asked.",
                 features: ["We trade your account for you", "Guaranteed $2k minimum profit", "3–4 week performance window", "Weekly transparent updates", "Money-back guarantee"],
