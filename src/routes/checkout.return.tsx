@@ -269,8 +269,8 @@ function Upsell({ amount, email }: { amount: number; email: string | null }) {
       : amount >= 600 && amount < 1800
         ? {
             priceId: "mentorship_managed_onetime",
-            label: "Add Managed Trading",
-            price: "$500",
+            label: "Managed Trading",
+            price: "$750",
             body: "Have your account personally traded alongside your coaching so you learn while the model runs live.",
           }
         : null;
