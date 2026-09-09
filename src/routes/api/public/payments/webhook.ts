@@ -232,6 +232,29 @@ async function handleEvent(event: { type: string; data: { object: any } }, env: 
       }
       break
     }
+    case 'checkout.session.async_payment_failed': {
+      const session = event.data.object
+      await recordIntent(session, env)
+      const email: string | undefined =
+        session?.customer_details?.email || session?.customer_email || undefined
+      if (email) {
+        try {
+          const { enqueueTemplateEmail } = await import('@/lib/email/send.server')
+          await enqueueTemplateEmail({
+            templateName: 'payment-failed',
+            recipientEmail: email,
+            idempotencyKey: `payfail-${session.id}`,
+            label: 'payment-failed',
+            data: {
+              name: session?.customer_details?.name ?? undefined,
+              productName: session?.line_items?.data?.[0]?.description ?? undefined,
+              retryUrl: 'https://sweepcapitalgroup.com/mentorship',
+            },
+          })
+        } catch (e) { console.error('payment-failed email', e) }
+      }
+      break
+    }
     case 'checkout.session.expired': {
       await recordIntent(event.data.object, env)
       break
