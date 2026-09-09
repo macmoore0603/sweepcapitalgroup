@@ -25,6 +25,7 @@ import { template as referralReward } from './referral-reward'
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'lead-confirmation': leadConfirmation,
   'purchase-confirmation': purchaseConfirmation,
+  'payment-failed': paymentFailed,
   'abandoned-checkout': abandonedCheckout,
   'nurture-day3': nurtureDay3,
   'nurture-day7': nurtureDay7,

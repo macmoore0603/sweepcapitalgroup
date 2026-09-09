@@ -399,7 +399,48 @@ function Index() {
         </div>
       </section>
 
-
+      {/* Social proof */}
+      <section id="results" className="px-6 md:px-10 py-24 md:py-32 border-t border-border bg-white/[0.02]">
+        <div className="max-w-7xl mx-auto">
+          <span className="font-mono text-accent text-[11px] uppercase tracking-[0.3em]">From the desk</span>
+          <h2 className="mt-4 text-4xl md:text-5xl font-extrabold tracking-tighter uppercase mb-16 md:mb-20">
+            Traders who{" "}
+            <span className="italic font-semibold text-accent capitalize" style={{ fontFamily: "var(--font-serif)" }}>
+              did the work
+            </span>
+          </h2>
+          <div className="grid md:grid-cols-3 gap-6 md:gap-8">
+            {[
+              {
+                quote: "The 5–15 gap alone changed how I read the open. I stopped forcing trades and started waiting for my setup.",
+                name: "Marcus D.",
+                detail: "The Edge graduate",
+              },
+              {
+                quote: "Weekly reviews in the Apprenticeship kept me honest. My journal went from chaos to a real process in about a month.",
+                name: "Priya S.",
+                detail: "Apprenticeship member",
+              },
+              {
+                quote: "I didn't have time to learn while working full-time. Managed Trading let me stay in the market without staring at charts all day.",
+                name: "Jordan T.",
+                detail: "Managed Trading client",
+              },
+            ].map((t) => (
+              <figure key={t.name} className="rounded-2xl border border-border bg-card/40 p-8 flex flex-col gap-6">
+                <blockquote className="text-base md:text-lg leading-relaxed text-foreground/90">“{t.quote}”</blockquote>
+                <figcaption className="mt-auto">
+                  <div className="font-semibold">{t.name}</div>
+                  <div className="text-sm text-muted-foreground">{t.detail}</div>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+          <p className="mt-10 text-xs text-muted-foreground max-w-2xl">
+            Testimonials reflect individual experiences and are not a guarantee of results. Trading futures involves substantial risk of loss.
+          </p>
+        </div>
+      </section>
 
       {/* Tiers */}
       <section id="tiers" className="px-6 md:px-10 py-24 md:py-32">
