@@ -160,9 +160,9 @@ async function recordRevenue(session: any, env: StripeEnv) {
     if (email) {
       const normalized = email.toLowerCase()
       await supabase.from('nurture_state')
-        .update({ stopped: true }).eq('email', normalized).eq('stopped', false)
+        .update({ stopped: true }).ilike('email', normalized).eq('stopped', false)
       await supabase.from('outbound_contacts')
-        .update({ status: 'stopped' }).eq('email', normalized)
+        .update({ status: 'stopped' }).ilike('email', normalized)
         .in('status', ['queued', 'contacted'])
     }
 
