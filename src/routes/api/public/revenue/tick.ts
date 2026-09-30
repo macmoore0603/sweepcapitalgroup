@@ -129,6 +129,40 @@ async function processOutbound() {
   return sent
 }
 
+async function processCallReminders() {
+  const supabase: any = serverSupabase()
+  const now = Date.now()
+  // Leads whose call is 23–25 hours away and haven't been reminded yet.
+  const from = new Date(now + 23 * 60 * 60 * 1000).toISOString()
+  const to = new Date(now + 25 * 60 * 60 * 1000).toISOString()
+  const { data: rows } = await supabase
+    .from('leads')
+    .select('id, full_name, email, scheduled_at, reminder_sent_at')
+    .not('scheduled_at', 'is', null)
+    .gte('scheduled_at', from)
+    .lte('scheduled_at', to)
+    .is('reminder_sent_at', null)
+    .limit(25)
+  let sent = 0
+  for (const lead of rows ?? []) {
+    const callTime = new Date(lead.scheduled_at).toLocaleString('en-US', {
+      weekday: 'long', hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York', timeZoneName: 'short',
+    })
+    const r = await enqueueTemplateEmail({
+      templateName: 'call-reminder',
+      recipientEmail: lead.email,
+      data: { name: lead.full_name, callTime, rescheduleUrl: `${SITE_URL}/book` },
+      idempotencyKey: `call-reminder-${lead.id}`,
+      label: 'call-reminder',
+    })
+    if ((r as any).queued) sent++
+    await supabase.from('leads')
+      .update({ reminder_sent_at: new Date().toISOString() })
+      .eq('id', lead.id)
+  }
+  return sent
+}
+
 async function topUpSocial() { return 0 }
 
 export const Route = createFileRoute('/api/public/revenue/tick')({
@@ -136,13 +170,14 @@ export const Route = createFileRoute('/api/public/revenue/tick')({
     handlers: {
       POST: async () => {
         const settings = await loadSettings(serverSupabase()).catch(() => ({ offsets: DEFAULT_OFFSETS, recoveryMin: DEFAULT_RECOVERY_MIN }))
-        const [abandoned, nurture, outbound] = await Promise.all([
+        const [abandoned, nurture, outbound, reminders] = await Promise.all([
           processAbandoned(settings.recoveryMin).catch((e) => { console.error('abandoned', e); return 0 }),
           processNurture(settings.offsets).catch((e) => { console.error('nurture', e); return 0 }),
           processOutbound().catch((e) => { console.error('outbound', e); return 0 }),
+          processCallReminders().catch((e) => { console.error('call-reminders', e); return 0 }),
         ])
         await topUpSocial()
-        return Response.json({ ok: true, abandoned, nurture, outbound, at: new Date().toISOString() })
+        return Response.json({ ok: true, abandoned, nurture, outbound, callReminders: reminders, at: new Date().toISOString() })
       },
       GET: async () => Response.json({ ok: true }),
     },

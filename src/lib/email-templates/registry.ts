@@ -22,8 +22,10 @@ import { template as outbound3 } from './outbound-3'
 import { template as opsNote } from './ops-note'
 import { template as playbookGuide } from './playbook-guide'
 import { template as referralReward } from './referral-reward'
+import { template as callReminder } from './call-reminder'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
+  'call-reminder': callReminder,
   'lead-confirmation': leadConfirmation,
   'purchase-confirmation': purchaseConfirmation,
   'payment-failed': paymentFailed,
