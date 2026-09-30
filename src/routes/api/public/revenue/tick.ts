@@ -129,6 +129,55 @@ async function processOutbound() {
   return sent
 }
 
+async function processCallReminders() {
+  const supabase: any = serverSupabase()
+  const now = Date.now()
+  // Leads whose call is 23–25 hours away and haven't been reminded yet.
+  const from = new Date(now + 23 * 60 * 60 * 1000).toISOString()
+  const to = new Date(now + 25 * 60 * 60 * 1000).toISOString()
+  const { data: rows } = await supabase
+    .from('leads')
+    .select('id, full_name, email, scheduled_at, reminder_sent_at')
+    .not('scheduled_at', 'is', null)
+    .gte('scheduled_at', from)
+    .lte('scheduled_at', to)
+    .is('reminder_sent_at', null)
+    .is('confirmation_sent_at', null) // never sent — reminder only after confirmation exists
+    .limit(25)
+  // confirmation_sent_at is null on fresh leads; reminder should not depend on it.
+  // Refetch without that filter if the combined filter is too strict in practice.
+  let targets = rows ?? []
+  if (!targets.length) {
+    const { data: fallback } = await supabase
+      .from('leads')
+      .select('id, full_name, email, scheduled_at, reminder_sent_at')
+      .not('scheduled_at', 'is', null)
+      .gte('scheduled_at', from)
+      .lte('scheduled_at', to)
+      .is('reminder_sent_at', null)
+      .limit(25)
+    targets = fallback ?? []
+  }
+  let sent = 0
+  for (const lead of targets) {
+    const callTime = new Date(lead.scheduled_at).toLocaleString('en-US', {
+      weekday: 'long', hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York', timeZoneName: 'short',
+    })
+    const r = await enqueueTemplateEmail({
+      templateName: 'call-reminder',
+      recipientEmail: lead.email,
+      data: { name: lead.full_name, callTime, rescheduleUrl: `${SITE_URL}/book` },
+      idempotencyKey: `call-reminder-${lead.id}`,
+      label: 'call-reminder',
+    })
+    if ((r as any).queued) sent++
+    await supabase.from('leads')
+      .update({ reminder_sent_at: new Date().toISOString() })
+      .eq('id', lead.id)
+  }
+  return sent
+}
+
 async function topUpSocial() { return 0 }
 
 export const Route = createFileRoute('/api/public/revenue/tick')({
