@@ -51,7 +51,7 @@ async function processAbandoned(recoveryMin: number) {
 async function processNurture(offsets: number[]) {
   const supabase: any = serverSupabase()
   const now = new Date().toISOString()
-  const maxStep = Math.min(offsets.length, 2) // we have templates for up to 2 nurture emails
+  const maxStep = Math.min(offsets.length, 3) // we have templates for up to 3 nurture emails
   const { data: rows } = await supabase
     .from('nurture_state')
     .select('*')
@@ -62,7 +62,7 @@ async function processNurture(offsets: number[]) {
   let sent = 0
   for (const s of rows ?? []) {
     const nextStep = s.step + 1
-    const templates = ['nurture-day3', 'nurture-day7']
+    const templates = ['nurture-day3', 'nurture-day7', 'nurture-day14']
     const template = nextStep <= maxStep ? templates[nextStep - 1] : null
     if (template) {
       const r = await enqueueTemplateEmail({
