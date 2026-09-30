@@ -142,24 +142,9 @@ async function processCallReminders() {
     .gte('scheduled_at', from)
     .lte('scheduled_at', to)
     .is('reminder_sent_at', null)
-    .is('confirmation_sent_at', null) // never sent — reminder only after confirmation exists
     .limit(25)
-  // confirmation_sent_at is null on fresh leads; reminder should not depend on it.
-  // Refetch without that filter if the combined filter is too strict in practice.
-  let targets = rows ?? []
-  if (!targets.length) {
-    const { data: fallback } = await supabase
-      .from('leads')
-      .select('id, full_name, email, scheduled_at, reminder_sent_at')
-      .not('scheduled_at', 'is', null)
-      .gte('scheduled_at', from)
-      .lte('scheduled_at', to)
-      .is('reminder_sent_at', null)
-      .limit(25)
-    targets = fallback ?? []
-  }
   let sent = 0
-  for (const lead of targets) {
+  for (const lead of rows ?? []) {
     const callTime = new Date(lead.scheduled_at).toLocaleString('en-US', {
       weekday: 'long', hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York', timeZoneName: 'short',
     })
