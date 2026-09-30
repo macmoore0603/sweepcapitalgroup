@@ -156,6 +156,16 @@ async function recordRevenue(session: any, env: StripeEnv) {
       .update({ status: 'completed', completed_at: new Date().toISOString() })
       .eq('stripe_session_id', session.id)
 
+    // Buyer is now a customer — stop all sales sequences for this email
+    if (email) {
+      const normalized = email.toLowerCase()
+      await supabase.from('nurture_state')
+        .update({ stopped: true }).ilike('email', normalized).eq('stopped', false)
+      await supabase.from('outbound_contacts')
+        .update({ status: 'stopped' }).ilike('email', normalized)
+        .in('status', ['queued', 'contacted'])
+    }
+
     // Track referral conversion if a code was attached
     const refCode = session?.client_reference_id ?? null
     if (refCode) {
