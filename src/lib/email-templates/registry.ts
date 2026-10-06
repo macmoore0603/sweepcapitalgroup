@@ -23,9 +23,11 @@ import { template as opsNote } from './ops-note'
 import { template as playbookGuide } from './playbook-guide'
 import { template as referralReward } from './referral-reward'
 import { template as callReminder } from './call-reminder'
+import { template as bookingNudge } from './booking-nudge'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'call-reminder': callReminder,
+  'booking-nudge': bookingNudge,
   'lead-confirmation': leadConfirmation,
   'purchase-confirmation': purchaseConfirmation,
   'payment-failed': paymentFailed,
