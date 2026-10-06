@@ -163,6 +163,32 @@ async function processCallReminders() {
   return sent
 }
 
+async function processBookingNudges() {
+  const supabase: any = serverSupabase()
+  const now = Date.now()
+  // Applied 24–72h ago, still no call booked. Dedupe via idempotency key.
+  const { data: rows } = await supabase
+    .from('leads')
+    .select('id, full_name, email, booking_token')
+    .is('scheduled_at', null)
+    .in('status', ['new', 'contacted'])
+    .lte('created_at', new Date(now - 24 * 3600 * 1000).toISOString())
+    .gte('created_at', new Date(now - 72 * 3600 * 1000).toISOString())
+    .limit(25)
+  let sent = 0
+  for (const lead of rows ?? []) {
+    const r = await enqueueTemplateEmail({
+      templateName: 'booking-nudge',
+      recipientEmail: lead.email,
+      data: { name: lead.full_name, bookingUrl: `${SITE_URL}/book?lead=${lead.id}&token=${lead.booking_token}` },
+      idempotencyKey: `booking-nudge-${lead.id}`,
+      label: 'booking-nudge',
+    })
+    if ((r as any).queued) sent++
+  }
+  return sent
+}
+
 async function topUpSocial() { return 0 }
 
 export const Route = createFileRoute('/api/public/revenue/tick')({
@@ -170,14 +196,15 @@ export const Route = createFileRoute('/api/public/revenue/tick')({
     handlers: {
       POST: async () => {
         const settings = await loadSettings(serverSupabase()).catch(() => ({ offsets: DEFAULT_OFFSETS, recoveryMin: DEFAULT_RECOVERY_MIN }))
-        const [abandoned, nurture, outbound, reminders] = await Promise.all([
+        const [abandoned, nurture, outbound, reminders, nudges] = await Promise.all([
           processAbandoned(settings.recoveryMin).catch((e) => { console.error('abandoned', e); return 0 }),
           processNurture(settings.offsets).catch((e) => { console.error('nurture', e); return 0 }),
           processOutbound().catch((e) => { console.error('outbound', e); return 0 }),
           processCallReminders().catch((e) => { console.error('call-reminders', e); return 0 }),
+          processBookingNudges().catch((e) => { console.error('booking-nudges', e); return 0 }),
         ])
         await topUpSocial()
-        return Response.json({ ok: true, abandoned, nurture, outbound, callReminders: reminders, at: new Date().toISOString() })
+        return Response.json({ ok: true, abandoned, nurture, outbound, callReminders: reminders, bookingNudges: nudges, at: new Date().toISOString() })
       },
       GET: async () => Response.json({ ok: true }),
     },
