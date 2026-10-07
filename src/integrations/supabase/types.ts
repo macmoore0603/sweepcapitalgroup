@@ -261,6 +261,7 @@ export type Database = {
           referral_code: string | null
           referred_by: string | null
           referrer: string | null
+          reminder_sent_at: string | null
           scheduled_at: string | null
           status: Database["public"]["Enums"]["lead_status"]
           updated_at: string
@@ -283,6 +284,7 @@ export type Database = {
           referral_code?: string | null
           referred_by?: string | null
           referrer?: string | null
+          reminder_sent_at?: string | null
           scheduled_at?: string | null
           status?: Database["public"]["Enums"]["lead_status"]
           updated_at?: string
@@ -305,6 +307,7 @@ export type Database = {
           referral_code?: string | null
           referred_by?: string | null
           referrer?: string | null
+          reminder_sent_at?: string | null
           scheduled_at?: string | null
           status?: Database["public"]["Enums"]["lead_status"]
           updated_at?: string
