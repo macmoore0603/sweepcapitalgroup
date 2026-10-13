@@ -12,7 +12,7 @@ const Email = ({ name, siteUrl }: Props) => (
         <Heading style={h1}>{name ? `${name} — last check-in.` : 'Last check-in.'}</Heading>
         <Text style={text}>
           It's been a week since you asked about Sweep Capital Group. We're closing your file
-          unless you want to move forward. The $500 Edge tier is the fastest way in.
+          unless you want to move forward. The $1,000 Edge tier is the fastest way in.
         </Text>
         {siteUrl ? (
           <Section style={{ textAlign: 'center' as const, margin: '28px 0' }}>

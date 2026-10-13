@@ -259,18 +259,18 @@ function Upsell({ amount, email }: { amount: number; email: string | null }) {
 
   // Tier detection by amount paid — no upsell for the all-inclusive package.
   const offer =
-    amount > 0 && amount < 600
+    amount > 0 && amount < 1200
       ? {
           priceId: "mentorship_course_coaching_onetime",
           label: "Add the Apprenticeship",
           price: "$1,500",
           body: "You have the framework. Add live 1-on-1 coaching and get your entries reviewed every week until the sweep setup is automatic.",
         }
-      : amount >= 600 && amount < 1800
+      : amount >= 1200 && amount < 1800
         ? {
             priceId: "mentorship_managed_onetime",
             label: "Add Managed Trading",
-            price: "$750",
+            price: "$1,000",
             body: "Have your account personally traded alongside your coaching so you learn while the model runs live.",
           }
         : null;

@@ -43,7 +43,7 @@ const TIERS: Tier[] = [
   {
     id: "course",
     name: "The Course",
-    price: "$500",
+    price: "$1,000",
     priceId: "mentorship_course_onetime",
     tagline: "Self-paced curriculum. One-time payment.",
     features: [
@@ -71,7 +71,7 @@ const TIERS: Tier[] = [
   {
     id: "managed",
     name: "Managed Trading",
-    price: "$750",
+    price: "$1,000",
     priceId: "mentorship_managed_onetime",
     tagline: "I trade for you. Guaranteed $2k minimum in 3–4 weeks.",
     features: [
@@ -134,7 +134,7 @@ const FAQ_GROUPS: FaqGroup[] = [
       },
       {
         q: "What does the Managed Trading guarantee cover?",
-        a: "If your account does not reach a $2,000 minimum net profit within the 3–4 week target window, we continue trading at no additional cost until it does, or we refund the $750 setup fee. Full terms in your written agreement.",
+        a: "If your account does not reach a $2,000 minimum net profit within the 3–4 week target window, we continue trading at no additional cost until it does, or we refund the $1,000 setup fee. Full terms in your written agreement.",
       },
       {
         q: "Are returns guaranteed for self-trading tiers?",

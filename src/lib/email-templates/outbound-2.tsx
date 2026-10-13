@@ -15,7 +15,7 @@ const Email = ({ name }: Props) => (
           That's it. Discipline over volume. Audited win rate, past performance not indicative of future results.
         </Text>
         <Text style={text}>
-          If it sounds relevant, the entry tier is $500 and starts this week:
+          If it sounds relevant, the entry tier is $1,000 and starts this week:
           https://sweepcapitalgroup.com/
         </Text>
         <Text style={text}>— SCG</Text>
