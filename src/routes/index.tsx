@@ -19,7 +19,7 @@ import { ExitIntentPlaybook } from "@/components/ExitIntentPlaybook";
 
 const FAQS: { q: string; a: string }[] = [
   {
-    q: "What exactly do I get with The Edge ($500)?",
+    q: "What exactly do I get with The Edge ($1,000)?",
     a: "Lifetime access to the full Sweep Capital Group course: Session Sweep, the 5–15 Gap, and Power of 3 — taught step by step with live chart breakdowns and the exact rules we trade.",
   },
   {
@@ -463,7 +463,7 @@ function Index() {
                 num: "01",
                 tag: "Self-Paced",
                 title: "The Edge",
-                price: "$500",
+                price: "$1,000",
                 priceId: "mentorship_course_onetime",
                 desc: "My complete trading system in one self-paced course — the exact framework, setups, and risk rules I use to stay profitable.",
                 features: ["Full video curriculum", "Lifetime updates", "Private student community"],
@@ -485,7 +485,7 @@ function Index() {
                 num: "03",
                 tag: "Done-For-You",
                 title: "Managed Trading",
-                price: "$750",
+                price: "$1,000",
                 priceId: "mentorship_managed_onetime",
                 desc: "Your account is personally managed and traded on your behalf. Guaranteed $2,000 minimum profit in a 3–4 week window — or your money back, no questions asked.",
                 features: ["We trade your account for you", "Guaranteed $2k minimum profit", "3–4 week performance window", "Weekly transparent updates", "Money-back guarantee"],
