@@ -73,10 +73,10 @@ const TIERS: Tier[] = [
     name: "Managed Trading",
     price: "$1,000",
     priceId: "mentorship_managed_onetime",
-    tagline: "I trade for you. Guaranteed $2k minimum in 3–4 weeks.",
+    tagline: "I trade for you. Guaranteed $3,100 minimum in 3–4 weeks.",
     features: [
       "Hands-off — I trade your account",
-      "Guaranteed $2,000 minimum profit",
+      "Guaranteed $3,100 minimum profit",
       "3–4 week target window",
       "Weekly performance updates",
     ],
@@ -91,7 +91,7 @@ const TIERS: Tier[] = [
     features: [
       "Full course access",
       "Step-by-step personal coaching",
-      "Managed trading ($2k+ target)",
+      "Managed trading ($3,100+ target)",
       "Highest priority direct access",
     ],
     badge: "Best Value",
@@ -134,7 +134,7 @@ const FAQ_GROUPS: FaqGroup[] = [
       },
       {
         q: "What does the Managed Trading guarantee cover?",
-        a: "If your account does not reach a $2,000 minimum net profit within the 3–4 week target window, we continue trading at no additional cost until it does, or we refund the $1,000 setup fee. Full terms in your written agreement.",
+        a: "If your account does not reach a $3,100 minimum net profit within the 3–4 week target window, we continue trading at no additional cost until it does, or we refund the $1,000 setup fee. Full terms in your written agreement.",
       },
       {
         q: "Are returns guaranteed for self-trading tiers?",
@@ -178,7 +178,7 @@ const TIER_EXPECTATIONS: { id: string; name: string; timeline: string; steps: st
     steps: [
       "Sign agreement and connect your funded account",
       "I trade your account hands-off with weekly performance reports",
-      "$2,000 minimum target — continue at no cost or refund if missed",
+      "$3,100 minimum target — continue at no cost or refund if missed",
       "Quarterly review on whether to continue managed or transition you to self-trading",
     ],
   },
