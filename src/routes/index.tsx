@@ -655,7 +655,7 @@ function Index() {
             <div className="grid grid-cols-3 gap-6 pt-4 border-t border-border mt-2">
               {[
                 { k: "3 YRS", v: "Trading Desks" },
-                { k: "$2.4M", v: "Allocated" },
+                { k: "$3.6M", v: "Allocated" },
                 { k: "12 / QTR", v: "Selected Mentees" },
               ].map((s) => (
                 <div key={s.k} className="flex flex-col gap-1">
