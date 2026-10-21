@@ -339,7 +339,7 @@ function Index() {
             { label: "Audited Win Rate", value: "76.4", suffix: "%" },
             { label: "Avg. Profit Factor", value: "2.42" },
             { label: "Max Drawdown", value: "4.1%", accent: true },
-            { label: "Assets Managed", value: "$2.4M" },
+            { label: "Assets Managed", value: "$3.6M" },
             { label: "Avg. Trade Return", value: "4.2x" },
             { label: "Avg. Monthly Return", value: "5.6", suffix: "%" },
             { label: "Risk / Reward Ratio", value: "1:2.8" },
