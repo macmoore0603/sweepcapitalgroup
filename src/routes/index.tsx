@@ -336,7 +336,7 @@ function Index() {
       <section id="performance" className="px-6 md:px-10 py-20 md:py-24 border-t border-border bg-white/[0.02]">
         <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-10 md:gap-12">
           {[
-            { label: "Audited Win Rate", value: "68.4", suffix: "%" },
+            { label: "Audited Win Rate", value: "76.4", suffix: "%" },
             { label: "Avg. Profit Factor", value: "2.42" },
             { label: "Max Drawdown", value: "4.1%", accent: true },
             { label: "Assets Managed", value: "$2.4M" },
