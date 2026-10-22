@@ -389,7 +389,7 @@ export default function MentorshipPage() {
               with next steps, payment, and a kickoff call.
             </p>
             <div className="pt-4 flex flex-col gap-2 font-mono text-[10px] text-muted-foreground tracking-widest">
-              <span>ATLANTA, GEORGIA</span>
+              <span>JOHNS CREEK, GEORGIA</span>
               <span>MAC MOORE — FOUNDER &amp; OWNER</span>
               <span>RESPONSE WITHIN 24 HOURS</span>
             </div>
@@ -403,7 +403,7 @@ export default function MentorshipPage() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
           <div className="flex items-center gap-3">
             <img src={logo} alt="Sweep Capital Group logo" width={24} height={24} className="h-6 w-6 object-contain opacity-60" />
-            <span>© 2026 Sweep Capital Group — Atlanta, GA</span>
+            <span>© 2026 Sweep Capital Group — Johns Creek, GA</span>
           </div>
           <span>Mac Moore — Founder, Owner &amp; CEO</span>
         </div>

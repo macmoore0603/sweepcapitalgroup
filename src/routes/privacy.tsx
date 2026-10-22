@@ -164,7 +164,7 @@ function PrivacyPage() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
           <div className="flex items-center gap-3">
             <img src={logo} alt="Sweep Capital Group logo" width={24} height={24} className="h-6 w-6 object-contain opacity-60" />
-            <span>© 2026 Sweep Capital Group — Atlanta, GA</span>
+            <span>© 2026 Sweep Capital Group — Johns Creek, GA</span>
           </div>
           <div className="flex gap-6">
             <Link to="/terms" className="hover:text-foreground transition-colors">Terms</Link>

@@ -10,13 +10,13 @@ export const Route = createFileRoute("/leadership")({
       {
         name: "description",
         content:
-          "Meet the leadership of Sweep Capital Group: founder Mac Moore and partner Sam Teese, leading a private trading practice from Atlanta, Georgia.",
+          "Meet the leadership of Sweep Capital Group: founder Mac Moore and partner Sam Teese, leading a private trading practice from Johns Creek, Georgia.",
       },
       { property: "og:title", content: "Leadership — Sweep Capital Group" },
       {
         property: "og:description",
         content:
-          "Founder Mac Moore and partner Sam Teese lead a private trading mentorship out of Atlanta, Georgia.",
+          "Founder Mac Moore and partner Sam Teese lead a private trading mentorship out of Johns Creek, Georgia.",
       },
     ],
   }),
@@ -38,23 +38,23 @@ const LEADERS: Leader[] = [
     name: "Mac Moore",
     title: "Founder, Owner & CEO",
     initials: "MM",
-    location: "Atlanta, Georgia",
+    location: "Johns Creek, Georgia",
     image: macMoore,
     bio: [
-      "Three years on the desk taught Mac one lesson worth repeating: the market does not reward intelligence — it rewards discipline. He founded Sweep Capital Group in Atlanta to compress that lesson into a deliberate, repeatable framework for the traders he chooses to mentor.",
+      "Three years on the desk taught Mac one lesson worth repeating: the market does not reward intelligence — it rewards discipline. He founded Sweep Capital Group in Johns Creek to compress that lesson into a deliberate, repeatable framework for the traders he chooses to mentor.",
       "Every mentee is selected personally, briefed personally, and held personally accountable to the same standards Mac runs his own book against.",
     ],
     stats: [
       { k: "3 YRS", v: "Trading Desks" },
       { k: "$2.4M", v: "Allocated" },
-      { k: "Atlanta", v: "Headquarters" },
+      { k: "Johns Creek", v: "Headquarters" },
     ],
   },
   {
     name: "Sam Teese",
     title: "Co-Founder & Director of Asset Management",
     initials: "ST",
-    location: "Atlanta, Georgia",
+    location: "Johns Creek, Georgia",
     bio: [
       "Sam co-founded Sweep Capital Group alongside Mac Moore, leading strategy design, risk architecture, and mentee selection. His focus is the quantitative underwriting of every position — building the rails that keep the firm's discipline measurable rather than theoretical.",
       "He works directly with each cohort on execution review and post-trade analysis, translating data into the next quarter's playbook.",
@@ -106,7 +106,7 @@ function LeadershipPage() {
             </span>
           </h1>
           <p className="max-w-[60ch] text-base md:text-lg text-muted-foreground text-pretty">
-            Sweep Capital Group is led by a deliberately small team out of Atlanta, Georgia. Every
+            Sweep Capital Group is led by a deliberately small team out of Johns Creek, Georgia. Every
             mentee works directly with the people listed below — not a sales floor, not a junior analyst.
           </p>
         </div>
@@ -214,7 +214,7 @@ function LeadershipPage() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
           <div className="flex items-center gap-3">
             <img src={logo} alt="Sweep Capital Group logo" width={24} height={24} className="h-6 w-6 object-contain opacity-60" />
-            <span>© 2026 Sweep Capital Group — Atlanta, GA</span>
+            <span>© 2026 Sweep Capital Group — Johns Creek, GA</span>
           </div>
           <span>Mac Moore — Founder, Owner &amp; CEO</span>
         </div>
