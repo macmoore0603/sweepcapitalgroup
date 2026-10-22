@@ -150,8 +150,8 @@ function PrivacyPage() {
             </p>
             <div className="mt-4 space-y-2 font-mono text-sm">
               <p><strong>Sweep Capital Group</strong></p>
-              <p>1131 Oaklake Terrace</p>
-              <p>Watkinsville, GA 30677</p>
+              <p>11555 Medlock Bridge Rd</p>
+              <p>Johns Creek, GA 30097</p>
               <p>Email: <a href="mailto:mac@sweepcapitalgroup.com" className="text-accent hover:underline">mac@sweepcapitalgroup.com</a></p>
               <p>Phone: <a href="tel:+14782978388" className="text-accent hover:underline">(478) 297-8388</a></p>
             </div>
