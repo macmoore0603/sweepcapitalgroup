@@ -631,7 +631,7 @@ function Index() {
               />
             </div>
             <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-              Atlanta, Georgia
+              Johns Creek, Georgia
             </div>
           </div>
           <div className="flex flex-col gap-6">
@@ -644,7 +644,7 @@ function Index() {
             <p className="text-muted-foreground text-base md:text-lg leading-relaxed text-pretty">
               Three years behind the screens of institutional desks taught Mac one lesson worth repeating:
               the market does not reward intelligence — it rewards success. He founded Sweep Capital Group
-              Group in Atlanta to compress that lesson into a deliberate, repeatable framework for the
+              Group in Johns Creek to compress that lesson into a deliberate, repeatable framework for the
               traders he chooses to mentor.
             </p>
             <p className="text-muted-foreground text-base md:text-lg leading-relaxed text-pretty">
@@ -684,7 +684,7 @@ function Index() {
                 of our instruction and the quality of our network.
               </p>
               <div className="pt-8 flex flex-col gap-3 font-mono text-[10px] text-muted-foreground tracking-widest">
-                <span>ATLANTA, GEORGIA</span>
+                <span>JOHNS CREEK, GEORGIA</span>
                 <span>MAC MOORE — FOUNDER &amp; OWNER</span>
                 <span>EST. MMXXIV — SWEEP</span>
               </div>
@@ -708,7 +708,7 @@ function Index() {
           <div className="flex flex-col gap-4">
             <span className="font-mono text-accent text-[11px] uppercase tracking-[0.3em]">Contact</span>
             <h2 className="text-4xl md:text-5xl font-extrabold tracking-tighter uppercase leading-[0.95]">
-              Atlanta,{" "}
+              Johns Creek,{" "}
               <span className="italic font-semibold text-accent" style={{ fontFamily: "var(--font-serif)" }}>
                 Georgia.
               </span>
@@ -717,7 +717,7 @@ function Index() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-10">
             <div className="flex flex-col gap-2">
               <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Headquarters</span>
-              <span className="text-foreground font-semibold">Atlanta, Georgia</span>
+              <span className="text-foreground font-semibold">Johns Creek, Georgia</span>
             </div>
             <div className="flex flex-col gap-2">
               <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Mailing Address</span>
@@ -742,7 +742,7 @@ function Index() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
           <div className="flex items-center gap-3">
             <img src={logo} alt="Sweep Capital Group logo" width={24} height={24} className="h-6 w-6 object-contain opacity-60" />
-            <span>© 2026 Sweep Capital Group — Atlanta, GA</span>
+            <span>© 2026 Sweep Capital Group — Johns Creek, GA</span>
           </div>
           <div className="flex flex-wrap justify-center gap-6">
             <Link to="/playbook" className="hover:text-foreground transition-colors">Free Playbook</Link>

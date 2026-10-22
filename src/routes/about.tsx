@@ -9,13 +9,13 @@ export const Route = createFileRoute("/about")({
       {
         name: "description",
         content:
-          "Sweep Capital Group is a private trading mentorship based in Atlanta, Georgia, owned and led by founder Mac Moore.",
+          "Sweep Capital Group is a private trading mentorship based in Johns Creek, Georgia, owned and led by founder Mac Moore.",
       },
       { property: "og:title", content: "About — Sweep Capital Group" },
       {
         property: "og:description",
         content:
-          "Based in Atlanta, Georgia. Founded and owned by Mac Moore. Institutional-grade discipline for serious capital allocators.",
+          "Based in Johns Creek, Georgia. Founded and owned by Mac Moore. Institutional-grade discipline for serious capital allocators.",
       },
     ],
   }),
@@ -52,12 +52,12 @@ function AboutPage() {
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter uppercase leading-[0.9]">
             A private office,{" "}
             <span className="italic font-semibold text-accent" style={{ fontFamily: "var(--font-serif)" }}>
-              built in Atlanta.
+              built in Johns Creek.
             </span>
           </h1>
           <p className="max-w-[60ch] text-base md:text-lg text-muted-foreground text-pretty">
             Sweep Capital Group is a private trading mentorship and capital allocation practice
-            headquartered in Atlanta, Georgia. We are founded, owned, and personally led by Mac Moore.
+            headquartered in Johns Creek, Georgia. We are founded, owned, and personally led by Mac Moore.
           </p>
         </div>
       </header>
@@ -68,7 +68,7 @@ function AboutPage() {
           <aside className="flex flex-col gap-6 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
             <div className="flex flex-col gap-1">
               <span className="text-foreground">Headquarters</span>
-              <span>Atlanta, Georgia</span>
+              <span>Johns Creek, Georgia</span>
             </div>
             <div className="flex flex-col gap-1">
               <span className="text-foreground">Founder, Owner &amp; CEO</span>
@@ -87,7 +87,7 @@ function AboutPage() {
           <div className="flex flex-col gap-6">
             <h2 className="text-3xl md:text-4xl font-extrabold tracking-tighter uppercase">Who we are</h2>
             <p className="text-muted-foreground text-base md:text-lg leading-relaxed text-pretty">
-              Sweep Capital Group operates out of Atlanta, Georgia as a deliberately small,
+              Sweep Capital Group operates out of Johns Creek, Georgia as a deliberately small,
               relationship-driven trading practice. We are not a fund-of-funds, not a course, and not a
               signals service. We are a private office where serious capital allocators are mentored
               one cohort at a time.
@@ -129,7 +129,7 @@ function AboutPage() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
           <div className="flex items-center gap-3">
             <img src={logo} alt="Sweep Capital Group logo" width={24} height={24} className="h-6 w-6 object-contain opacity-60" />
-            <span>© 2026 Sweep Capital Group — Atlanta, GA</span>
+            <span>© 2026 Sweep Capital Group — Johns Creek, GA</span>
           </div>
           <span>Mac Moore — Founder, Owner &amp; CEO</span>
         </div>
