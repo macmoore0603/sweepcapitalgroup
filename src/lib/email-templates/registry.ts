@@ -13,6 +13,7 @@ import { template as leadConfirmation } from './lead-confirmation'
 import { template as purchaseConfirmation } from './purchase-confirmation'
 import { template as paymentFailed } from './payment-failed'
 import { template as abandonedCheckout } from './abandoned-checkout'
+import { template as abandonedCheckout2 } from './abandoned-checkout-2'
 import { template as nurtureDay3 } from './nurture-day3'
 import { template as nurtureDay7 } from './nurture-day7'
 import { template as nurtureDay14 } from './nurture-day14'
@@ -32,6 +33,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'purchase-confirmation': purchaseConfirmation,
   'payment-failed': paymentFailed,
   'abandoned-checkout': abandonedCheckout,
+  'abandoned-checkout-2': abandonedCheckout2,
   'nurture-day3': nurtureDay3,
   'nurture-day7': nurtureDay7,
   'nurture-day14': nurtureDay14,

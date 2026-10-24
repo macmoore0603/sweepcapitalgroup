@@ -20,6 +20,8 @@ async function loadSettings(supabase: any) {
   }
 }
 
+const RECOVERY2_DELAY_MS = 48 * 60 * 60 * 1000 // 48h after the first recovery email
+
 async function processAbandoned(recoveryMin: number) {
   const supabase: any = serverSupabase()
   const cutoff = new Date(Date.now() - recoveryMin * 60 * 1000).toISOString()
@@ -43,6 +45,31 @@ async function processAbandoned(recoveryMin: number) {
     if ((r as any).queued) sent++
     await supabase.from('checkout_intents')
       .update({ recovery_sent_at: new Date().toISOString() })
+      .eq('id', it.id)
+  }
+
+  // Second follow-up: 48h after the first recovery email, if they still haven't bought.
+  const cutoff2 = new Date(Date.now() - RECOVERY2_DELAY_MS).toISOString()
+  const { data: intents2 } = await supabase
+    .from('checkout_intents')
+    .select('*')
+    .eq('status', 'open')
+    .not('recovery_sent_at', 'is', null)
+    .is('recovery2_sent_at', null)
+    .lt('recovery_sent_at', cutoff2)
+    .limit(25)
+  for (const it of intents2 ?? []) {
+    if (!it.email) continue
+    const r = await enqueueTemplateEmail({
+      templateName: 'abandoned-checkout-2',
+      recipientEmail: it.email,
+      data: { productName: it.product_name, resumeUrl: SITE_URL },
+      idempotencyKey: `abandon2-${it.stripe_session_id}`,
+      label: 'abandoned-checkout-2',
+    })
+    if ((r as any).queued) sent++
+    await supabase.from('checkout_intents')
+      .update({ recovery2_sent_at: new Date().toISOString() })
       .eq('id', it.id)
   }
   return sent
