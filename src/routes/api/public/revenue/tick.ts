@@ -49,28 +49,34 @@ async function processAbandoned(recoveryMin: number) {
   }
 
   // Second follow-up: 48h after the first recovery email, if they still haven't bought.
-  const cutoff2 = new Date(Date.now() - RECOVERY2_DELAY_MS).toISOString()
-  const { data: intents2 } = await supabase
-    .from('checkout_intents')
-    .select('*')
-    .eq('status', 'open')
-    .not('recovery_sent_at', 'is', null)
-    .is('recovery2_sent_at', null)
-    .lt('recovery_sent_at', cutoff2)
-    .limit(25)
-  for (const it of intents2 ?? []) {
-    if (!it.email) continue
-    const r = await enqueueTemplateEmail({
-      templateName: 'abandoned-checkout-2',
-      recipientEmail: it.email,
-      data: { productName: it.product_name, resumeUrl: SITE_URL },
-      idempotencyKey: `abandon2-${it.stripe_session_id}`,
-      label: 'abandoned-checkout-2',
-    })
-    if ((r as any).queued) sent++
-    await supabase.from('checkout_intents')
-      .update({ recovery2_sent_at: new Date().toISOString() })
-      .eq('id', it.id)
+  // Wrapped in try/catch so a missing recovery2_sent_at column (pre-migration) can't break first-pass sends.
+  try {
+    const cutoff2 = new Date(Date.now() - RECOVERY2_DELAY_MS).toISOString()
+    const { data: intents2, error } = await supabase
+      .from('checkout_intents')
+      .select('*')
+      .eq('status', 'open')
+      .not('recovery_sent_at', 'is', null)
+      .is('recovery2_sent_at', null)
+      .lt('recovery_sent_at', cutoff2)
+      .limit(25)
+    if (error) throw error
+    for (const it of intents2 ?? []) {
+      if (!it.email) continue
+      const r = await enqueueTemplateEmail({
+        templateName: 'abandoned-checkout-2',
+        recipientEmail: it.email,
+        data: { productName: it.product_name, resumeUrl: SITE_URL },
+        idempotencyKey: `abandon2-${it.stripe_session_id}`,
+        label: 'abandoned-checkout-2',
+      })
+      if ((r as any).queued) sent++
+      await supabase.from('checkout_intents')
+        .update({ recovery2_sent_at: new Date().toISOString() })
+        .eq('id', it.id)
+    }
+  } catch (e) {
+    console.error('abandoned-checkout-2 follow-up skipped:', e)
   }
   return sent
 }
