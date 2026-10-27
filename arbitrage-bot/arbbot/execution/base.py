@@ -25,5 +25,10 @@ class ExchangeClient(Protocol):
         ...
 
     async def query_order(self, req: OrderRequest) -> OrderResult | None:
-        """Look up an order by ``req.client_id``. None if the venue has no record of it."""
+        """Look up an order by ``req.client_id``.
+
+        Returns None only when the venue says the order does not exist. Raises
+        ``ExchangeError`` when the state cannot be determined (transport failure
+        or any other venue error); the engine then reports the order UNKNOWN.
+        """
         ...

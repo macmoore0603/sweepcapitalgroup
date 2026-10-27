@@ -23,7 +23,12 @@ def to_jsonable(obj: Any) -> Any:
 
 
 class Journal:
-    """One JSON object per line: ``{"ts": ..., "kind": ..., **payload}``. Flushed per write."""
+    """One JSON object per line: ``{"ts": ..., "kind": ..., **payload}``. Flushed per write.
+
+    The envelope always wins: a payload that has its own ``ts`` or ``kind``
+    (e.g. a ``Signal``) is nested under ``"payload"`` instead of overwriting
+    them; a non-dict payload goes under ``"value"``.
+    """
 
     def __init__(self, path: str | os.PathLike[str] | None) -> None:
         self._fh = None
@@ -36,7 +41,13 @@ class Journal:
         if self._fh is None:
             return
         body = to_jsonable(payload)
-        line = {"ts": ts, "kind": kind, **(body if isinstance(body, dict) else {"value": body})}
+        line: dict[str, Any] = {"ts": ts, "kind": kind}
+        if not isinstance(body, dict):
+            line["value"] = body
+        elif line.keys() & body.keys():
+            line["payload"] = body
+        else:
+            line.update(body)
         self._fh.write(json.dumps(line, separators=(",", ":")) + "\n")
         self._fh.flush()
 

@@ -135,7 +135,7 @@ class Signal:
     legs: tuple[Leg, ...]
     size: float  # proposed base size before risk sizing
     gross_edge_bps: float  # raw spread before costs
-    cost_bps: float  # fees on all legs + expected slippage + buffer
+    cost_bps: float  # taker fees + expected slippage on every leg (min_net_edge_bps is the threshold, not a cost)
     net_edge_bps: float  # gross - cost; only emitted when >= the configured threshold
     expected_pnl: float  # quote currency, at ``size``, net of fees and expected slippage
     entry: float
@@ -177,10 +177,14 @@ class OrderResult:
     requested_qty: float
     filled_qty: float
     avg_price: float  # 0.0 when nothing filled
-    fee: float  # quote currency
+    fee: float  # the whole commission in quote currency (any part paid in base valued at the fill price)
     status: OrderStatus
     ts: float
     error: str | None = None
+    # Part of the commission the venue took in the BASE asset, in base units (Binance without
+    # BNB deducts it from the base received on a BUY). Already included in ``fee``; the base
+    # balance changes by ``side.sign * filled_qty - base_fee``.
+    base_fee: float = 0.0
 
     @property
     def remaining_qty(self) -> float:
@@ -235,9 +239,25 @@ class Position:
     exit_attempts: int = 0
 
 
-_ids = itertools.count(1)
+class IdFactory:
+    """Sequential ``<prefix>-<n>`` ids, one counter shared by every prefix (``sig-1``, ``pos-2``, ...).
+
+    Each ``Bot`` owns one, so the ids of a run start at 1 whatever ran before it
+    in the same process: two identical backtests write identical journals.
+    Ids are unique within a run; the journal brackets each run with ``start``
+    and ``shutdown`` records.
+    """
+
+    def __init__(self) -> None:
+        self._n = itertools.count(1)
+
+    def __call__(self, prefix: str) -> str:
+        return f"{prefix}-{next(self._n)}"
+
+
+_ids = IdFactory()
 
 
 def next_id(prefix: str) -> str:
-    """Process-unique, deterministic ids (no randomness, so backtests replay identically)."""
-    return f"{prefix}-{next(_ids)}"
+    """Process-wide ids for components used without a ``Bot`` (deterministic, no randomness)."""
+    return _ids(prefix)

@@ -21,11 +21,25 @@ class Feed(Protocol):
     def stream(self) -> AsyncIterator[FeedEvent]: ...
 
 
+class BookView(Protocol):
+    """Read access to the latest quote per (venue, symbol): what the execution engine prices from."""
+
+    def get(self, venue: str, symbol: str) -> Quote | None: ...
+
+
+def _same_level(a: Quote, b: Quote) -> bool:
+    return (a.bid, a.bid_size, a.ask, a.ask_size) == (b.bid, b.bid_size, b.ask, b.ask_size)
+
+
 class QuoteBook:
     """Latest valid top of book per (venue, symbol).
 
     Invalid (crossed / non-positive) quotes are dropped. When quotes carry a
-    ``seq``, an update with a seq <= the stored one is dropped as out of order.
+    ``seq``, an update with a lower seq is dropped as out of order, and so is
+    one with the same seq but different prices or sizes. The same seq with
+    the same prices and sizes is a venue re-confirming an unchanged book
+    (Bybit re-sends its level-1 snapshot every 3 s with the same ``u``): it
+    is stored, so the quote's ``ts_local`` (staleness) is refreshed.
     """
 
     def __init__(self) -> None:
@@ -37,8 +51,11 @@ class QuoteBook:
             return False
         venues = self._by_symbol.setdefault(quote.symbol, {})
         prev = venues.get(quote.venue)
-        if prev is not None and prev.seq is not None and quote.seq is not None and quote.seq <= prev.seq:
-            return False
+        if prev is not None and prev.seq is not None and quote.seq is not None:
+            if quote.seq < prev.seq:
+                return False
+            if quote.seq == prev.seq and not (_same_level(quote, prev) and quote.ts_local >= prev.ts_local):
+                return False
         venues[quote.venue] = quote
         return True
 

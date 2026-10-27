@@ -6,6 +6,7 @@ like 0.3 / 0.1 land exactly on the grid instead of one step below it.
 
 from __future__ import annotations
 
+import math
 from decimal import ROUND_CEILING, ROUND_FLOOR, Decimal
 
 from .models import Side
@@ -25,6 +26,20 @@ def floor_to_step(x: float, step: float) -> float:
 
 def ceil_to_step(x: float, step: float) -> float:
     return _grid(x, step, ROUND_CEILING)
+
+
+def common_lot(*lots: float) -> float:
+    """Smallest step that is a whole multiple of every lot (exact, via Decimal).
+
+    Flooring to it lands on every venue's lot grid at once: 0.001 and 0.01 ->
+    0.01; 0.002 and 0.003 -> 0.006. Non-positive lots are ignored; 0.0 if none remain.
+    """
+    ds = [Decimal(repr(x)) for x in lots if x > 0]
+    if not ds:
+        return 0.0
+    exp = max(max(-int(d.as_tuple().exponent) for d in ds), 0)
+    scale = Decimal(10) ** exp
+    return float(Decimal(math.lcm(*(int(d * scale) for d in ds))) / scale)
 
 
 def quantize_limit(price: float, tick: float, side: Side) -> float:

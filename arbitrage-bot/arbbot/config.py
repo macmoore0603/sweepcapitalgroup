@@ -15,6 +15,12 @@ from typing import Any
 
 _SYMBOL_RE = re.compile(r"^[A-Z0-9]+-[A-Z0-9]+$")
 MODES = ("paper", "live")
+# Quote currencies the bot can account in. Every money figure (risk limits, depth
+# floor, PnL, marks) is in a symbol's quote currency and is summed across symbols
+# at par, so only USD and USD stablecoins are accepted: a BTC- or EUR-quoted
+# symbol would make max_order_notional = 500 mean 500 BTC (or EUR).
+USD_LIKE_QUOTES = ("USD", "USDT", "USDC", "FDUSD", "TUSD", "USDP", "DAI")
+DEFAULT_JOURNAL_PATH = "logs/journal.jsonl"
 
 
 class ConfigError(ValueError):
@@ -64,8 +70,8 @@ class ReferenceLagConfig:
     target_venue: str = ""
     target_symbol: str = ""
     basis_halflife_s: float = 300.0  # EMA half-life of the normal target-vs-reference premium
-    min_basis_samples: int = 100  # no signals until the basis estimate has warmed up
-    entry_threshold_bps: float = 10.0  # deviation from basis-adjusted fair, AFTER round-trip costs
+    min_basis_samples: int = 100  # warm-up: no signals before; then the basis is seeded with their median
+    entry_threshold_bps: float = 10.0  # edge to the take-profit target (tp * gap to fair) AFTER round-trip costs
     take_profit_fraction: float = 0.8  # target = entry + this fraction of the gap to fair
     stop_bps: float = 15.0  # hard stop distance from entry
     max_hold_s: float = 30.0  # time stop
@@ -80,7 +86,7 @@ class RiskConfig:
     liquidity_recovery_s: float = 5.0  # depth must stay above the floor this long to re-enable
     max_quote_age_ms: float = 1500.0  # older quotes are stale: no trading on them
     daily_loss_limit: float = 50.0  # realized loss (UTC day) that trips the kill switch
-    max_consecutive_hedge_failures: int = 3  # unequal-fill trades in a row that trip the kill switch
+    max_consecutive_hedge_failures: int = 3  # unequal-fill cross-venue arbs in a row that trip the kill switch
     max_trades_per_minute: int = 20
 
 
@@ -100,7 +106,7 @@ class BotConfig:
     reference_lag: ReferenceLagConfig = ReferenceLagConfig()
     risk: RiskConfig = RiskConfig()
     execution: ExecutionConfig = ExecutionConfig()
-    journal_path: str = "logs/journal.jsonl"
+    journal_path: str = DEFAULT_JOURNAL_PATH
 
     def venue(self, name: str) -> VenueConfig:
         for v in self.venues:
@@ -148,7 +154,7 @@ def parse_config(raw: dict[str, Any]) -> BotConfig:
         venues.append(_build(VenueConfig, {**v, "instruments": insts, "starting_balances": balances}, where))
     cfg = BotConfig(
         mode=raw.pop("mode", "paper"),
-        journal_path=raw.pop("journal_path", BotConfig.journal_path),
+        journal_path=raw.pop("journal_path", DEFAULT_JOURNAL_PATH),  # not BotConfig.journal_path: a slot descriptor
         venues=tuple(venues),
         signal=_build(SignalConfig, raw.pop("signal", {}), "signal"),
         reference_lag=_build(ReferenceLagConfig, raw.pop("reference_lag", {}), "reference_lag"),
@@ -173,6 +179,7 @@ def _require(cond: bool, msg: str) -> None:
 
 def validate(cfg: BotConfig) -> None:
     _require(cfg.mode in MODES, f"mode must be one of {MODES}, got {cfg.mode!r}")
+    _require(isinstance(cfg.journal_path, str) and bool(cfg.journal_path), "journal_path must be a non-empty string")
     _require(len(cfg.venues) >= 1, "at least one venue is required")
     names = [v.name for v in cfg.venues]
     _require(len(names) == len(set(names)), f"duplicate venue names: {names}")
@@ -186,6 +193,10 @@ def validate(cfg: BotConfig) -> None:
         seen = set()
         for inst in v.instruments:
             _require(bool(_SYMBOL_RE.match(inst.symbol)), f"{w}: symbol {inst.symbol!r} must be BASE-QUOTE")
+            quote = inst.symbol.partition("-")[2]
+            _require(quote in USD_LIKE_QUOTES,
+                     f"{w}: {inst.symbol} is quoted in {quote}; risk limits, PnL and marks are in USD-like quote "
+                     f"currencies valued at par, so the quote currency must be one of {', '.join(USD_LIKE_QUOTES)}")
             _require(inst.symbol not in seen, f"{w}: duplicate instrument {inst.symbol}")
             seen.add(inst.symbol)
             _require(bool(inst.venue_symbol), f"{w}: {inst.symbol} needs venue_symbol")
