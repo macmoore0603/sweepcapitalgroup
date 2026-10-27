@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+.venv/
+logs/
+data/*.jsonl
+!data/sample_*.jsonl
+config.local.toml
+.env

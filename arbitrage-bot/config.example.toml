@@ -1,0 +1,181 @@
+# arbbot example configuration. Copy to config.toml and edit.
+#
+# Units: price = quote currency per base unit, size = base units, money = quote
+# currency, fees/slippage/edges in basis points (1 bp = 0.01%).
+#
+# Instrument filters and default fees below were checked on 2026-10-27:
+#   binance  instruments: live GET https://data-api.binance.vision/api/v3/exchangeInfo
+#            fees: https://www.binance.com/en/fee/schedule (Regular user / VIP 0 spot)
+#   bybit    instruments: official docs example (bybit-exchange.github.io/docs/v5/market/instrument)
+#            and the precision of a live orderbook.50 websocket snapshot; the REST
+#            API is geo-blocked from where this was checked
+#            fees: https://www.bybit.com/en/help-center/article/Trading-Fee-Structure (VIP 0 spot)
+#   kraken   instruments: live GET https://api.kraken.com/0/public/AssetPairs?pair=XBTUSD
+#            fees: https://www.kraken.com/features/fee-schedule (Kraken Pro spot, Tier 1)
+#   coinbase instruments: live GET https://api.coinbase.com/api/v3/brokerage/market/products/BTC-USD
+#            fees: NOT verified (see the coinbase venue below)
+#
+# FEES DECIDE PROFITABILITY. These are the entry-tier taker fees; verify your
+# own tier (and any discount-token or region pricing) and put YOUR numbers here.
+# The scanner only fires when the spread beats both legs' taker fees + slippage + X.
+
+mode = "paper"                       # "live" is required (with more gates) for `arbbot live`
+journal_path = "logs/journal.jsonl"
+
+[signal]
+min_net_edge_bps = 5.0               # X: required edge AFTER taker fees + slippage on both legs
+participation = 0.5                  # take at most half of the displayed top-of-book size
+persistence_ms = 0.0                 # 0 = fire as soon as the edge appears
+cooldown_ms = 1000.0                 # per (symbol, buy venue, sell venue)
+
+[risk]
+max_order_notional = 500.0           # per trade, quote currency
+max_net_exposure_notional = 1000.0   # |net base change across venues| * mid
+max_open_positions = 1               # reference-lag positions
+min_top_depth_notional = 2000.0      # thinner side of the top of book must be at least this
+liquidity_recovery_s = 5.0
+max_quote_age_ms = 1500.0            # older quotes are stale: never traded on
+daily_loss_limit = 50.0              # realized UTC-day loss that trips the kill switch
+max_consecutive_hedge_failures = 3   # arbs in a row whose legs filled unequally
+max_trades_per_minute = 20
+
+[execution]
+leg_timeout_ms = 2000.0
+max_slippage_bps = 5.0               # entry limits: quote +/- 5 bps
+hedge_retry = true
+unwind_slippage_bps = 50.0           # hedges/unwinds/stops may cross this far to get flat
+
+# --------------------------------------------------------------------------
+# Pair 1: BTC-USDT and ETH-USDT on Binance and Bybit (same quote currency).
+
+[[venues]]
+name = "binance"
+feed = "binance"
+taker_fee_bps = 10.0                 # VIP 0 spot: 0.100% taker / 0.100% maker (no BNB discount)
+maker_fee_bps = 10.0
+slippage_bps = 1.0                   # expected adverse fill vs the quote, per leg
+latency_ms = 50.0                    # order round trip; measure from where you deploy
+
+[[venues.instruments]]
+symbol = "BTC-USDT"
+venue_symbol = "BTCUSDT"
+tick_size = 0.01                     # PRICE_FILTER.tickSize
+lot_size = 0.00001                   # LOT_SIZE.stepSize
+min_notional = 5.0                   # NOTIONAL.minNotional (USDT)
+
+[[venues.instruments]]
+symbol = "ETH-USDT"
+venue_symbol = "ETHUSDT"
+tick_size = 0.01
+lot_size = 0.0001
+min_notional = 5.0
+
+[venues.starting_balances]           # paper/backtest inventory (live: must match your account)
+USDT = 5000.0
+BTC = 0.05
+ETH = 1.0
+
+[[venues]]
+name = "bybit"
+feed = "bybit"
+taker_fee_bps = 10.0                 # VIP 0 spot (crypto-crypto): 0.1000% taker / 0.1000% maker
+maker_fee_bps = 10.0
+slippage_bps = 1.0
+latency_ms = 50.0
+
+[[venues.instruments]]
+symbol = "BTC-USDT"
+venue_symbol = "BTCUSDT"
+tick_size = 0.1                      # priceFilter.tickSize (live prices carry 1 decimal)
+lot_size = 0.000001                  # lotSizeFilter.basePrecision
+min_notional = 5.0                   # lotSizeFilter.minOrderAmt (USDT)
+
+[[venues.instruments]]
+symbol = "ETH-USDT"
+venue_symbol = "ETHUSDT"
+tick_size = 0.01                     # from live book precision (2 price decimals)
+lot_size = 0.00001                   # from live book precision (5 size decimals)
+min_notional = 5.0                   # assumed equal to BTCUSDT's minOrderAmt: verify with instruments-info
+
+[venues.starting_balances]
+USDT = 5000.0
+BTC = 0.05
+ETH = 1.0
+
+# --------------------------------------------------------------------------
+# Pair 2: BTC-USD on Kraken and Coinbase. USD, not USDT: never compared with
+# pair 1 (BTC-USD vs BTC-USDT carries a floating basis; that is not an arb).
+# At entry-tier fees this pair costs well over 1.5% round trip, so expect it
+# to (correctly) never fire unless you have a much better fee tier.
+
+[[venues]]
+name = "kraken"
+feed = "kraken"
+taker_fee_bps = 80.0                 # Kraken Pro spot Tier 1 ($0+ 30-day volume): 0.80% taker / 0.40% maker
+maker_fee_bps = 40.0
+slippage_bps = 1.0
+latency_ms = 80.0
+
+[[venues.instruments]]
+symbol = "BTC-USD"
+venue_symbol = "BTC/USD"             # websocket v2 spelling (REST altname XBTUSD)
+tick_size = 0.1                      # tick_size
+lot_size = 0.00000001                # lot_decimals = 8
+min_notional = 10.0                  # ordermin 0.00006 BTC (~$5 near $80k) and costmin 0.5 USD; padded
+
+[venues.starting_balances]
+USD = 5000.0
+BTC = 0.05
+
+[[venues]]
+name = "coinbase"
+feed = "coinbase"
+# UNVERIFIED: coinbase.com fee pages returned HTTP 403 to the checker, and
+# Coinbase Advanced entry rates vary by region and need a login to see.
+# 120 bps is a deliberately conservative placeholder: look up your rate
+# (Coinbase Advanced > Fees) and replace it.
+taker_fee_bps = 120.0
+maker_fee_bps = 60.0
+slippage_bps = 1.0
+latency_ms = 80.0
+
+[[venues.instruments]]
+symbol = "BTC-USD"
+venue_symbol = "BTC-USD"
+tick_size = 0.01                     # price_increment / quote_increment
+lot_size = 0.00000001                # base_increment
+min_notional = 1.0                   # quote_min_size (USD)
+
+[venues.starting_balances]
+USD = 5000.0
+BTC = 0.05
+
+# --------------------------------------------------------------------------
+# Reference lag (disabled). A directional strategy, not an arbitrage: it
+# assumes the target venue lags the reference and trades the target alone.
+#
+# Here the reference is Binance BTC-USDT and the target is Kraken BTC-USD.
+# Their prices differ by a "basis": mostly the USDT/USD exchange rate, plus
+# each venue's own premium. The basis floats, so the two are never compared
+# as an arb. Instead the scanner learns it as a slow EMA (basis_halflife_s),
+# seeded with the median of the first min_basis_samples observations; it
+# does not trade before that. A trade aims for a target take_profit_fraction
+# of the way back to fair = reference_mid * (1 + basis); it fires when that
+# distance beats the round trip 2 * (taker fee + slippage) plus
+# entry_threshold_bps. With the Tier 1 Kraken fee above that is
+# 2 * (80 + 1) = 162 bps of cost before any edge. Exits (stop, target,
+# max_hold_s) are always allowed. Uncomment to try it in paper mode or a
+# backtest:
+#
+# [reference_lag]
+# enabled = true
+# reference_venue = "binance"
+# reference_symbol = "BTC-USDT"
+# target_venue = "kraken"
+# target_symbol = "BTC-USD"
+# basis_halflife_s = 300.0
+# min_basis_samples = 100
+# entry_threshold_bps = 10.0          # edge to the take-profit target after round-trip costs
+# take_profit_fraction = 0.8
+# stop_bps = 15.0
+# max_hold_s = 30.0
