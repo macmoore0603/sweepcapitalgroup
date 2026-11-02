@@ -39,6 +39,24 @@ Use **MNQ**, not NQ. At the default $150 risk per trade, one NQ contract with th
 
 **Expect about 3 to 4 signals a week on MNQ 5-minute,** almost all Trend Pullback. From October 5 to November 2, 2026, TradingView's MNQ1! data gave 11. Only one reached target 2, and seven were stopped out. A lower "Minimum setup score" shows more: on 49 sessions, 55 gave 34 signals, 45 gave 52 and 40 gave 61. None of those levels has shown an edge.
 
+To check the indicator on your chart, scroll back to these bars. Times are the start of the 5-minute signal bar in ET. All 11 were Trend Pullback, and the entry is the next bar's open.
+
+| Date | Time | Side | Score | Entry | Stop | T1 | T2 | Outcome |
+|---|---|---|---|---|---|---|---|---|
+| Mon Oct 5 | 11:40 | LONG | 57 | 31240.50 | 31198.50 | 31303.25 | 31366.00 | T1, then time stop |
+| Wed Oct 7 | 14:15 | LONG | 56 | 31381.25 | 31335.25 | 31451.75 | 31521.75 | stop |
+| Mon Oct 12 | 11:20 | SHORT | 74 | 30891.75 | 30936.25 | 30827.25 | 30762.00 | stop |
+| Mon Oct 12 | 13:30 | SHORT | 69 | 30876.50 | 30931.00 | 30795.75 | 30714.50 | time stop |
+| Wed Oct 14 | 13:00 | SHORT | 57 | 30262.50 | 30320.50 | 30175.25 | 30088.00 | T2 |
+| Mon Oct 19 | 13:40 | SHORT | 68 | 29766.25 | 29822.50 | 29682.75 | 29598.75 | stop |
+| Wed Oct 21 | 14:00 | LONG | 71 | 30053.50 | 30033.50 | 30082.50 | 30112.00 | T1, then breakeven stop |
+| Mon Oct 26 | 12:05 | LONG | 56 | 29476.75 | 29436.50 | 29538.00 | 29599.00 | stop |
+| Tue Oct 27 | 13:05 | LONG | 57 | 29802.75 | 29767.25 | 29855.00 | 29907.75 | stop |
+| Wed Oct 28 | 11:15 | SHORT | 68 | 29842.00 | 29873.00 | 29796.25 | 29750.25 | stop |
+| Thu Oct 29 | 14:55 | SHORT | 68 | 29464.50 | 29503.25 | 29407.25 | 29349.50 | stop |
+
+Small differences against your chart are expected, because the history TradingView loads differs slightly by plan and the indicator needs a warm-up.
+
 ### What a signal looks like
 
 ```
