@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 // cli.mjs - Apex 50K Intraday planner: odds of passing the evaluation and then reaching payouts, by size.
+// With --firm tradeify: Tradeify 50K funded-account payouts and breach odds, by size (tradeify.mjs).
 // Run `node planner/cli.mjs --help` for usage. Dependency-free (node: built-ins only).
 
 import { resolve, basename } from 'node:path';
@@ -15,7 +16,7 @@ import {
   normalizeDllFill,
 } from './ledger.mjs';
 import { readTvCsv } from './tv-csv.mjs';
-import { NY, SESSION_ROLL_HOUR } from './time.mjs';
+import { NY, SESSION_ROLL_HOUR, addDays } from './time.mjs';
 import {
   makeParametricSource,
   makeEmpiricalSource,
@@ -26,6 +27,20 @@ import {
   evalSessionBudgets,
   PARAMETRIC_DEFAULTS,
 } from './sim.mjs';
+import {
+  TRADEIFY_RULES_PATH,
+  PLAN_KEYS,
+  loadTradeifyRules,
+  resolvePlan,
+  normalizePlan,
+  normalizePayoutPolicy,
+  planCap,
+  sessionRollHour,
+  simulateFunded,
+  replayFunded,
+  flatTimeViolations,
+  microscalpingCheck,
+} from './tradeify.mjs';
 
 class UsageError extends Error {}
 
@@ -33,8 +48,13 @@ const VALUED = new Set([
   'trades', 'extra-cost', 'tz', 'session-roll', 'date-order', 'decimal',
   'win', 'rr', 'loss-r', 'risk', 'tpd', 'cost', 'mfe-losers', 'mae-winners', 'r-spread',
   'contracts', 'scale', 'unit', 'mode', 'feed', 'order', 'dll-fill', 'attempts', 'pa-runs', 'days', 'horizon', 'fee', 'seed', 'rules',
+  'firm', 'plan', 'payout', 'runs', 'early-close',
 ]);
-const FLAGS = new Set(['sweep', 'json', 'help', 'zero-edge']);
+const FLAGS = new Set(['sweep', 'json', 'help', 'zero-edge', 'legacy', 'select-caps-before-2026-09-01']);
+/** Options that only apply with --firm tradeify, and Apex evaluation / PA options that do not apply there. */
+const TRADEIFY_ONLY = ['plan', 'legacy', 'select-caps-before-2026-09-01', 'payout', 'runs', 'early-close'];
+const APEX_ONLY = ['feed', 'attempts', 'pa-runs', 'days', 'fee'];
+export const FIRMS = Object.freeze(['apex', 'tradeify']);
 /** CLI default for --r-spread: real stops vary in width, so a fixed size does not risk exactly 1R per trade. */
 export const CLI_R_SPREAD = 0.5;
 
@@ -90,7 +110,7 @@ function number(args, key, { def, min = -Infinity, max = Infinity, int = false, 
 }
 
 /** "3" | "1..4" | "2..60:2" | "1,2,4" -> sorted unique sizes */
-export function parseSizes(spec, cap) {
+export function parseSizes(spec, cap, capLabel = 'evaluation cap for this unit') {
   const out = new Set();
   for (const part of String(spec).split(',')) {
     const p = part.trim();
@@ -104,9 +124,22 @@ export function parseSizes(spec, cap) {
   }
   const sizes = [...out].sort((x, y) => x - y);
   for (const q of sizes) {
-    if (q < 1 || q > cap) throw new UsageError(`--contracts ${q} is outside 1..${cap} (evaluation cap for this unit)`);
+    if (q < 1 || q > cap) throw new UsageError(`--contracts ${q} is outside 1..${cap} (${capLabel})`);
   }
   return sizes;
+}
+
+/** "2024-11-29,2024-12-24" -> sorted unique valid YYYY-MM-DD days */
+function parseDayList(spec, opt) {
+  const days = String(spec)
+    .split(',')
+    .map((x) => x.trim())
+    .filter(Boolean);
+  if (days.length === 0) throw new UsageError(`${opt} needs one or more dates YYYY-MM-DD,YYYY-MM-DD,...`);
+  for (const d of days) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || addDays(d, 0) !== d) throw new UsageError(`${opt}: bad date "${d}" (expected YYYY-MM-DD)`);
+  }
+  return [...new Set(days)].sort();
 }
 
 // ---------------------------------------------------------------------------------------------- formatting
@@ -140,7 +173,7 @@ function jsonReplacer(_k, v) {
 
 // ---------------------------------------------------------------------------------------------- main
 
-function usage(rules) {
+function usage(rules, tradeify = null) {
   const e = rules?.evaluation;
   const stop = e?.thresholdStopRithmic != null ? `stops trailing at $${e.thresholdStopRithmic.toLocaleString('en-US')}` : 'keeps trailing';
   const cap = e ? `${e.maxContractsMini} minis / ${e.maxContractsMini * rules.microsPerMini} micros` : 'evaluation cap';
@@ -151,6 +184,9 @@ Usage:
                        [--contracts N | --contracts A..B | --sweep] [--mode eval|pa|both]
                        [--feed rithmic|tradovate] [--order conservative|adverse-first]
                        [--attempts 20000] [--days N] [--horizon 120] [--fee 0] [--seed 1] [--json]
+  node planner/cli.mjs --firm tradeify [--plan growth|select-flex|select-daily|lightning] [--legacy]
+                       [--select-caps-before-2026-09-01] [--payout max|min] (--trades ... [--early-close D,...] | --win ...)
+                       [--contracts SPEC | --sweep] [--runs 20000] [--horizon 120] [--seed 1] [--json]
 
 Trade source (one of):
   --trades FILE         TradingView Strategy Tester "List of trades" CSV; whole trading sessions are
@@ -187,7 +223,8 @@ Size and run:
   --unit mini|micro     contract unit (default mini)
   --mode eval|pa|both   evaluation, performance account after a pass, or both (default both)
   --feed rithmic|tradovate   evaluation feed; Rithmic/WealthCharts threshold ${stop} (default rithmic)
-  --order conservative|adverse-first   intratrade order (default conservative: favorable extreme first)
+  --order conservative|adverse-first   intratrade order (default conservative: favorable extreme first;
+                        Apex only: with --firm tradeify the order cannot change a result)
   --dll-fill extreme|limit   PA daily-loss flatten at the trade's adverse extreme (default, conservative)
                         or exactly at the limit (platform liquidation; can keep a breach from happening)
   --attempts N          evaluation attempts per size (default 20000)
@@ -197,10 +234,49 @@ Size and run:
   --horizon N           PA trading days simulated after a pass (default 120)
   --fee $               evaluation fee per attempt (default 0)
   --seed N              PRNG seed (default 1)
-  --rules FILE          rules file (default ${RULES_PATH})
+  --rules FILE          rules file (default ${RULES_PATH}; with --firm tradeify ${TRADEIFY_RULES_PATH})
   --json                machine-readable output
   --help                this text
+
+Firm:
+  --firm apex|tradeify  apex (default): the evaluation and performance account above; tradeify: the
+                        Tradeify 50K Sim Funded account only (no evaluation). --mode, --feed, --attempts,
+                        --pa-runs, --days, --fee and --order are Apex options and are rejected with --firm tradeify
+  --plan P              Tradeify plan: ${PLAN_KEYS.join(' | ')} (default growth)
+  --legacy              Tradeify Growth / Lightning bought before ${String(tradeify?.plans?.growth?.legacyBefore ?? 'the legacy cut-off').slice(0, 10)} (${tradeifyLegacyLabel(tradeify)})
+  --select-caps-before-2026-09-01   Select Flex / Select Daily bought before 2026-09-01 (payout caps
+                        ${tradeifySelectCapsLabel(tradeify)})
+  --payout max|min      request the largest payout allowed (default) or the plan minimum
+  --early-close D,D,... (tradeify, with --trades) early-close session days YYYY-MM-DD checked against the
+                        ${tradeify?.session?.earlyCloseFlatByEt ?? 'early-close'} ET flat time (the planner has no exchange calendar)
+  --runs N              funded accounts simulated per size (default 20000)
+  --horizon N           trading sessions simulated per funded account (default 120)
+  --sweep               (tradeify) contracts 1 to the plan cap (${tradeifyCapLabel(tradeify)}), or the
+                        risk multipliers with --scale risk
+  The DLL is soft (the session pauses, --dll-fill applies); payouts are checked at each session close;
+  the trader receives ${tradeify ? pct(tradeify.split, 0) : 'the split'} of each payout; --trades replays the actual trades too.
 `;
+}
+
+function tradeifyCapLabel(t) {
+  if (!t) return 'plan cap';
+  const g = t.plans.growth;
+  const m = t.microsPerMini;
+  const leg = g.legacy?.maxContractsMini;
+  return `${g.maxContractsMini} minis / ${g.maxContractsMini * m} micros${leg ? `; legacy ${leg} / ${leg * m}` : ''}`;
+}
+
+function tradeifyLegacyLabel(t) {
+  const g = t?.plans?.growth?.legacy;
+  if (!g) return 'legacy limits';
+  return `${g.maxContractsMini} minis, Growth payouts from ${usd(g.minBalance)}`;
+}
+
+function tradeifySelectCapsLabel(t) {
+  const f = t?.plans?.['select-flex']?.payout;
+  const d = t?.plans?.['select-daily']?.payout;
+  if (!f || !d) return 'legacy caps';
+  return `Flex ${usd(f.capIfBoughtBefore20260901)} instead of ${usd(f.cap)}, Daily ${usd(d.capIfBoughtBefore20260901)} instead of ${usd(d.cap)}`;
 }
 
 /** "21" or "21-22" for a list of per-attempt session budgets. */
@@ -211,14 +287,14 @@ function budgetLabel(budgets) {
   return lo === hi ? `${lo}` : `${lo}-${hi}`;
 }
 
-function buildSource(args, rules) {
+function buildSource(args, rules, { defaultRollHour = SESSION_ROLL_HOUR } = {}) {
   const parametricKeys = ['win', 'rr', 'risk', 'tpd', 'cost', 'loss-r', 'mfe-losers', 'mae-winners', 'r-spread', 'zero-edge'];
   if (args.trades) {
     const clash = parametricKeys.filter((k) => args[k] != null);
     if (clash.length) throw new UsageError(`--trades cannot be combined with ${clash.map((k) => `--${k}`).join(', ')}`);
     const path = resolve(args.trades);
     const rollOff = args['session-roll'] != null && /^(off|none|no|false)$/i.test(String(args['session-roll']));
-    const rollHour = rollOff ? null : number(args, 'session-roll', { def: SESSION_ROLL_HOUR, min: 0, max: 23, int: true });
+    const rollHour = rollOff ? null : number(args, 'session-roll', { def: defaultRollHour, min: 0, max: 23, int: true });
     const dateOrder = String(args['date-order'] ?? 'auto').toLowerCase();
     if (!['auto', 'mdy', 'dmy'].includes(dateOrder)) throw new UsageError(`--date-order must be auto, mdy or dmy, got "${args['date-order']}"`);
     const decimal = String(args.decimal ?? 'auto').toLowerCase();
@@ -304,13 +380,28 @@ function buildSource(args, rules) {
 
 export function run(argv) {
   const args = parseArgs(argv);
+  const firm = String(args.firm ?? 'apex').toLowerCase();
+  if (!FIRMS.includes(firm)) throw new UsageError(`--firm must be ${FIRMS.join(' or ')}, got "${args.firm}"`);
+  if (firm === 'tradeify' && !args.help) return runTradeify(args);
   let rules = null;
   try {
-    rules = loadRules(args.rules ? resolve(args.rules) : RULES_PATH);
+    rules = loadRules(args.rules && firm === 'apex' ? resolve(args.rules) : RULES_PATH);
   } catch (err) {
     if (!args.help) throw err;
   }
-  if (args.help) return { text: usage(rules) };
+  if (args.help) {
+    let tradeify = null;
+    try {
+      tradeify = loadTradeifyRules(args.rules && firm === 'tradeify' ? resolve(args.rules) : TRADEIFY_RULES_PATH);
+    } catch {
+      // help still prints without the Tradeify rules file
+    }
+    return { text: usage(rules, tradeify) };
+  }
+  const tradeifyOnly = TRADEIFY_ONLY.filter((k) => args[k] != null);
+  if (tradeifyOnly.length) {
+    throw new UsageError(`${tradeifyOnly.map((k) => `--${k}`).join(', ')} only appl${tradeifyOnly.length > 1 ? 'y' : 'ies'} with --firm tradeify`);
+  }
 
   const { source, trades, info } = buildSource(args, rules);
   const unit = asUsage(() => normalizeUnit(args.unit ?? 'mini'));
@@ -529,6 +620,302 @@ function summaryLine(out) {
   const ex = out.source.expectancyPerContract;
   if (Math.abs(ex) < 1e-9) text += ' Expectancy after costs is zero, so these odds come from variance alone.';
   else if (ex < 0) text += ` Expectancy after costs is negative (${usd(ex, 2)} per trade per contract): passes here are luck, not edge.`;
+  return text;
+}
+
+// ---------------------------------------------------------------------------------------------- tradeify
+
+function runTradeify(args) {
+  if (args.mode != null && String(args.mode).toLowerCase() !== 'funded') {
+    throw new UsageError(
+      `--mode ${args.mode} does not apply with --firm tradeify: it simulates the funded account only (no evaluation or Apex PA); drop --mode or use --mode funded`,
+    );
+  }
+  const apexOnly = APEX_ONLY.filter((k) => args[k] != null);
+  if (apexOnly.length) {
+    const runs = apexOnly.some((k) => k === 'attempts' || k === 'pa-runs') ? '; use --runs N for the number of funded accounts' : '';
+    throw new UsageError(
+      `${apexOnly.map((k) => `--${k}`).join(', ')} ${apexOnly.length > 1 ? 'are Apex evaluation/PA options' : 'is an Apex evaluation/PA option'}; --firm tradeify simulates the funded account only${runs}`,
+    );
+  }
+  if (args.order != null) {
+    throw new UsageError(
+      '--order has no effect with --firm tradeify: the end-of-day floor does not move intraday and the favorable extreme never falls below the balance, so both orders give identical results; drop --order',
+    );
+  }
+  if (args['early-close'] != null && !args.trades) throw new UsageError('--early-close only applies with --trades (it checks the CSV trades against the flat time)');
+  const earlyCloseDays = args['early-close'] != null ? parseDayList(args['early-close'], '--early-close') : [];
+  const rulesFile = args.rules ? resolve(args.rules) : TRADEIFY_RULES_PATH;
+  const rules = loadTradeifyRules(rulesFile);
+  const planKey = asUsage(() => normalizePlan(args.plan ?? 'growth'));
+  const legacy = Boolean(args.legacy);
+  const boughtBefore20260901 = Boolean(args['select-caps-before-2026-09-01']);
+  const plan = asUsage(() => resolvePlan(rules, planKey, { legacy, boughtBefore20260901 }));
+  const { source, trades, info } = buildSource(args, rules, { defaultRollHour: sessionRollHour(rules) });
+  const unit = asUsage(() => normalizeUnit(args.unit ?? 'mini'));
+  const cap = planCap(rules, plan, unit);
+  if (args.sweep && args.contracts != null) throw new UsageError('use --contracts or --sweep, not both');
+  const risk = source.scaling === 'risk';
+  const sizeCap = risk ? Math.max(1, Math.ceil(cap / (source.minQty || 1))) : cap;
+  const sizes =
+    args.contracts != null
+      ? parseSizes(args.contracts, sizeCap, risk ? `beyond it every trade is capped at the ${plan.name} limit` : `${plan.name} cap for this unit`)
+      : defaultSizes(source, cap);
+  const settings = asUsage(() => ({
+    firm: 'tradeify',
+    plan: plan.key,
+    legacy,
+    selectCapsBefore20260901: boughtBefore20260901,
+    payout: normalizePayoutPolicy(args.payout ?? 'max'),
+    unit,
+    dllFill: normalizeDllFill(args['dll-fill'] ?? 'extreme'),
+    runs: number(args, 'runs', { def: 20000, min: 1, int: true }),
+    horizonDays: number(args, 'horizon', { def: 120, min: 1, int: true }),
+    seed: number(args, 'seed', { def: 1, min: 0, max: 4294967295, int: true }),
+  }));
+  const simOpts = { ...settings, boughtBefore20260901 };
+  const results = sizes.map((contracts) => simulateFunded(rules, plan.key, source, { ...simOpts, contracts }));
+  const replay = trades
+    ? sizes.map((contracts) => {
+        const r = replayFunded(rules, plan.key, trades, { ...simOpts, contracts, scaling: source.scaling, extraCost: info.extraCost });
+        r.accounts = r.accounts.map(({ payoutHistory, ...a }) => ({ ...a, payoutAmounts: payoutHistory.map((p) => p.amount) }));
+        return r;
+      })
+    : null;
+  if (trades) {
+    const late = flatTimeViolations(rules, trades, NY, earlyCloseDays);
+    info.earlyCloseDays = earlyCloseDays;
+    info.flatTimeViolations = late.length;
+    info.flatTimeTrades = late.map((t) => t.tradeNo);
+    info.microscalping = microscalpingCheck(rules, trades, { scaling: source.scaling });
+  }
+  const best = {
+    received: argmaxBy(results, (r) => r.meanReceived),
+    payoutChance: argmaxBy(results, (r) => r.pPayout),
+  };
+  const out = {
+    planner: 'tradeify-50k',
+    rules: {
+      file: rulesFile,
+      firm: rules.firm,
+      account: rules.account,
+      verifiedOn: rules.verifiedOn,
+      plan: plan.key,
+      planName: plan.name,
+      effective: plan,
+      drawdown: rules.drawdown,
+      split: rules.split,
+      session: rules.session,
+      fundedRules: rules.fundedRules ?? null,
+      unverified: rules.unverified ?? [],
+    },
+    source: info,
+    settings: { ...settings, scaling: source.scaling ?? 'contracts', sizes, cap },
+    results,
+    best: {
+      received: best.received ? { contracts: best.received.contracts, meanReceived: best.received.meanReceived } : null,
+      payoutChance: best.payoutChance ? { contracts: best.payoutChance.contracts, pPayout: best.payoutChance.pPayout } : null,
+    },
+    replay,
+  };
+  out.summary = tradeifySummary(out);
+  if (args.json) return { text: JSON.stringify(out, jsonReplacer, 2), data: out };
+  return { text: renderTradeify(out, rules), data: out };
+}
+
+function argmaxBy(rows, f) {
+  let best = null;
+  let bestV = -Infinity;
+  for (const r of rows) {
+    const v = f(r);
+    if (v != null && v > bestV) {
+      bestV = v;
+      best = r;
+    }
+  }
+  return best && bestV > 0 ? best : null;
+}
+
+const list$ = (arr) => arr.map((x) => usd(x)).join('/');
+const listPct = (arr) => arr.map((x) => pct(x, 0)).join('/');
+
+/** The plan's rules in two lines: account limits, then the payout rule. */
+export function tradeifyRuleLines(rules, plan, unit) {
+  const d = rules.drawdown;
+  const m = rules.microsPerMini;
+  const startFloor = rules.startBalance - d.amount;
+  const lockBits = [`an EOD balance reaches ${usd(d.lockTriggerEodBalance)}`];
+  if (d.lockOnPayoutRequest) lockBits.push('a payout is requested');
+  let dll = 'no DLL';
+  if (plan.dailyLossLimit != null) {
+    dll = `DLL ${usd(plan.dailyLossLimit)} soft (pauses the session)`;
+    if (plan.dllRaise) {
+      dll += plan.dllRaise.to == null
+        ? `, removed after a ${usd(plan.dllRaise.atBalance)} close`
+        : `, ${usd(plan.dllRaise.to)} after a ${usd(plan.dllRaise.atBalance)} close`;
+    }
+  }
+  const capText = plan.scaling
+    ? `contracts ${plan.scaling.map((t) => t.maxContractsMini).join('/')} minis at EOD profit ${plan.scaling
+        .map((t, i) => (i === 0 ? `< ${usd(plan.scaling[1]?.minProfit ?? Infinity)}` : `>= ${usd(t.minProfit)}`))
+        .join(' / ')} (kept once reached)`
+    : `max ${plan.maxContractsMini} minis / ${plan.maxContractsMini * m} micros`;
+  const line1 =
+    `EOD trailing drawdown ${usd(d.amount)} (floor ${usd(startFloor)}, locks at ${usd(d.lockedFloor)} once ${lockBits.join(' or ')}); ` +
+    `${dll}; ${capText}; flat by ${rules.session.flatByEt} ET (${rules.session.earlyCloseFlatByEt} ET on early-close days)`;
+  const P = plan.payout;
+  const repeat = (caps, rep) => (P.capAfterTiers != null ? `, then ${usd(P.capAfterTiers)}` : rep !== false ? `, then ${usd(caps[caps.length - 1])}` : '');
+  let line2;
+  if (P.type === 'growth') {
+    line2 =
+      `payout: ${P.minQualifyingDays} days > ${usd(P.qualifyingDayProfitAbove)} since the last payout, largest day <= ${listPct(plan.consistency)} of profit since the last payout, ` +
+      `balance >= ${usd(P.minBalance)}; amount min(${list$(P.caps)}${repeat(P.caps, P.capsRepeatLast)}, balance - floor - $0.01) >= ${usd(P.minPayout)}`;
+  } else if (P.type === 'select-flex') {
+    line2 =
+      `payout: ${P.winningDays} winning days (>= ${usd(P.winningDayProfitAtLeast)}) since the last payout, positive profit since the last payout from payout ${P.positiveCycleProfitFromPayout}; ` +
+      `amount min(${pct(P.shareOfTotalProfit, 0)} of total profit, ${usd(P.cap)}) >= ${usd(P.minPayout)}, balance stays above the floor`;
+  } else if (P.type === 'select-daily') {
+    line2 =
+      `payout: daily, profit since the last payout > 0; amount min(${P.multipleOfCycleProfit}x profit since the last payout, ${usd(P.cap)}, balance - ${usd(P.bufferBalance)}) >= ${usd(P.minPayout)}`;
+  } else {
+    line2 =
+      `payout: profit since the last payout >= ${list$(P.profitGoals)} (payout 1, then each later), largest day <= ${listPct(plan.consistency)} of it by payout number; ` +
+      `amount min(${list$(P.caps)}${repeat(P.caps, P.capsRepeatLast)}, balance - floor - $0.01) >= ${usd(P.minPayout)}`;
+  }
+  return [line1, `${line2}; trader receives ${pct(rules.split, 0)}`];
+}
+
+function renderTradeify(out, rules) {
+  const s = out.settings;
+  const plan = out.rules.effective;
+  const unitName = s.unit === 'micro' ? 'micro' : 'mini';
+  const sizeLabel = s.scaling === 'risk' ? 'Risk x' : 'Qty';
+  const lines = [];
+  const src = describeSource(out.source, unitName);
+  lines.push(`Tradeify 50K funded planner - ${rules.firm} ${plan.name} (${rules.account}; rules verified ${rules.verifiedOn})`);
+  lines.push(`Trades : ${src[0]}`);
+  for (const l of src.slice(1)) lines.push(`         ${l}`);
+  const csv = out.source.kind === 'empirical';
+  const early = out.source.earlyCloseDays ?? [];
+  const earlyText = early.length
+    ? `${rules.session.earlyCloseFlatByEt} ET on the ${early.length} --early-close day(s)`
+    : `early-close days (${rules.session.earlyCloseFlatByEt} ET) not checked: list them with --early-close YYYY-MM-DD,...`;
+  if (out.source.flatTimeViolations > 0) {
+    lines.push(
+      `         WARNING: ${out.source.flatTimeViolations} trade(s) (#${out.source.flatTimeTrades.join(', #')}) were open after the ${rules.session.flatByEt} ET flat time ` +
+        `or across the session break (${earlyText}); they are simulated as traded`,
+    );
+  } else if (csv) {
+    lines.push(`         flat time: no trade open after ${rules.session.flatByEt} ET or across the session break (${earlyText})`);
+  }
+  const ms = out.source.microscalping;
+  if (ms && !ms.passes) {
+    const same = ms.sameTimestamp > 0 ? `; ${ms.sameTimestamp} trade(s) open and close on the same CSV timestamp and count as 0 s` : '';
+    lines.push(
+      `         WARNING: microscalping: ${pct(ms.longShareOfTrades)} of trades and ${pct(ms.longShareOfProfit)} of gross profit come from holds over ${ms.minHoldSeconds} s ` +
+        `(Tradeify blocks payouts unless both are over ${pct(ms.minShare, 0)}${same}); the simulation and replay pay out as if the rule were met`,
+    );
+  }
+  const [r1, r2] = tradeifyRuleLines(rules, plan, s.unit);
+  lines.push(`Rules  : ${r1}`);
+  lines.push(`         ${r2}`);
+  const notModelled = [];
+  if (rules.fundedRules?.minActivity) notModelled.push(`minimum activity (${rules.fundedRules.minActivity})`);
+  if (!csv) notModelled.push('flat time and microscalping (checked on --trades only)');
+  if (notModelled.length) lines.push(`         not modelled: ${notModelled.join('; ')}`);
+  const unverified = out.rules.unverified.length;
+  lines.push(
+    `Run    : ${int(s.runs)} funded accounts x ${s.horizonDays} trading sessions; DLL fill ${s.dllFill}; payout ${s.payout}; ` +
+      `unit ${unitName}; seed ${s.seed}${unverified ? `; ${unverified} modelling assumptions listed under "unverified" in the rules file` : ''}`,
+  );
+  const bestRec = out.best.received?.contracts;
+  const bestChance = out.best.payoutChance?.contracts;
+  lines.push('', `FUNDED ACCOUNT (${s.horizonDays} trading sessions per account; "To trader" = requested x ${pct(rules.split, 0)})`);
+  const rows = out.results.map((r) => {
+    const tags = [];
+    if (r.contracts === bestRec) tags.push('best $ to trader');
+    if (r.contracts === bestChance) tags.push('best P(payout)');
+    return [
+      r.contracts,
+      pct(r.pPayout),
+      `${fx(r.meanPayouts, 2)}/${r.medianPayouts}`,
+      `${usd(r.meanRequested)}/${usd(r.medianRequested)}`,
+      `${usd(r.meanReceived)}/${usd(r.medianReceived)}`,
+      pct(r.pBreachBeforeFirstPayout),
+      pct(r.pBreach),
+      r.medianDaysToFirstPayout == null ? '-' : r.medianDaysToFirstPayout,
+      fx(r.dllDaysPerRun, 2),
+      pct(r.cappedTradeShare),
+      tags.length ? `<- ${tags.join(', ')}` : '',
+    ];
+  });
+  lines.push(
+    table(
+      [sizeLabel, 'P(1+ payout)', 'Payouts mean/med', 'Requested mean/med', 'To trader mean/med', 'P(breach<1st pay)', 'P(breach)', 'Days to 1st pay', 'DLL days/run', 'Capped', ''],
+      rows,
+      new Set([10]),
+    ),
+  );
+  lines.push('Days to 1st pay = median trading sessions to the first payout among accounts that got one; Capped = share of trades cut to the plan cap');
+  if (out.replay) {
+    const r0 = out.replay[0];
+    lines.push(
+      '',
+      `HISTORICAL REPLAY (actual trade order, ${r0.firstDay}..${r0.lastDay}, ${r0.sessions} sessions; a breach ends the account and a fresh one starts at the next session)`,
+    );
+    const rows2 = out.replay.map((r) => [
+      r.contracts,
+      r.total,
+      r.breached,
+      r.payouts,
+      usd(r.requested),
+      usd(r.received),
+      r.firstPayoutDay ?? '-',
+      r.dllDays,
+      lastAccount(r.last),
+    ]);
+    lines.push(table([sizeLabel, 'Accounts', 'Breached', 'Payouts', 'Requested', 'To trader', '1st payout', 'DLL days', 'Last account'], rows2, new Set([8])));
+  }
+  lines.push('', out.summary);
+  return lines.join('\n');
+}
+
+function lastAccount(a) {
+  if (!a) return '-';
+  const floor = `floor ${usd(a.floor, 2)}${a.locked ? ' (locked)' : ''}`;
+  if (a.status === 'BREACHED') return `BREACHED ${a.breachDay}: net liq ${usd(a.breachNetLiq, 2)} <= ${floor}`;
+  return `${a.status} balance ${usd(a.balance, 2)}, ${floor}`;
+}
+
+function tradeifySummary(out) {
+  const s = out.settings;
+  const name = out.rules.planName;
+  const label = (q) => (s.scaling === 'risk' ? `risk x${q}` : `${q} ${s.unit === 'micro' ? 'micro' : 'mini'}${q === 1 ? '' : 's'}`);
+  const find = (q) => out.results.find((r) => r.contracts === q);
+  const parts = [];
+  if (out.best.received) {
+    const r = find(out.best.received.contracts);
+    parts.push(
+      `${label(r.contracts)} pays the trader the most (${usd(r.meanReceived)} on average within ${s.horizonDays} trading sessions; ` +
+        `${pct(r.pPayout)} reach at least one payout, ${pct(r.pBreachBeforeFirstPayout)} breach before the first)`,
+    );
+    if (out.best.payoutChance && out.best.payoutChance.contracts !== r.contracts) {
+      const c = find(out.best.payoutChance.contracts);
+      parts.push(`${label(c.contracts)} gives the best chance of a payout (${pct(c.pPayout)}, ${usd(c.meanReceived)} to the trader on average)`);
+    }
+  } else parts.push(`no size reached a payout within ${s.horizonDays} trading sessions`);
+  if (out.replay) {
+    const paid = out.replay.filter((r) => r.payouts > 0);
+    parts.push(
+      paid.length
+        ? `the historical replay paid out at ${paid.map((r) => label(r.contracts)).join(', ')}`
+        : 'the historical replay reached no payout at any size',
+    );
+  }
+  let text = `Summary: ${name}: ${parts.join('; ')}.`;
+  const ex = out.source.expectancyPerContract;
+  if (Math.abs(ex) < 1e-9) text += ' Expectancy after costs is zero, so these odds come from variance alone.';
+  else if (ex < 0) text += ` Expectancy after costs is negative (${usd(ex, 2)} per trade per contract): payouts here are luck, not edge.`;
   return text;
 }
 

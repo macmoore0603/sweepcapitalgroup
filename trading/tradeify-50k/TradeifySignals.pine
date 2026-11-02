@@ -1,0 +1,1003 @@
+//@version=6
+// =============================================================================
+// Tradeify 50K Signals  (TradingView Pine Script v6 indicator)
+// =============================================================================
+//
+// WHAT THIS IS
+//   Signal prompts for trading NQ / MNQ by hand on a Tradeify 50K Sim Funded
+//   account. On each confirmed bar it looks for the July NQ setups (Trend
+//   Pullback, Opening Range Breakout, VWAP Reclaim, Failed Breakout Reversal,
+//   VWAP Fade). When the best one passes the setup gates and the account
+//   gates, it posts a LONG or SHORT prompt with a size that fits Tradeify's
+//   limits and your own daily limits, a stop and two targets, and sends an
+//   alert. It then follows the prompt as a virtual trade, posts its exits,
+//   and uses the virtual P&L for the daily gates. It places no orders.
+//
+// THE RECORD, STATED PLAINLY
+//   - In October, similar NQ setups (pullback, opening-range breakout, VWAP,
+//     fades) failed on 14 years of real 1-minute NQ data after costs.
+//   - On 49 regular sessions (Aug 24 - Oct 30, 2026, MNQ 5-minute; the July
+//     Python engine run by trading/apex-50k/research/run_real.py at commit
+//     5c4d89c, $100 risk, $300 daily stop, entries blocked from 15:50 ET)
+//     these July setups took 18 trades, won 39% (7 of 18), and lost $12.58
+//     per trade per micro: no better than seeded random entries (mean -0.12 R
+//     against -0.08 R). This Pine port with its own defaults was not itself
+//     replayed.
+//   - So the signals are prompts, not advice, and not a proven edge. Past
+//     results do not predict future results.
+//   - Pine cannot see the account. The account inputs below must be typed
+//     from the Tradeify dashboard every day. Until they are, the table shows
+//     STALE and no prompts are posted for the current session (only the
+//     flat-by reminder, which then says the inputs are STALE).
+//
+// GETTING ALERTS ON A PHONE
+//   1. Open MNQ1! (or the front MNQ contract) on a 5-minute chart and add
+//      this indicator. Type today's figures from the Tradeify dashboard into
+//      its settings. The table (top right) must not say STALE.
+//   2. Install the TradingView app on the phone, log in to the same account
+//      and allow its notifications.
+//   3. On the chart: Alerts > Create alert. Condition: this indicator
+//      ("Tradeify 50K Signals"), then "Any alert() function call". These
+//      messages are sent once per bar close. Under Notifications tick
+//      "Notify in app" so they reach the phone. Create it.
+//      (Optional: the alertcondition alerts "Long signal", "Short signal",
+//      "Exit" and "Flat-by in 10 minutes" carry short static messages; pick
+//      "Once per bar close" for them.)
+//   4. An alert keeps the inputs it was created with. After typing new daily
+//      figures, delete the old alert and create a new one. An old alert goes
+//      STALE at the first 18:00 ET session start after a 17:00 ET close that
+//      is later than its as-of time. It then posts no prompts, only the
+//      daily flat-by reminder, which says the inputs are STALE.
+//
+// DAILY INPUTS (type them from the Tradeify dashboard before trading, flat)
+//   Balance at last close, Trailing Max Drawdown floor (the dashboard
+//   figure), highest end-of-day balance so far, today's realized P&L, trades
+//   already taken today, and the date and time you read them ("as of"). The
+//   figures are STALE when the as-of time is before the close of the
+//   previous session (17:00 ET on the day the current session starts at
+//   18:00 ET; Friday 17:00 ET for the Sunday session), so figures read
+//   between sessions stay valid for the next one. Read between sessions,
+//   today's realized P&L and trades taken are 0 (the balance at last close
+//   already includes them). Type them while flat: a virtual trade or prompt
+//   from before the as-of time is dropped when the live period starts.
+//
+// TRADEIFY 50K SIM FUNDED RULES MODELLED
+//   From trading/tradeify-50k/rules.json, verified 2026-11-02. Re-check the
+//   sources before relying on any number; the firm can change its rules.
+//   - Trailing Max Drawdown 2,000, end-of-day trailing: floor = highest
+//     end-of-day balance - 2,000, updated only at the end of each trading
+//     day, never moves down; it locks at 50,100 once an end-of-day balance
+//     reaches 52,100, or at once when a payout is requested. It is enforced
+//     in real time on net liquidation (balance + open P&L); touching it fails
+//     the account permanently. The indicator uses the higher of the floor you
+//     type and the floor implied by the highest end-of-day balance.
+//   - Contract cap: Growth and Lightning 4 minis or 40 micros (bought before
+//     Sep 12, 2025: 5 or 50). Select Flex and Select Daily scale from the
+//     highest end-of-day profit: under 1,500 -> 2 minis, 1,500 -> 3,
+//     2,000 -> 4, kept once reached. Micros count 10 per mini; a micro is
+//     detected from syminfo.root (MNQ, MES, MYM, M2K, MGC, MCL, ...).
+//   - Daily loss limit (soft breach: trading pauses until the next 18:00 ET
+//     session, the account stays open, losses can run past it): Growth and
+//     Lightning 1,250, or 2,000 once the balance at last close is 53,000 or
+//     more (legacy Growth: no limit from 53,000); Select Daily 1,000; Select
+//     Flex none.
+//   - Session 18:00-17:00 ET, flat by 16:45 ET (12:59 ET on early-close
+//     days, which are not scheduled here: flatten those yourself).
+//   - Consistency (Growth 35%, Lightning 20-30%, Select none) is a payout
+//     rule. The daily profit lock input is a guard against one outsized day,
+//     not the rule itself. Its Auto values fit the first payout only; after
+//     a payout set it to Custom (see its tooltip).
+//   - Not modelled: payouts, microscalping (more than 50% of trades and of
+//     profit must come from trades held longer than 10 seconds), at least
+//     1 trade per week, no hedging (also across correlated products and
+//     accounts), algo rules. News trading is allowed.
+//   Sources:
+//     https://help.tradeify.co/en/articles/10495897-rules-trailing-max-drawdowns
+//     https://help.tradeify.co/en/articles/10468321-rules-daily-loss-limit
+//     https://help.tradeify.co/en/articles/12268167-essential-trading-rules-overview
+//     https://help.tradeify.co/en/articles/11083796-growth-funded-account-payout-policy
+//     https://help.tradeify.co/en/articles/12853966-select-flex-and-select-daily-payout-policies
+//     https://help.tradeify.co/en/articles/10495938-lightning-funded-accounts
+//     https://help.tradeify.co/en/articles/10495932-lightning-funded-account-payout-policy
+//     https://help.tradeify.co/en/articles/10468320-rules-consistency-rule
+//   Unverified (rules.json): whether the Growth consistency window resets per
+//   payout cycle; whether the 2,000 DLL reverts if the balance falls below
+//   53,000 (this indicator uses the balance at last close, the cautious
+//   reading); the DLL is modelled on realized plus open P&L for the session;
+//   Select scaling uses end-of-day profit (balance - 50,000).
+//
+// HOW A PROMPT IS SIZED
+//   per-contract risk = (stop points + 2 ticks of modelled entry and stop
+//            slippage) x point value + round-trip commission
+//   budget = the smallest of: risk per trade; room to floor x max share;
+//            DLL room - $100 (plans with a DLL); room to your own daily stop
+//   qty    = floor(budget / per-contract risk), capped at the plan's limit
+//   room to floor = balance at last close + today's realized P&L + virtual
+//            P&L since the as-of time - floor
+//   A setup that cannot be sized to 1 contract is drawn as a small grey
+//   "no size" marker with the reason and sends no alert. On NQ ($20/point)
+//   a $150 budget is below one contract's risk for any 8-point stop
+//   ($171.50), so NQ prompts are "no size": use MNQ or raise the risk. The
+//   table then shows PAUSED with the reason instead of ARMED.
+//
+// HOW A PROMPT IS GATED (the table shows ARMED or PAUSED: reason)
+//   No prompt when: the inputs are stale; the signal bar closes outside the
+//   entry window or within 20 minutes of flat-by; room to floor <= 0; the
+//   DLL, your daily stop or the daily profit lock is hit; the day's trade
+//   count or the losses-in-a-row limit is reached; a virtual trade is open
+//   or pending; the budget cannot size 1 contract even at the minimum stop
+//   (table only). Prompts are decided on confirmed bars only, so they do not
+//   repaint within a session. Which bars are live depends on the current
+//   time and the typed figures: after the session rolls, a reload or new
+//   inputs, earlier bars are recomputed as review prompts and can differ
+//   from what was alerted. Keep your own record of the alerts you acted on.
+//
+// THE VIRTUAL TRADE (as the July Python backtest manages it)
+//   Entered at the next bar's open + 1 tick (cancelled if that is past the
+//   stop or target 1). Each bar: an open through the stop exits at the
+//   open; a stop touch exits at the stop - 1 tick (a bar touching stop and
+//   target counts the stop first); target 1 (the setup's T1: 1.5R, or less
+//   for a VWAP Fade) takes half off and moves the stop to breakeven (a
+//   single contract exits whole at T1); target 2 (the setup's T2) takes the
+//   rest; flat-by exits at the close - 1 tick of the last bar that closes
+//   5 minutes or more before the flat-by time (16:40 ET by default), so the
+//   EXIT alert comes before the deadline; after 24 bars held it exits at
+//   the close - 1 tick. Commission is charged per contract.
+//
+// LIMITS AND APPROXIMATIONS
+//   - Virtual P&L assumes every prompt was taken and filled as modelled.
+//     Real fills differ: keep typing your real realized P&L.
+//   - The trade count is "trades already taken today" plus virtual trades
+//     filled after the as-of time; the losses-in-a-row count and the virtual
+//     P&L start at the as-of time. A review trade still open or pending at
+//     the as-of time is dropped then, so the typed figures stand alone.
+//   - Past sessions, and the current session before the as-of time, show
+//     faded "review" prompts gated with the typed figures as a stand-in for
+//     that day's account. They never alert. Turn them off under Display.
+//   - The entry window is judged on the signal bar's close time; overnight
+//     windows (start after end) are not supported.
+//   - Setups, gates and indicators are copied from the compiled July port
+//     (Apex 50K Eval Lab): EMA 9/21/50, Wilder ATR/RSI/ADX, session VWAP and
+//     bands, ATR percentile, 3/3 pivots, prior-day high/low built on the
+//     chart, 09:30-10:00 ET opening range, 15-minute bias from the last
+//     completed 15-minute bar (request.security with lookahead on and [1]),
+//     best candidate by score, then score >= 55, stop 8-60 points and net R
+//     to target 1 >= 1.2 after costs. Built for a 1 to 5 minute chart.
+// =============================================================================
+
+indicator("Tradeify 50K Signals", shorttitle = "TradeifySignals", overlay = true,
+     max_labels_count = 100, max_lines_count = 10)
+
+// ------------------------------------------------------------ constants ----
+TZ = "America/New_York"
+int DAY_MS = 86400000
+int WARMUP_BARS = 200
+int SLIP_TICKS = 1
+
+int REG_UP = 1
+int REG_DOWN = 2
+int REG_CHOP = 3
+int REG_EXP = 4
+int REG_QUIET = 5
+
+// <<RULES:BEGIN>> Tradeify 50K Sim Funded, rules.json verifiedOn 2026-11-02
+float START_BAL = 50000
+float TMD = 2000
+float TMD_LOCKED_FLOOR = 50100
+float DLL_BASE = 1250
+float DLL_RAISE_AT = 53000
+float DLL_RAISED = 2000
+float DLL_SELECT_DAILY = 1000
+int MAX_MINIS = 4
+int MAX_MINIS_LEGACY = 5
+float SEL_T2_PROFIT = 1500
+float SEL_T3_PROFIT = 2000
+int SEL_T1_MINIS = 2
+int SEL_T2_MINIS = 3
+int SEL_T3_MINIS = 4
+int MICROS_PER_MINI = 10
+int FLAT_BY_CAP_MIN = 1005
+int SESSION_START_H = 18
+int SESSION_END_H = 17
+// <<RULES:END>>
+
+// Indicator rules (not Tradeify rules).
+int TIME_STOP_BARS = 24
+int FLATBY_NO_ENTRY_MIN = 20
+int FLATBY_WARN_MIN = 10
+int FLATBY_EXIT_MIN = 5
+float DLL_MARGIN = 100
+float LOCK_GROWTH = 1000
+float LOCK_LIGHTNING = 600
+int MAX_KEEP_LABELS = 95
+
+PLAN_GROWTH = "Growth"
+PLAN_FLEX = "Select Flex"
+PLAN_DAILY = "Select Daily"
+PLAN_LIGHT = "Lightning"
+LOCK_AUTO = "Auto, first payout (Growth 1000, Lightning 600, Select off)"
+LOCK_CUSTOM = "Custom"
+LOCK_OFF = "Off"
+COMM_AUTO = "Auto (1.50 per mini, 0.50 per micro)"
+COMM_CUSTOM = "Custom"
+
+// --------------------------------------------------------------- inputs ----
+grpAcct = "Tradeify account (type from the dashboard every day)"
+iPlan = input.string(PLAN_GROWTH, "Plan", options = [PLAN_GROWTH, PLAN_FLEX, PLAN_DAILY, PLAN_LIGHT], group = grpAcct)
+iLegacy = input.bool(false, "Bought before Sep 12, 2025 (legacy limits)", group = grpAcct,
+     tooltip = "Growth and Lightning only: 5 minis / 50 micros, and legacy Growth has no daily loss limit once the balance at last close is 53,000 or more.")
+iBal = input.float(50000, "Balance at last close ($)", step = 50, group = grpAcct, confirm = true)
+iFloor = input.float(48000, "Trailing Max Drawdown floor ($, dashboard figure)", step = 50, group = grpAcct,
+     tooltip = "The floor shown on the Tradeify dashboard. If it is below the floor implied by the highest end-of-day balance, the higher one is used.")
+iHiEod = input.float(50000, "Highest end-of-day balance so far ($)", step = 50, group = grpAcct,
+     tooltip = "Sets the Select contract tier (from highest end-of-day profit) and checks the floor. The balance at last close is used if it is higher.")
+iTodayPnl = input.float(0, "Today's realized P&L ($)", step = 10, group = grpAcct, confirm = true,
+     tooltip = "Realized P&L of the current session (since 18:00 ET). Type 0 if you read the figures between sessions (17:00-18:00 ET or the weekend): the balance at last close already includes it.")
+iTradesToday = input.int(0, "Trades already taken today", minval = 0, group = grpAcct, confirm = true,
+     tooltip = "Trades taken in the current session (since 18:00 ET). Type 0 if you read the figures between sessions.")
+iAsOf = input.time(timestamp("01 Jan 2026 00:00 -0500"), "Figures as of (date and time)", group = grpAcct,
+     tooltip = "When you read the figures. STALE (no prompts) when this is before the previous session's 17:00 ET close (Friday's for the Sunday session). Virtual P&L is added from this time on. Type the figures while flat: a virtual trade from before this time is dropped.")
+
+grpRisk = "Risk"
+iRisk = input.float(150, "Risk per trade ($)", minval = 1, step = 10, group = grpRisk)
+iShare = input.float(10, "Max share of room to floor per trade (%)", minval = 0.5, maxval = 100, step = 0.5, group = grpRisk)
+iSelfStop = input.float(400, "Self-imposed daily loss stop ($, 0 = off)", minval = 0, step = 25, group = grpRisk)
+iLockMode = input.string(LOCK_AUTO, "Daily profit lock (consistency guard)", options = [LOCK_AUTO, LOCK_CUSTOM, LOCK_OFF], group = grpRisk,
+     tooltip = "No new prompts once the day's P&L reaches this, so one day does not dominate the profit for the consistency rule. Auto fits the first payout only (about 35% / 20% of 3,000). After a payout use Custom set to the consistency share of the profit needed for the next payout: Lightning 500 for payout 2 and 600 after (legacy Lightning 400); Growth 35% of (53,000 - balance after the last payout).")
+iLockCustom = input.float(1000, "Custom daily profit lock ($)", minval = 1, step = 50, group = grpRisk)
+iMaxTrades = input.int(3, "Max trades per day", minval = 1, group = grpRisk)
+iMaxLosses = input.int(2, "Stop after N losses in a row", minval = 1, group = grpRisk)
+iCommMode = input.string(COMM_AUTO, "Round-trip commission per contract", options = [COMM_AUTO, COMM_CUSTOM], group = grpRisk)
+iCommCustom = input.float(1.50, "Custom round-trip commission per contract ($)", minval = 0, step = 0.1, group = grpRisk)
+
+grpSess = "Session (America/New_York)"
+iWindow = input.session("0935-1530", "Entry window (ET)", group = grpSess,
+     tooltip = "A prompt is allowed when the signal bar closes inside this window.")
+iFlatH = input.int(16, "Flat-by (hour : minute ET)", minval = 0, maxval = 23, group = grpSess, inline = "fb")
+iFlatM = input.int(45, "", minval = 0, maxval = 59, group = grpSess, inline = "fb",
+     tooltip = "Capped at 16:45 ET, Tradeify's flat-by time. No prompts within 20 minutes of it; a reminder alert 10 minutes before it; the virtual trade exits 5 minutes before it.")
+
+grpSig = "Setups"
+iUseTP = input.bool(true, "Trend Pullback", group = grpSig)
+iUseORB = input.bool(true, "Opening Range Breakout", group = grpSig)
+iUseVR = input.bool(true, "VWAP Reclaim", group = grpSig)
+iUseFB = input.bool(true, "Failed Breakout Reversal", group = grpSig)
+iUseFade = input.bool(true, "VWAP Fade", group = grpSig)
+iMinScore = input.float(55.0, "Minimum setup score (0-100)", minval = 0, maxval = 100, step = 5, group = grpSig)
+iMinStop = input.float(8.0, "Min stop (points)", minval = 0, step = 1, group = grpSig)
+iMaxStop = input.float(60.0, "Max stop (points)", minval = 1, step = 5, group = grpSig)
+iMinNetR = input.float(1.2, "Min net R to target 1 (after costs)", minval = 0, step = 0.1, group = grpSig)
+
+grpDisp = "Display"
+iLblSize = input.string("Small", "Label size", options = ["Tiny", "Small", "Normal"], group = grpDisp)
+iShowReview = input.bool(true, "Show review prompts (past sessions, no alerts)", group = grpDisp)
+iShowTable = input.bool(true, "Show table", group = grpDisp)
+
+// -------------------------------------------------------- symbol & costs ----
+var array<string> MICRO_ROOTS = array.from("MNQ", "MES", "MYM", "M2K", "MGC", "MCL", "M6E", "M6A", "M6B", "MJY", "MSF", "MCD", "MBT", "MET", "SIL", "MHG", "MNG")
+bool isMicro = array.includes(MICRO_ROOTS, syminfo.root)
+float rtCost = iCommMode == COMM_AUTO ? (isMicro ? 0.50 : 1.50) : iCommCustom
+float pv = syminfo.pointvalue
+float tick = syminfo.mintick
+float slipPx = SLIP_TICKS * tick
+string lblSize = iLblSize == "Tiny" ? size.tiny : iLblSize == "Normal" ? size.normal : size.small
+
+// ----------------------------------------------------- Tradeify account ----
+bool isSelect = iPlan == PLAN_FLEX or iPlan == PLAN_DAILY
+bool legacyOn = iLegacy and not isSelect
+float hiEod = math.max(iHiEod, iBal)
+float eodProfit = hiEod - START_BAL
+int capMinis = isSelect ? (eodProfit >= SEL_T3_PROFIT ? SEL_T3_MINIS : eodProfit >= SEL_T2_PROFIT ? SEL_T2_MINIS : SEL_T1_MINIS) : legacyOn ? MAX_MINIS_LEGACY : MAX_MINIS
+int capQty = capMinis * (isMicro ? MICROS_PER_MINI : 1)
+float planDll = iPlan == PLAN_FLEX ? float(na) : iPlan == PLAN_DAILY ? DLL_SELECT_DAILY : iBal >= DLL_RAISE_AT ? (legacyOn and iPlan == PLAN_GROWTH ? float(na) : DLL_RAISED) : DLL_BASE
+float floorRule = math.min(hiEod - TMD, TMD_LOCKED_FLOOR)
+float floorUsed = math.max(iFloor, floorRule)
+bool floorTypedLow = iFloor < floorRule - 0.5
+float lockVal = iLockMode == LOCK_OFF ? float(na) : iLockMode == LOCK_CUSTOM ? iLockCustom : iPlan == PLAN_GROWTH ? LOCK_GROWTH : iPlan == PLAN_LIGHT ? LOCK_LIGHTNING : float(na)
+string planName = iPlan + (legacyOn ? " (legacy)" : "")
+string tagTxt = "Tradeify " + planName + " 50K"
+
+// --------------------------------------------------------------- helpers ----
+rNear(float p) =>
+    na(p) ? na : math.round(p / syminfo.mintick) * syminfo.mintick
+rDown(float p) =>
+    na(p) ? na : math.floor(p / syminfo.mintick + 1e-9) * syminfo.mintick
+rUp(float p) =>
+    na(p) ? na : math.ceil(p / syminfo.mintick - 1e-9) * syminfo.mintick
+
+etMinutes(int t) =>
+    hour(t, TZ) * 60 + minute(t, TZ)
+
+parseHM(string s, int at) =>
+    float h = str.tonumber(str.substring(s, at, at + 2))
+    float m = str.tonumber(str.substring(s, at + 2, at + 4))
+    na(h) or na(m) ? na : h * 60 + m
+
+fmtPx(float p) =>
+    na(p) ? "-" : str.tostring(p, format.mintick)
+fmtUsd0(float v) =>
+    na(v) ? "none" : (v < 0 ? "-$" : "$") + str.tostring(math.abs(v), "#,##0")
+fmtUsd2(float v) =>
+    na(v) ? "none" : (v < 0 ? "-$" : "$") + str.tostring(math.abs(v), "#,##0.00")
+fmtSigned(float v) =>
+    na(v) ? "-" : (v < 0 ? "-$" : "+$") + str.tostring(math.abs(v), "#,##0.00")
+addLine(string a, string b) =>
+    a == "" ? b : a + "\n" + b
+
+// ------------------------------------------------------------- clock -------
+bool newDay = bar_index == 0 or time_tradingday != time_tradingday[1]
+int etMin = etMinutes(time)
+int closeMin = etMinutes(time_close)
+float winStart = parseHM(iWindow, 0)
+float winEnd = parseHM(iWindow, 5)
+float tfMin = timeframe.in_seconds(timeframe.period) / 60.0
+int flatByMin = math.min(iFlatH * 60 + iFlatM, FLAT_BY_CAP_MIN)
+string flatTxt = str.tostring(math.floor(flatByMin / 60), "00") + ":" + str.tostring(flatByMin % 60, "00")
+// The virtual trade is closed at the close of the last bar that closes at
+// least 5 minutes before the flat-by time (the first bar whose next close
+// would be later), so its EXIT alert arrives before the deadline.
+bool atFlatBy = closeMin + tfMin > flatByMin - FLATBY_EXIT_MIN and closeMin < 18 * 60
+bool inWindow = not na(winStart) and not na(winEnd) and closeMin >= winStart and closeMin < winEnd and closeMin < flatByMin and not atFlatBy
+bool nearFlatBy = closeMin < 18 * 60 and closeMin >= flatByMin - FLATBY_NO_ENTRY_MIN
+bool fbWarnBar = closeMin < 18 * 60 and closeMin <= flatByMin and closeMin + tfMin > flatByMin - FLATBY_WARN_MIN
+float minsSinceOpen = (time - timestamp(TZ, year(time, TZ), month(time, TZ), dayofmonth(time, TZ), 9, 30)) / 60000.0
+bool sessDrive = etMin >= 570 and etMin < 600
+bool sessMorning = etMin >= 600 and etMin < 690
+bool sessLunch = etMin >= 690 and etMin < 810
+bool sessPower = etMin >= 900 and etMin < 950
+
+// Current session start: 18:00 ET of the previous day, or of today after
+// 18:00 ET. The typed figures are STALE when their as-of time is before the
+// previous session's 17:00 ET close (the same day as that start; Friday for
+// a Sunday start or over the weekend): figures read after that close, with
+// no trading since, are still valid.
+// Bars from that start on are the current session; once a bar closes after
+// the as-of time it is live (gated by the typed figures, alerts on).
+int nowNoon = timestamp(TZ, year(timenow, TZ), month(timenow, TZ), dayofmonth(timenow, TZ), 12, 0)
+int sessRef = hour(timenow, TZ) >= SESSION_START_H ? nowNoon : nowNoon - DAY_MS
+int sessStartNow = timestamp(TZ, year(sessRef, TZ), month(sessRef, TZ), dayofmonth(sessRef, TZ), SESSION_START_H, 0)
+int sessDow = dayofweek(sessStartNow, TZ)
+int closeRef = sessDow == dayofweek.sunday ? sessStartNow - 2 * DAY_MS : sessDow == dayofweek.saturday ? sessStartNow - DAY_MS : sessStartNow
+int prevClose = timestamp(TZ, year(closeRef, TZ), month(closeRef, TZ), dayofmonth(closeRef, TZ), SESSION_END_H, 0)
+bool stale = iAsOf < prevClose
+bool asOfFuture = iAsOf > timenow
+bool curSess = time >= sessStartNow
+bool liveBar = curSess and time_close > iAsOf
+
+// --------------------------------------------- July NQ indicator stack -----
+// Copied from the compiled July port (Apex 50K Eval Lab): same EMAs, Wilder
+// ATR/RSI/ADX, session VWAP with volume-weighted bands, ATR percentile,
+// pivots, 15m bias, prior-day levels, opening range, five setups and gates.
+float emaF = ta.ema(close, 9)
+float emaM = ta.ema(close, 21)
+float emaS = ta.ema(close, 50)
+float atrV = ta.atr(14)
+float rsiV = ta.rsi(close, 14)
+[diPlus, diMinus, adxV] = ta.dmi(14, 14)
+[vwapV, vwapU1, vwapL1] = ta.vwap(hlc3, newDay, 1.0)
+float vwapSd = vwapU1 - vwapV
+float atrRank = ta.percentrank(atrV, 100)
+float volAvgPrev = ta.sma(volume, 20)[1]
+float rvol = na(volAvgPrev) or volAvgPrev <= 0 ? na : volume / volAvgPrev
+float lo4 = ta.lowest(low, 4)
+float hi4 = ta.highest(high, 4)
+float lo10 = ta.lowest(low, 10)
+float hi10 = ta.highest(high, 10)
+float belowN = math.sum(close < vwapV ? 1 : 0, 6)[1]
+float aboveN = math.sum(close > vwapV ? 1 : 0, 6)[1]
+
+// 15-minute bias from the last completed 15m bar: close vs EMA21 with the
+// EMA's 5-point least-squares slope agreeing (market.py _bias_from).
+// lookahead_on with [1] gives the same completed bar historically and live.
+htfBiasCalc() =>
+    float e = ta.ema(close, 21)
+    float slope = (2.0 * (e - e[4]) + (e[1] - e[3])) / 10.0
+    int b = 0
+    if not na(e)
+        if close > e and (na(slope) or slope >= 0)
+            b := 1
+        else if close < e and (na(slope) or slope <= 0)
+            b := -1
+    b
+int htfBiasRaw = request.security(syminfo.tickerid, "15", htfBiasCalc()[1], lookahead = barmerge.lookahead_on)
+int htfBias = nz(htfBiasRaw, 0)
+
+// Prior trading day's high/low, computed on the chart (no request.security).
+var float dayHi = na
+var float dayLo = na
+var float pdHigh = na
+var float pdLow = na
+if newDay
+    if not na(dayHi)
+        pdHigh := dayHi
+        pdLow := dayLo
+    dayHi := high
+    dayLo := low
+else
+    dayHi := math.max(dayHi, high)
+    dayLo := math.min(dayLo, low)
+
+// Confirmed swing pivots (3 left / 3 right, ties allowed), published 3 bars late.
+bool isPH = bar_index >= 6 and high <= high[3] and high[1] <= high[3] and high[2] <= high[3] and high[4] <= high[3] and high[5] <= high[3] and high[6] <= high[3]
+bool isPL = bar_index >= 6 and low >= low[3] and low[1] >= low[3] and low[2] >= low[3] and low[4] >= low[3] and low[5] >= low[3] and low[6] >= low[3]
+var float lastPH = na
+var float lastPL = na
+if isPH
+    lastPH := high[3]
+if isPL
+    lastPL := low[3]
+
+// Opening range 09:30-10:00 ET, complete once a bar opens at or after 10:00.
+var float orHi = na
+var float orLo = na
+var bool orDone = false
+if newDay
+    orHi := na
+    orLo := na
+    orDone := false
+if etMin >= 570 and etMin < 600
+    orHi := na(orHi) ? high : math.max(orHi, high)
+    orLo := na(orLo) ? low : math.min(orLo, low)
+else if etMin >= 600 and not na(orHi)
+    orDone := true
+
+int emaStack = na(emaF) or na(emaM) or na(emaS) ? 0 : emaF > emaM and emaM > emaS ? 1 : emaF < emaM and emaM < emaS ? -1 : 0
+int regime = not na(atrRank) and atrRank >= 90 ? REG_EXP : not na(atrRank) and atrRank <= 15 ? REG_QUIET : na(adxV) or na(diPlus) or na(diMinus) ? REG_CHOP : adxV >= 23 and diPlus > diMinus and emaStack >= 0 ? REG_UP : adxV >= 23 and diMinus > diPlus and emaStack <= 0 ? REG_DOWN : REG_CHOP
+bool isRange = regime == REG_CHOP or regime == REG_QUIET
+float closePos = high - low <= 0 ? 0.5 : (close - low) / (high - low)
+bool warm = bar_index >= WARMUP_BARS and not na(emaS) and not na(atrV) and not na(adxV) and not na(vwapV) and not na(atrRank)
+
+// Context support for a direction (signals.py _confluence).
+confluence(int dir) =>
+    float pts = 0.0
+    pts += htfBias == dir ? 15 : htfBias == -dir ? -12 : 0
+    pts += emaStack == dir ? 10 : emaStack == -dir ? -8 : 0
+    if not na(vwapV)
+        pts += (dir > 0 ? close > vwapV : close < vwapV) ? 10 : -6
+    if not na(adxV)
+        pts += math.max(0.0, math.min(15.0, (adxV - 15.0) * 0.9))
+    if not na(rvol)
+        pts += rvol >= 1.3 ? 10 : rvol < 0.7 ? -8 : 0
+    pts += sessDrive or sessMorning ? 10 : sessLunch ? -15 : sessPower ? 5 : 0
+    if not na(rsiV)
+        pts += dir > 0 and rsiV > 78 ? -10 : dir < 0 and rsiV < 22 ? -10 : 0
+    pts
+float scoreL = confluence(1)
+float scoreS = confluence(-1)
+
+// Snap to ticks (stops and targets rounded the conservative way) and reject
+// broken geometry (signals.py _build_setup).
+buildSetup(int dir, float entryRaw, float stopRaw, float t1Raw, float t2Raw, float scoreRaw) =>
+    float e = rNear(entryRaw)
+    float s = dir > 0 ? rDown(stopRaw) : rUp(stopRaw)
+    float a = dir > 0 ? rDown(t1Raw) : rUp(t1Raw)
+    float b = dir > 0 ? rDown(t2Raw) : rUp(t2Raw)
+    bool okNum = dir != 0 and not na(e) and not na(s) and not na(a) and not na(b) and not na(scoreRaw)
+    bool okGeo = okNum and (dir > 0 ? s < e and e < a and a <= b : s > e and e > a and a >= b) and math.abs(e - s) >= syminfo.mintick
+    [okGeo, e, s, a, b, math.max(0.0, math.min(100.0, nz(scoreRaw)))]
+
+float stopStructL = (na(lastPL) ? lo10 : math.min(lastPL, lo10)) - 0.25 * atrV
+float stopStructS = (na(lastPH) ? hi10 : math.max(lastPH, hi10)) + 0.25 * atrV
+
+// 1. Trend Pullback (detect_trend_pullback)
+int tpDir0 = regime == REG_UP ? 1 : regime == REG_DOWN ? -1 : 0
+float refHi = na(vwapV) ? emaM : math.max(emaM, vwapV)
+float refLo = na(vwapV) ? emaM : math.min(emaM, vwapV)
+bool tpLong = tpDir0 == 1 and lo4 <= refHi + 0.35 * atrV and close > open and closePos >= 0.6 and close > emaM
+bool tpShort = tpDir0 == -1 and hi4 >= refLo - 0.35 * atrV and close <= open and closePos <= 0.4 and close < emaM
+int tpDir = not na(emaM) and (tpLong or tpShort) ? tpDir0 : 0
+float tpStop = tpDir > 0 ? stopStructL : stopStructS
+float tpRisk = math.abs(close - tpStop)
+[tpOk, tpE, tpS, tpA, tpB, tpSc] = buildSetup(tpDir, close, tpStop, close + tpRisk * 1.5 * tpDir, close + tpRisk * 3.0 * tpDir, (tpDir > 0 ? scoreL : scoreS) + 22)
+
+// 2. Opening Range Breakout (detect_orb_breakout)
+float orW = orHi - orLo
+bool orbGate = orDone and not na(orHi) and not na(orLo) and minsSinceOpen >= 30 and minsSinceOpen <= 180 and orW <= 3.0 * atrV and orW >= 0.4 * atrV and not isRange
+int orbRaw = close > orHi and close[1] <= orHi ? 1 : close < orLo and close[1] >= orLo ? -1 : 0
+bool orbBar = orbRaw == 1 ? closePos >= 0.55 : orbRaw == -1 ? closePos <= 0.45 : false
+int orbDir = orbGate and orbBar ? orbRaw : 0
+float orbStop = orbDir > 0 ? math.min(stopStructL, orHi - 0.3 * atrV) : math.max(stopStructS, orLo + 0.3 * atrV)
+float orbRisk = math.abs(close - orbStop)
+[orbOk, orbE, orbS, orbA, orbB, orbSc] = buildSetup(orbDir, close, orbStop, close + orbRisk * 1.5 * orbDir, close + math.max(orbRisk * 2.5, orW) * orbDir, (orbDir > 0 ? scoreL : scoreS) + 25)
+
+// 3. VWAP Reclaim (detect_vwap_reclaim)
+bool vrGate = bar_index >= 6 and not na(vwapV) and not na(vwapV[6]) and regime != REG_EXP
+int vrRaw = belowN >= 4 and close > vwapV and close > open ? 1 : aboveN >= 4 and close < vwapV and close <= open ? -1 : 0
+int vrDir = vrGate ? vrRaw : 0
+float vrStop = vrDir > 0 ? math.min(stopStructL, vwapV - 0.4 * atrV) : math.max(stopStructS, vwapV + 0.4 * atrV)
+float vrRisk = math.abs(close - vrStop)
+[vrOk, vrE, vrS, vrA, vrB, vrSc] = buildSetup(vrDir, close, vrStop, close + vrRisk * 1.5 * vrDir, close + vrRisk * 2.5 * vrDir, (vrDir > 0 ? scoreL : scoreS) + 15)
+
+// 4. Failed Breakout Reversal (detect_failed_breakout)
+int fbRaw = not na(pdHigh) and hi4 > pdHigh and close < pdHigh ? -1 : not na(pdLow) and lo4 < pdLow and close > pdLow ? 1 : 0
+float fbLevel = fbRaw < 0 ? hi4 : lo4
+float fbRef = fbRaw < 0 ? pdHigh : pdLow
+bool fbValid = bar_index >= 3 and fbRaw != 0 and math.abs(fbLevel - fbRef) >= 0.15 * atrV and (fbRaw > 0 ? close > open : close <= open)
+int fbDir = fbValid ? fbRaw : 0
+float fbStop = fbDir < 0 ? fbLevel + 0.3 * atrV : fbLevel - 0.3 * atrV
+float fbRisk = math.abs(close - fbStop)
+float fbT2 = not na(vwapV) and (vwapV - close) * fbDir > fbRisk * 2 ? vwapV : close + fbRisk * 2.5 * fbDir
+[fbOk, fbE, fbS, fbA, fbB, fbSc] = buildSetup(fbDir, close, fbStop, close + fbRisk * 1.5 * fbDir, fbT2, (fbDir > 0 ? scoreL : scoreS) + 18)
+
+// 5. VWAP Fade (detect_vwap_fade), range regimes only
+float sigma = not na(vwapSd) and vwapSd > 0 ? (close - vwapV) / vwapSd : na
+int fadeRaw = isRange and not na(sigma) and math.abs(sigma) >= 2.0 ? (sigma > 0 ? -1 : 1) : 0
+float bodyAbs = math.abs(close - open)
+bool fadeShortOk = (high - math.max(open, close) > bodyAbs * 0.8 or close <= open) and (na(rsiV) or rsiV > 62)
+bool fadeLongOk = (math.min(open, close) - low > bodyAbs * 0.8 or close > open) and (na(rsiV) or rsiV < 38)
+int fadeDir = fadeRaw < 0 and fadeShortOk ? -1 : fadeRaw > 0 and fadeLongOk ? 1 : 0
+float fadeStop = fadeDir < 0 ? high + 0.5 * atrV : low - 0.5 * atrV
+float fadeRisk = math.abs(close - fadeStop)
+float fadeT1 = close + math.min(math.abs(close - vwapV) * 0.6, fadeRisk * 1.5) * fadeDir
+[fadeOk, fadeE, fadeS, fadeA, fadeB, fadeSc] = buildSetup(fadeRisk > 0 ? fadeDir : 0, close, fadeStop, fadeT1, vwapV, (fadeDir > 0 ? scoreL : scoreS) + 12)
+
+// Best enabled candidate by score; ties keep detector order (detect_all).
+int jDir = 0
+float jE = na
+float jS = na
+float jA = na
+float jB = na
+float jSc = -1.0
+string jName = ""
+if iUseTP and tpOk and tpSc > jSc
+    jDir := tpDir
+    jE := tpE
+    jS := tpS
+    jA := tpA
+    jB := tpB
+    jSc := tpSc
+    jName := "Trend Pullback"
+if iUseORB and orbOk and orbSc > jSc
+    jDir := orbDir
+    jE := orbE
+    jS := orbS
+    jA := orbA
+    jB := orbB
+    jSc := orbSc
+    jName := "Opening Range Breakout"
+if iUseVR and vrOk and vrSc > jSc
+    jDir := vrDir
+    jE := vrE
+    jS := vrS
+    jA := vrA
+    jB := vrB
+    jSc := vrSc
+    jName := "VWAP Reclaim"
+if iUseFB and fbOk and fbSc > jSc
+    jDir := fbDir
+    jE := fbE
+    jS := fbS
+    jA := fbA
+    jB := fbB
+    jSc := fbSc
+    jName := "Failed Breakout Reversal"
+if iUseFade and fadeOk and fadeSc > jSc
+    jDir := fadeDir
+    jE := fadeE
+    jS := fadeS
+    jA := fadeA
+    jB := fadeB
+    jSc := fadeSc
+    jName := "VWAP Fade"
+// July playbook gates on the best candidate only: score, stop sanity, net R.
+float jStopPts = math.abs(jE - jS)
+float jNetR = (math.abs(jA - jE) * pv - rtCost) / (jStopPts * pv + rtCost)
+bool julyPass = jDir != 0 and jSc >= iMinScore and jStopPts >= iMinStop and jStopPts <= iMaxStop and jNetR >= iMinNetR
+
+// =================================================== ACCOUNT GATES =========
+// Day P&L = typed realized P&L (live bars only) + virtual P&L counted today
+// (since the as-of time on live bars, since the session start on review
+// bars) + the open virtual trade's P&L.
+acctNow(bool live, float dVirt, float openPnl) =>
+    float dayPnl = (live ? iTodayPnl : 0.0) + dVirt + openPnl
+    float room = iBal + dayPnl - floorUsed
+    float dllRoom = na(planDll) ? float(na) : planDll + dayPnl
+    bool dllHit = not na(planDll) and dayPnl <= -planDll
+    bool selfHit = iSelfStop > 0 and dayPnl <= -iSelfStop
+    bool lockHit = not na(lockVal) and dayPnl >= lockVal
+    [dayPnl, room, dllRoom, dllHit, selfHit, lockHit]
+
+// First reason that blocks a new prompt, or "" when armed.
+gateWhy(bool live, bool warmOk, float room, bool dllHit, bool selfHit, bool lockHit, int trades, int streak, bool busy, bool inWin, bool nearFb) =>
+    string r = ""
+    if not warmOk
+        r := "warming up"
+    else if live and asOfFuture
+        r := "as-of time is in the future"
+    else if live and stale
+        r := "STALE inputs (as-of before the previous session's 17:00 ET close)"
+    else if room <= 0
+        r := "at or below the drawdown floor"
+    else if dllHit
+        r := "daily loss limit hit"
+    else if selfHit
+        r := "daily stop hit"
+    else if lockHit
+        r := "daily profit lock reached"
+    else if trades >= iMaxTrades
+        r := str.tostring(trades) + " trades today (max " + str.tostring(iMaxTrades) + ")"
+    else if streak >= iMaxLosses
+        r := str.tostring(streak) + " losses in a row"
+    else if busy
+        r := "virtual trade open"
+    else if not inWin
+        r := "outside the entry window"
+    else if nearFb
+        r := "within 20 min of flat-by"
+    r
+
+// Size: the smallest budget over the per-contract risk, capped by the plan.
+sizeFor(float stopPts, float room, float dllRoom, float dayPnl) =>
+    float perC = (stopPts + 2 * slipPx) * pv + rtCost
+    float budget = iRisk
+    string bind = "risk per trade"
+    float bFloor = room * iShare / 100.0
+    if bFloor < budget
+        budget := bFloor
+        bind := str.tostring(iShare) + "% of floor room"
+    if not na(dllRoom) and dllRoom - DLL_MARGIN < budget
+        budget := dllRoom - DLL_MARGIN
+        bind := "DLL room - $100"
+    if iSelfStop > 0 and iSelfStop + dayPnl < budget
+        budget := iSelfStop + dayPnl
+        bind := "daily stop room"
+    int q = na(perC) or perC <= 0 ? 0 : int(math.floor(budget / perC))
+    q := math.max(0, math.min(capQty, q))
+    [q, perC, budget, bind]
+
+// ======================================================== VIRTUAL TRADE ======
+type VTrade
+    int dir = 0
+    float qty0 = 0.0
+    float qty = 0.0
+    float entry = na
+    float stop = na
+    float t1 = na
+    float t2 = na
+    bool scaled = false
+    int bars = 0
+    float net = 0.0
+    string name = ""
+    float score = 0.0
+    bool live = false
+    int bar0 = 0
+    float barPnl = 0.0
+    string barTxt = ""
+    string barTag = ""
+    float barPx = na
+    bool closedNow = false
+
+method resetBar(VTrade v) =>
+    v.barPnl := 0.0
+    v.barTxt := ""
+    v.barTag := ""
+    v.barPx := na
+    v.closedNow := false
+
+method start(VTrade v, int dir, float qty, float fillPx, float stopPx, float t1Px, float t2Px, string name, float score, bool live) =>
+    v.dir := dir
+    v.qty0 := qty
+    v.qty := qty
+    v.entry := fillPx
+    v.stop := stopPx
+    v.t1 := t1Px
+    v.t2 := t2Px
+    v.scaled := false
+    v.bars := 0
+    v.net := 0.0
+    v.name := name
+    v.score := score
+    v.live := live
+    v.bar0 := bar_index
+
+// Close qtyLeg contracts at px and book the leg, net of round-trip commission.
+method leg(VTrade v, string tag, float qtyLeg, float px) =>
+    float pnl = qtyLeg * v.dir * (px - v.entry) * pv - qtyLeg * rtCost
+    v.net += pnl
+    v.qty -= qtyLeg
+    v.barPnl += pnl
+    v.barTxt := v.barTxt + (v.barTxt == "" ? "" : ", ") + tag + " " + str.tostring(qtyLeg, "#") + " @ " + str.tostring(px, format.mintick)
+    v.barTag := v.barTag + (v.barTag == "" ? "" : "+") + tag
+    v.barPx := px
+    if v.qty <= 0
+        v.closedNow := true
+    pnl
+
+// One bar of management, in the order of the July backtest (_manage).
+method manage(VTrade v, bool flatNow) =>
+    v.bars += 1
+    float d = v.dir
+    bool gapped = d > 0 ? open <= v.stop : open >= v.stop
+    bool stopHit = d > 0 ? low <= v.stop : high >= v.stop
+    bool t1Hit = d > 0 ? high >= v.t1 : low <= v.t1
+    bool t2Hit = d > 0 ? high >= v.t2 : low <= v.t2
+    if gapped
+        v.leg("GAP STOP", v.qty, open)
+    else if stopHit
+        v.leg(v.scaled ? "BE STOP" : "STOP", v.qty, v.stop - d * slipPx)
+    else
+        if t1Hit and not v.scaled and v.qty >= 2
+            v.leg("T1", math.floor(v.qty / 2), v.t1)
+            v.scaled := true
+            v.stop := v.entry
+        if t2Hit
+            v.leg("T2", v.qty, v.t2)
+        else if t1Hit and not v.scaled
+            v.leg("T1", v.qty, v.t1)
+        else if flatNow
+            v.leg("FLAT-BY", v.qty, close - d * slipPx)
+        else if v.bars >= TIME_STOP_BARS
+            v.leg("TIME", v.qty, close - d * slipPx)
+    v.closedNow
+
+method openPnl(VTrade v) =>
+    v.dir != 0 ? v.qty * v.dir * (close - v.entry) * pv : 0.0
+
+exitText(VTrade v, float dayPnl) =>
+    string side = v.dir > 0 ? "LONG" : "SHORT"
+    string tail = v.closedNow ? " | trade " + fmtSigned(v.net) : " | trade so far " + fmtSigned(v.net) + " | runner " + str.tostring(v.qty, "#") + " " + side + ", stop moved to breakeven " + fmtPx(v.stop)
+    syminfo.root + " EXIT " + v.barTxt + " (" + side + " " + v.name + ") | virtual P&L " + fmtSigned(v.barPnl) + tail + " | day " + fmtSigned(dayPnl) + " | " + tagTxt
+
+// Keep at most MAX_KEEP_LABELS labels, deleting the oldest.
+keepLabel(array<label> a, label l) =>
+    a.push(l)
+    if a.size() > MAX_KEEP_LABELS
+        label.delete(a.shift())
+    l
+
+exitMark(VTrade v, array<label> a) =>
+    color c = v.barPnl > 0 ? color.teal : v.barPnl < 0 ? color.red : color.gray
+    keepLabel(a, label.new(bar_index, v.barPx, v.barTag + " " + fmtSigned(v.barPnl), style = label.style_label_left, color = color.new(c, v.live ? 10 : 55), textcolor = color.white, size = size.tiny))
+
+moveLine(line l, int x1, int x2, float y, color c) =>
+    line.set_xy1(l, x1, y)
+    line.set_xy2(l, x2, y)
+    line.set_color(l, c)
+
+showMark(bool live) =>
+    live or iShowReview
+
+// ================================================================ STATE ======
+var VTrade vt = VTrade.new()
+var int pDir = 0
+var float pQty = 0.0
+var float pEst = na
+var float pStop = na
+var float pT1 = na
+var float pT2 = na
+var string pName = ""
+var float pScore = 0.0
+var bool pLive = false
+var int pBar = 0
+
+var float dayVirt = 0.0
+var int dayTrades = 0
+var int lossStreak = 0
+var bool liveStarted = false
+var bool fbWarned = false
+var int nPosted = 0
+var int nPaused = 0
+var int nNoSize = 0
+var string lastPauseWhy = ""
+var string lastSigTxt = "-"
+var array<label> labs = array.new<label>()
+
+var line lnE = line.new(bar_index, close, bar_index + 1, close, color = color.new(color.gray, 100), width = 2)
+var line lnS = line.new(bar_index, close, bar_index + 1, close, color = color.new(color.gray, 100), width = 2)
+var line lnA = line.new(bar_index, close, bar_index + 1, close, color = color.new(color.gray, 100), width = 1, style = line.style_dashed)
+var line lnB = line.new(bar_index, close, bar_index + 1, close, color = color.new(color.gray, 100), width = 1, style = line.style_dashed)
+
+bool longNow = false
+bool shortNow = false
+bool longAlert = false
+bool shortAlert = false
+bool exitAlert = false
+bool fbWarnNow = false
+float exitMarkPx = na
+string alertTxt = ""
+
+// ============================================================= EACH BAR ======
+// Everything below runs on confirmed bars only, so within a session the
+// history and the live chart follow the same path. Which bars are live
+// depends on timenow and the typed figures: after the session rolls, a
+// reload or new inputs, earlier bars are recomputed as review bars and can
+// differ from what was alerted.
+if barstate.isconfirmed
+    vt.resetBar()
+
+    // A. New session: a virtual trade still open is closed at this open, and
+    //    the day counters reset.
+    if newDay
+        if vt.dir != 0
+            vt.leg("SESSION END", vt.qty, open)
+            float dpEnd = (vt.live ? iTodayPnl : 0.0) + dayVirt + vt.barPnl
+            if showMark(vt.live)
+                exitMark(vt, labs)
+                exitMarkPx := vt.barPx
+            if vt.live
+                alertTxt := addLine(alertTxt, exitText(vt, dpEnd))
+                exitAlert := true
+            vt.dir := 0
+        vt.resetBar()
+        pDir := 0
+        dayVirt := 0.0
+        dayTrades := 0
+        lossStreak := 0
+        liveStarted := false
+        fbWarned := false
+        nPosted := 0
+        nPaused := 0
+        nNoSize := 0
+        lastPauseWhy := ""
+
+    // B. The first bar that closes after the as-of time switches the day's
+    //    counters to the typed figures (virtual P&L counts from here on). A
+    //    review trade or prompt still open or pending is dropped: no alert
+    //    was sent for it, and the typed figures already hold what happened.
+    if liveBar and not liveStarted
+        liveStarted := true
+        if vt.dir != 0 and not vt.live
+            vt.dir := 0
+        if pDir != 0 and not pLive
+            pDir := 0
+        dayVirt := 0.0
+        dayTrades := iTradesToday
+        lossStreak := 0
+
+    // C. A pending prompt fills at this bar's open + 1 tick, unless that is
+    //    already past its stop or its target 1.
+    if pDir != 0
+        float fillPx = rNear(open + pDir * slipPx)
+        bool pastStop = pDir > 0 ? fillPx <= pStop : fillPx >= pStop
+        bool pastT1 = pDir > 0 ? fillPx >= pT1 : fillPx <= pT1
+        if not pastStop and not pastT1
+            vt.start(pDir, pQty, fillPx, pStop, pT1, pT2, pName, pScore, pLive)
+            dayTrades += 1
+        else
+            string pastWhat = pastStop ? "the stop" : "target 1"
+            if showMark(pLive)
+                keepLabel(labs, label.new(bar_index, open, "cancelled: opened past " + pastWhat, style = label.style_label_left, color = color.new(color.gray, 30), textcolor = color.white, size = size.tiny))
+            if pLive and liveBar
+                alertTxt := addLine(alertTxt, syminfo.root + " CANCEL " + (pDir > 0 ? "LONG" : "SHORT") + " " + pName + ": the bar opened at " + fmtPx(open) + ", past " + pastWhat + " " + fmtPx(pastStop ? pStop : pT1) + " - do not enter | " + tagTxt)
+                exitAlert := true
+        pDir := 0
+
+    // D. Manage the virtual trade on this bar, its fill bar included.
+    if vt.dir != 0
+        vt.manage(atFlatBy)
+        if vt.barTxt != ""
+            dayVirt += vt.barPnl
+            if vt.closedNow
+                lossStreak := vt.net < 0 ? lossStreak + 1 : 0
+            float dpNow = (liveBar ? iTodayPnl : 0.0) + dayVirt
+            if showMark(vt.live)
+                exitMark(vt, labs)
+                exitMarkPx := vt.barPx
+            if vt.live and liveBar
+                alertTxt := addLine(alertTxt, exitText(vt, dpNow))
+                exitAlert := true
+            if vt.closedNow
+                vt.dir := 0
+
+    // E. Flat-by reminder, once per session, about 10 minutes before.
+    if fbWarnBar and not fbWarned
+        fbWarned := true
+        if liveBar
+            fbWarnNow := true
+            string openTxt = vt.dir != 0 ? " | virtual " + (vt.dir > 0 ? "LONG " : "SHORT ") + str.tostring(vt.qty, "#") + " still open, trade P&L " + fmtSigned(vt.net + vt.openPnl()) : ""
+            string staleTxt = asOfFuture ? " | as-of time is in the future: no prompts until it is fixed" : stale ? " | inputs STALE: no prompts until you type today's figures and as-of time and recreate the alert" : ""
+            alertTxt := addLine(alertTxt, syminfo.root + " FLAT-BY in 10 min: be flat by " + flatTxt + " ET" + openTxt + staleTxt + " | " + tagTxt)
+
+    // F. A new prompt from the best July setup that passed its gates.
+    if julyPass
+        [dP, rF, rD, hD, hS, hL] = acctNow(liveBar, dayVirt, vt.openPnl())
+        string why = gateWhy(liveBar, warm, rF, hD, hS, hL, dayTrades, lossStreak, vt.dir != 0 or pDir != 0, inWindow, nearFlatBy)
+        string side = jDir > 0 ? "LONG" : "SHORT"
+        string scoreTxt = jName + " " + str.tostring(jSc, "#")
+        if why != ""
+            if curSess
+                nPaused += 1
+                lastPauseWhy := scoreTxt + ": " + why
+        else
+            [q, perC, budget, bind] = sizeFor(jStopPts, rF, rD, dP)
+            if q < 1
+                if curSess
+                    nNoSize += 1
+                    lastPauseWhy := scoreTxt + ": no size (" + bind + ")"
+                if showMark(liveBar)
+                    string nsTxt = "no size: " + bind + " " + fmtUsd0(budget) + " < " + fmtUsd2(perC) + "/contract\n" + side + " " + scoreTxt
+                    keepLabel(labs, label.new(bar_index, jDir > 0 ? low : high, nsTxt, yloc = jDir > 0 ? yloc.belowbar : yloc.abovebar, style = jDir > 0 ? label.style_label_up : label.style_label_down, color = color.new(color.gray, 45), textcolor = color.white, size = size.tiny))
+            else
+                pDir := jDir
+                pQty := q
+                pEst := jE
+                pStop := jS
+                pT1 := jA
+                pT2 := jB
+                pName := jName
+                pScore := jSc
+                pLive := liveBar
+                pBar := bar_index
+                if curSess
+                    nPosted += 1
+                lastSigTxt := str.format_time(time_close, "MM-dd HH:mm", TZ) + " " + side + " " + str.tostring(q) + " @ " + fmtPx(jE) + " " + scoreTxt + (liveBar ? "" : " (review)")
+                if showMark(liveBar)
+                    longNow := jDir > 0
+                    shortNow := jDir < 0
+                    color base = jDir > 0 ? color.teal : color.red
+                    string lt = side + " " + str.tostring(q) + " @ " + fmtPx(jE) + "\nSL " + fmtPx(jS) + "  T1 " + fmtPx(jA) + "  T2 " + fmtPx(jB) + "\n" + scoreTxt + (liveBar ? "" : "  (review)")
+                    keepLabel(labs, label.new(bar_index, jDir > 0 ? low : high, lt, yloc = jDir > 0 ? yloc.belowbar : yloc.abovebar, style = jDir > 0 ? label.style_label_up : label.style_label_down, color = color.new(base, liveBar ? 0 : 55), textcolor = color.white, size = lblSize))
+                if liveBar
+                    longAlert := jDir > 0
+                    shortAlert := jDir < 0
+                    string msg = syminfo.root + " " + side + " " + str.tostring(q) + " @ " + fmtPx(jE) + " | stop " + fmtPx(jS) + " (" + str.tostring(jStopPts, "#,##0.00") + " pts, " + fmtUsd2(q * perC) + " risk) | T1 " + fmtPx(jA) + " | T2 " + fmtPx(jB) + " | " + scoreTxt + " | floor room " + fmtUsd0(rF) + " | DLL room " + fmtUsd0(rD) + " | " + tagTxt
+                    alertTxt := addLine(alertTxt, msg)
+
+    // G. Entry, stop, T1 and T2 lines while a prompt is pending or open.
+    bool lnOn = vt.dir != 0 or pDir != 0
+    bool lnLive = vt.dir != 0 ? vt.live : pLive
+    if lnOn and showMark(lnLive)
+        int x1 = vt.dir != 0 ? vt.bar0 : pBar
+        int x2 = bar_index + 5
+        int tr = lnLive ? 0 : 50
+        moveLine(lnE, x1, x2, vt.dir != 0 ? vt.entry : pEst, color.new(color.blue, tr))
+        moveLine(lnS, x1, x2, vt.dir != 0 ? vt.stop : pStop, color.new(color.red, tr))
+        moveLine(lnA, x1, x2, vt.dir != 0 ? vt.t1 : pT1, color.new(color.teal, vt.dir != 0 and vt.scaled ? 80 : tr))
+        moveLine(lnB, x1, x2, vt.dir != 0 ? vt.t2 : pT2, color.new(color.teal, tr))
+    else
+        line.set_color(lnE, color.new(color.gray, 100))
+        line.set_color(lnS, color.new(color.gray, 100))
+        line.set_color(lnA, color.new(color.gray, 100))
+        line.set_color(lnB, color.new(color.gray, 100))
+
+    // H. One alert() per bar close with every message of the bar.
+    if alertTxt != ""
+        alert(alertTxt, alert.freq_once_per_bar_close)
+
+// ============================================================== MARKERS ======
+plotshape(longNow, "Long prompt", shape.triangleup, location.belowbar, color.new(color.teal, liveBar ? 0 : 55), size = size.tiny)
+plotshape(shortNow, "Short prompt", shape.triangledown, location.abovebar, color.new(color.red, liveBar ? 0 : 55), size = size.tiny)
+plotshape(exitMarkPx, "Virtual exit", shape.xcross, location.absolute, color.new(color.gray, 0), size = size.tiny)
+
+alertcondition(longAlert, "Long signal", "Tradeify 50K Signals: LONG prompt on {{ticker}} at {{close}}. Size, stop and targets are on the chart and in the alert() message.")
+alertcondition(shortAlert, "Short signal", "Tradeify 50K Signals: SHORT prompt on {{ticker}} at {{close}}. Size, stop and targets are on the chart and in the alert() message.")
+alertcondition(exitAlert, "Exit", "Tradeify 50K Signals: virtual exit or cancel on {{ticker}} at {{close}}. See the chart for which exit and the P&L.")
+alertcondition(fbWarnNow, "Flat-by in 10 minutes", "Tradeify 50K Signals: flat-by in 10 minutes on {{ticker}} ({{close}}). Be flat by the flat-by time.")
+
+// ================================================================ TABLE ======
+var table tb = table.new(position.top_right, 2, 14, bgcolor = color.new(color.black, 15), frame_color = color.new(color.gray, 50), frame_width = 1, border_color = color.new(color.gray, 75), border_width = 1)
+
+tcell(int r, string k, string v, color vc) =>
+    table.cell(tb, 0, r, k, text_color = color.new(color.silver, 0), text_size = size.small, text_halign = text.align_left)
+    table.cell(tb, 1, r, v, text_color = vc, text_size = size.small, text_halign = text.align_left)
+
+if barstate.islast and iShowTable
+    float tOpen = vt.openPnl()
+    [tDay, tRoom, tDllRoom, tDllHit, tSelf, tLock] = acctNow(liveBar, dayVirt, tOpen)
+    string tWhy = asOfFuture ? "as-of time is in the future" : stale ? "STALE inputs: type today's dashboard figures and as-of time" : not curSess ? "waiting for the session (18:00 ET)" : not liveBar ? "no bar has closed after the as-of time yet" : gateWhy(true, warm, tRoom, tDllHit, tSelf, tLock, dayTrades, lossStreak, vt.dir != 0 or pDir != 0, inWindow, nearFlatBy)
+    // A budget that cannot size 1 contract even at the minimum stop posts nothing.
+    if tWhy == ""
+        [mq, mPerC, mBudget, mBind] = sizeFor(iMinStop, tRoom, tDllRoom, tDay)
+        if mq < 1
+            tWhy := mBind + " " + fmtUsd2(mBudget) + " cannot size 1 " + syminfo.root + " even at a " + str.tostring(iMinStop) + "-pt stop (needs " + fmtUsd2(mPerC) + ")" + (mBind == "risk per trade" and not isMicro ? ": use the micro contract or raise the risk" : "")
+    string status = tWhy == "" ? "ARMED" : "PAUSED: " + tWhy
+    color white = color.new(color.white, 0)
+    color good = color.new(color.lime, 0)
+    color warnC = color.new(color.orange, 0)
+    color bad = color.new(color.red, 0)
+    table.cell(tb, 0, 0, tagTxt + " | " + syminfo.ticker + " " + timeframe.period, text_color = color.new(color.orange, 0), text_size = size.small, text_halign = text.align_left)
+    table.merge_cells(tb, 0, 0, 1, 0)
+    tcell(1, "Figures as of", str.format_time(iAsOf, "yyyy-MM-dd HH:mm", TZ) + " ET" + (stale ? "  STALE" : asOfFuture ? "  (future)" : ""), stale or asOfFuture ? bad : white)
+    tcell(2, "Plan", planName + (isSelect ? ", tier from EOD profit " + fmtUsd0(eodProfit) : ""), white)
+    tcell(3, "Floor", fmtUsd0(floorUsed) + (floorUsed >= TMD_LOCKED_FLOOR ? " (locked)" : "") + (floorTypedLow ? "  typed " + fmtUsd0(iFloor) + " is below the rule: check it" : ""), floorTypedLow ? warnC : white)
+    tcell(4, "Room to floor", fmtUsd0(tRoom) + (liveBar ? "" : " (not live)"), tRoom <= 0 ? bad : tRoom < 500 ? warnC : white)
+    tcell(5, "DLL room", na(planDll) ? "no DLL on this plan" : fmtUsd0(tDllRoom) + " of " + fmtUsd0(planDll) + (tDllHit ? "  HIT" : ""), tDllHit ? bad : white)
+    tcell(6, "Size cap", str.tostring(capQty) + " " + syminfo.root + (isMicro ? " (" + str.tostring(capMinis) + " minis)" : ""), white)
+    tcell(7, "Today's P&L", liveBar ? fmtSigned(tDay) + " (typed " + fmtSigned(iTodayPnl) + " + virtual " + fmtSigned(dayVirt + tOpen) + ")" : "virtual " + fmtSigned(tDay) + " (not live)", tDay < 0 ? warnC : white)
+    tcell(8, "Day limits", "risk " + fmtUsd0(iRisk) + " / " + str.tostring(iShare) + "% of room | stop " + (iSelfStop > 0 ? fmtUsd0(iSelfStop) : "off") + " | lock " + (na(lockVal) ? "off" : fmtUsd0(lockVal)), white)
+    tcell(9, "Trades today", str.tostring(dayTrades) + " / " + str.tostring(iMaxTrades) + " | losses in a row " + str.tostring(lossStreak) + " / " + str.tostring(iMaxLosses), white)
+    tcell(10, "Status", status, tWhy == "" ? good : stale or asOfFuture ? bad : warnC)
+    tcell(11, "Setups this session", "posted " + str.tostring(nPosted) + ", paused " + str.tostring(nPaused) + ", no size " + str.tostring(nNoSize) + (lastPauseWhy != "" ? "\nlast held: " + lastPauseWhy : ""), white)
+    tcell(12, "Last signal", lastSigTxt, white)
+    table.cell(tb, 0, 13, "Unproven signals: prompts, not advice", text_color = color.new(color.silver, 0), text_size = size.small, text_halign = text.align_left)
+    table.merge_cells(tb, 0, 13, 1, 13)

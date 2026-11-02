@@ -41,8 +41,10 @@
 // HOW TO USE
 //   1. Open MNQ1! or NQ1! (or one specific contract month) on a 1 to 5 minute
 //      chart. The default $100 risk per trade suits MNQ; on NQ ($20/point) a
-//      $100 budget covers only stops under about 4.9 points, so most setups
-//      are skipped for size.
+//      $100 budget covers only stops under about 4.9 points, so at the default
+//      8-point July min stop EVERY July setup is skipped for size (and most
+//      1-ATR external and random entries too). On NQ set Risk per trade to at
+//      least about $162 (8 pt x $20 + $1.50 round trip), or chart MNQ.
 //   2. Add this strategy and open the Strategy Tester. The table at the top
 //      right is the lab's result: attempts, passes, breaches and expiries for
 //      the signal ledger and for the random control, split into attempts whose
@@ -56,6 +58,29 @@
 //      out-of-sample attempts. A signal that does not clearly beat random
 //      there has not shown an edge. A handful of attempts is anecdote, not a
 //      rate; the counts are shown so the sample size can be judged.
+//   5. Raw trades for the planner (any firm, e.g. a Tradeify 50K funded
+//      account): set Account mode to "Raw trades (no account rules)". There
+//      are then no attempts and no account ledger: every signal the source
+//      produces while flat is taken, sized by risk per trade as above and
+//      capped by "Max contracts in raw mode" (default 4 minis, 40 micros on a
+//      micro symbol: the Tradeify 50K limit). For Tradeify set the flat-by
+//      time to 16:40 (Tradeify requires flat by 16:45 ET). Set Exit model to
+//      "Fixed R" for an export: with "July playbook" each exit leg is its own
+//      List of trades row, and the planner sizes, caps and steps each row on
+//      its own, never the combined position, so it overstates size and
+//      understates breach risk (the table warns). The export's P&L uses the
+//      Properties tab commission, so set that to your real commission per
+//      side per contract first. Then:
+//        a. Strategy Tester > List of trades > Export, saved as list.csv.
+//        b. From trading/apex-50k, run the planner, which applies the firm's
+//           rules itself and resizes each trade by its risk (--scale risk):
+//             node planner/cli.mjs --firm tradeify --plan growth --trades list.csv --unit micro --sweep --scale risk
+//           (--unit mini for an NQ export, but on NQ set Risk per trade to at
+//           least about $162 first or no July setup is taken (see 1); MNQ
+//           with --scale risk is simpler. Drop --firm and --plan for Apex.)
+//      The table then shows trades, win %, net P&L per trade per contract,
+//      profit factor and net P&L for the signal and the random control,
+//      in-sample and out-of-sample.
 //
 // HOW THE LEDGER COUNTS
 //   - Each attempt starts at 50,000 on the first bar of a trading session
@@ -73,6 +98,15 @@
 //     one starts. The table shows the share of finished attempts breached
 //     within the horizon and the median traded days to breach; the attempt
 //     still running is shown only in the current-attempt rows.
+//   - Raw trades mode has no ledger. A trade is one position from entry to
+//     flat, with all its exit legs summed (the List of trades shows each leg
+//     of a July-playbook split as its own row, which the planner reads as a
+//     separate trade, so export with Fixed R exits). Its P&L is net of the lab's
+//     cost model, its contracts are the entry size, and it is in-sample or
+//     out-of-sample by the trading day of its entry (CME roll, 18:00 ET).
+//     Net P&L per trade per contract is the average over trades of each
+//     trade's net P&L divided by its contracts; profit factor is gross profit
+//     over gross loss in dollars as traded.
 //
 // LIMITS
 //   - History: TradingView limits intraday bar history by subscription plan,
@@ -184,10 +218,12 @@ AMB_STOP = "Stop first (conservative)"
 AMB_TV = "TradingView OHLC path"
 COMM_AUTO = "Auto by symbol class"
 COMM_CUSTOM = "Custom"
+MODE_RAW = "Raw trades (no account rules)"
 
 // --------------------------------------------------------------- inputs ----
 grpAcct = "Apex account"
-iMode = input.string("Evaluation", "Account mode", options = ["Evaluation", "Performance Account"], group = grpAcct)
+iMode = input.string("Evaluation", "Account mode", options = ["Evaluation", "Performance Account", MODE_RAW], group = grpAcct,
+     tooltip = "Raw trades: no attempts and no account rules. Every signal is taken with the same sizing, window, exits and flat-by, so the List of trades can be exported to the planner for any firm.")
 iFeed = input.string("Rithmic/WealthCharts", "Data feed", options = ["Rithmic/WealthCharts", "Tradovate"], group = grpAcct,
      tooltip = "Evaluation only. Rithmic/WealthCharts: the threshold stops rising at 53,000. Tradovate: it keeps trailing. A Performance Account always stops at 50,100.")
 iOrder = input.string(ORD_FAV, "Intrabar ordering", options = [ORD_FAV, ORD_ADV], group = grpAcct,
@@ -213,14 +249,14 @@ iExtAtr = input.float(1.0, "External signal stop (ATR multiple)", minval = 0.1, 
 
 grpExit = "Exits"
 iExit = input.string(EXIT_FIXED, "Exit model", options = [EXIT_FIXED, EXIT_JULY], group = grpExit,
-     tooltip = "Fixed R: one stop and one target at the R multiple. July playbook: half off at target 1 (1.5R), stop to breakeven once 1R is touched, the rest at the setup's target 2 (2.5R for external and random entries). A single contract exits whole at target 1.")
+     tooltip = "Fixed R: one stop and one target at the R multiple. July playbook: half off at target 1 (1.5R), stop to breakeven once 1R is touched, the rest at the setup's target 2 (2.5R for external and random entries). A single contract exits whole at target 1. For a raw-trades export to the planner use Fixed R: July legs export as separate trades.")
 iRMult = input.float(2.0, "Fixed R target (R multiple)", minval = 0.1, step = 0.25, group = grpExit)
 
 grpRisk = "Risk and costs"
 iRisk = input.float(100.0, "Risk per trade ($)", minval = 1, step = 25, group = grpRisk,
      tooltip = "Stop distance x point value + round-trip cost per contract decides size. $100 is 5% of the 2,000 drawdown.")
 iMaxQty = input.int(0, "Max contracts override (0 = plan cap)", minval = 0, group = grpRisk,
-     tooltip = "In contracts of the charted symbol. Never exceeds the plan cap (Evaluation 6 minis / 60 micros; PA tier cap).")
+     tooltip = "In contracts of the charted symbol. Never exceeds the plan cap (Evaluation 6 minis / 60 micros; PA tier cap; Raw trades: Max contracts in raw mode).")
 iCommMode = input.string(COMM_AUTO, "Commission model", options = [COMM_AUTO, COMM_CUSTOM], group = grpRisk,
      tooltip = "Auto: $0.75 per side per mini contract, $0.25 per side per micro. Charged to both ledgers.")
 iCommCustom = input.float(0.75, "Custom commission per side per contract ($)", minval = 0, step = 0.05, group = grpRisk)
@@ -230,7 +266,7 @@ iWindow = input.session("0935-1530", "New entries window", group = grpSess,
      tooltip = "An entry is allowed when its fill time (the signal bar's close) is inside this window.")
 iFlatH = input.int(16, "Flat-by time (hour : minute)", minval = 0, maxval = 23, group = grpSess, inline = "fb")
 iFlatM = input.int(55, "", minval = 0, maxval = 59, group = grpSess, inline = "fb",
-     tooltip = "Positions are closed by this time: the market close is sent on the last bar whose close is at or before it and fills at the next bar's open. Capped at 16:59 ET, Apex's flat-by deadline.")
+     tooltip = "Positions are closed by this time: the market close is sent on the last bar whose close is at or before it and fills at the next bar's open. Capped at 16:59 ET, Apex's flat-by deadline. Tradeify requires flat by 16:45 ET, so use 16:40 for Tradeify exports.")
 iOOS = input.time(timestamp("01 Aug 2026 00:00 -0400"), "Out-of-sample start", group = grpSess,
      tooltip = "Attempts whose first trading day is before this date (ET) are in-sample; on or after it, out-of-sample. The default is after the July setups were written.")
 
@@ -244,6 +280,11 @@ iAmb = input.string(AMB_STOP, "Bar touching stop and target", options = [AMB_STO
 grpDisp = "Display"
 iShowTable = input.bool(true, "Show results table", group = grpDisp)
 
+// Declared last so the inputs above keep their positions (saved settings).
+grpRaw = "Raw trades mode"
+iRawMaxMinis = input.int(4, "Max contracts in raw mode (minis)", minval = 1, group = grpRaw,
+     tooltip = "Raw trades mode only. In minis: on a micro symbol each mini is 10 micros, so the default 4 is 4 NQ or 40 MNQ, the Tradeify 50K limit. Max contracts override, when set, still applies.")
+
 // -------------------------------------------------------- symbol & costs ----
 var array<string> MICRO_ROOTS = array.from("MNQ", "MES", "MYM", "M2K", "MGC", "MCL", "M6E", "M6A", "M6B", "MJY", "MSF", "MCD", "MBT", "MET", "SIL", "MHG", "MNG")
 isMicro = array.includes(MICRO_ROOTS, syminfo.root)
@@ -254,6 +295,8 @@ float pv = syminfo.pointvalue
 float tick = syminfo.mintick
 float slipPx = SLIP_TICKS * tick
 bool isPA = iMode == "Performance Account"
+bool isRaw = iMode == MODE_RAW
+int rawCap = iMaxQty > 0 ? math.min(iRawMaxMinis * qtyPerMini, iMaxQty) : iRawMaxMinis * qtyPerMini
 float evalStop = iFeed == "Tradovate" ? EVAL_STOP_TRADOVATE : EVAL_STOP_RITHMIC
 float planStopLevel = isPA ? PA_STOP : evalStop
 bool favFirst = iOrder == ORD_FAV
@@ -270,6 +313,12 @@ rUp(float p) =>
 
 etMinutes(int t) =>
     hour(t, TZ) * 60 + minute(t, TZ)
+
+// Trading day of a timestamp as 00:00 UTC of its date (like time_tradingday):
+// the ET date six hours later, so 18:00 ET onwards counts toward the next day.
+tradingDayOf(int t) =>
+    int t6 = t + 6 * 3600000
+    timestamp("UTC", year(t6, TZ), month(t6, TZ), dayofmonth(t6, TZ), 0, 0)
 
 parseHM(string s, int at) =>
     float h = str.tonumber(str.substring(s, at, at + 2))
@@ -681,6 +730,32 @@ sizeFor(float stopPts, float riskUsd, int cap, float pointValue, float roundTrip
     float perC = stopPts * pointValue + roundTrip
     na(perC) or perC <= 0 ? 0 : math.min(cap, int(math.floor(riskUsd / perC)))
 
+// ======================================================= RAW TRADE STATS ====
+// Raw trades mode only: per-trade results, [0] in-sample, [1] out-of-sample.
+type RawStats
+    array<int> n
+    array<int> wins
+    array<float> net
+    array<float> grossWin
+    array<float> grossLoss
+    array<float> perContract
+
+newRawStats() =>
+    RawStats.new(n = array.new<int>(2, 0), wins = array.new<int>(2, 0), net = array.new<float>(2, 0.0), grossWin = array.new<float>(2, 0.0), grossLoss = array.new<float>(2, 0.0), perContract = array.new<float>(2, 0.0))
+
+// One finished trade: net P&L in dollars as traded, contracts at entry.
+method add(RawStats S, bool oos, float pnl, float qty) =>
+    int si = oos ? 1 : 0
+    S.n.set(si, S.n.get(si) + 1)
+    S.net.set(si, S.net.get(si) + pnl)
+    if pnl > 0
+        S.wins.set(si, S.wins.get(si) + 1)
+        S.grossWin.set(si, S.grossWin.get(si) + pnl)
+    else if pnl < 0
+        S.grossLoss.set(si, S.grossLoss.get(si) - pnl)
+    if qty > 0
+        S.perContract.set(si, S.perContract.get(si) + pnl / qty)
+
 // ============================================================ POSITION ======
 type Pos
     int dir = 0
@@ -868,6 +943,8 @@ var Ledger sigL = newLedger()
 var Ledger rndL = newLedger()
 var Pos sp = Pos.new()
 var Pos rp = Pos.new()
+var RawStats sigRaw = newRawStats()
+var RawStats rndRaw = newRawStats()
 sigL.dayEvent := 0
 rndL.dayEvent := 0
 
@@ -880,6 +957,11 @@ var float paidAtStart = 0.0
 var float labAtStart = 0.0
 var int prevClosed = 0
 var int tradeNo = 0
+// Raw trades mode: the position whose exit legs are being summed.
+var string rawSId = ""
+var bool rawSOos = false
+var float rawSPnl = 0.0
+var float rawSQty = 0.0
 
 // Read back every trade the emulator closed since the last bar. A trade that
 // exited at an earlier bar's close (strategy.close_all(immediately = true))
@@ -895,7 +977,24 @@ if nowClosed > prevClosed
         labCost += tradeLab
         if strategy.closedtrades.exit_bar_index(i) >= bar_index
             bookedNow += strategy.closedtrades.profit(i) + tradeComm - tradeLab
+        if isRaw
+            // Each exit leg is its own closed trade; legs of one entry share
+            // its id. Lab costs replace the Properties-tab commission.
+            string legId = strategy.closedtrades.entry_id(i)
+            if legId != rawSId and rawSQty > 0
+                sigRaw.add(rawSOos, rawSPnl, rawSQty)
+                rawSPnl := 0.0
+                rawSQty := 0.0
+            rawSId := legId
+            rawSOos := tradingDayOf(strategy.closedtrades.entry_time(i)) >= oosDay
+            rawSPnl += strategy.closedtrades.profit(i) + tradeComm - tradeLab
+            rawSQty += math.abs(strategy.closedtrades.size(i))
     prevClosed := nowClosed
+// Raw trades mode: a position is finished once the emulator is flat.
+if isRaw and rawSQty > 0 and strategy.position_size == 0
+    sigRaw.add(rawSOos, rawSPnl, rawSQty)
+    rawSPnl := 0.0
+    rawSQty := 0.0
 // realized = strategy.netprofit - netprofit at attempt start, with the
 // Properties-tab commission swapped for the lab's cost model.
 float sRealizedNow = (strategy.netprofit - npAtStart) + (paidComm - paidAtStart) - (labCost - labAtStart)
@@ -911,7 +1010,7 @@ if newDay
         sigL.observe(sigL.bal())
         sigL.passCheck()
     sigL.dayRoll()
-    if not sigL.active() and warm and strategy.position_size == 0 and sp.dir == 0 and sp.pDir == 0 and not sp.pFlat
+    if not isRaw and not sigL.active() and warm and strategy.position_size == 0 and sp.dir == 0 and sp.pDir == 0 and not sp.pFlat
         sigL.begin(isPA, planStopLevel, oosDay)
         npAtStart := strategy.netprofit
         paidAtStart := paidComm
@@ -938,7 +1037,7 @@ if sp.dir != 0 and na(sM1)
     [mA, mB, mAmb] = barMarks(sp, favFirst, slipPx, pv)
     sM1 := mA
     sM2 := mB
-    if mAmb and sigL.active()
+    if mAmb and (isRaw or sigL.active())
         sigL.ambiguous += 1
 
 // Sync with the broker emulator: this bar's exits, then the position left.
@@ -964,8 +1063,9 @@ if exitJuly
 // Decide what the strategy does at this close.
 bool sHasPos = posSize != 0
 bool sNow = sHasPos and (session.islastbar or (newDay and bar_index > 0))
-bool sFlat = sHasPos and not sNow and (not sigL.active() or sDll or atFlatBy or sp.dir == 0)
-bool sElig = warm and sigL.active() and not sHasPos and sp.pDir == 0 and inWindow and not sigL.dllHit and not session.islastbar
+// Raw trades mode has no attempt to end and no DLL (the ledger never starts).
+bool sFlat = sHasPos and not sNow and ((not isRaw and not sigL.active()) or sDll or atFlatBy or sp.dir == 0)
+bool sElig = warm and (isRaw or sigL.active()) and not sHasPos and sp.pDir == 0 and inWindow and not sigL.dllHit and not session.islastbar
 
 int sigDir = 0
 float sigE = na
@@ -995,7 +1095,7 @@ int sQty = 0
 if sigDir != 0 and math.abs(sigE - sigStop) < tick
     sigDir := 0
 if sigDir != 0
-    sQty := sizeFor(math.abs(sigE - sigStop), iRisk, sigL.planCap(qtyPerMini, iMaxQty), pv, rtCost)
+    sQty := sizeFor(math.abs(sigE - sigStop), iRisk, isRaw ? rawCap : sigL.planCap(qtyPerMini, iMaxQty), pv, rtCost)
     if sQty < 1
         sigL.skippedSize += 1
         sigDir := 0
@@ -1004,7 +1104,7 @@ if sNow
     strategy.close_all(comment = "session end", immediately = true)
     sp.flatten()
 else if sFlat
-    strategy.close_all(comment = not sigL.active() ? "attempt over" : sDll ? "DLL" : "flat-by")
+    strategy.close_all(comment = not isRaw and not sigL.active() ? "attempt over" : sDll ? "DLL" : "flat-by")
     sp.pFlat := true
 else if sHasPos
     if sp.qtyT1 > 0
@@ -1028,9 +1128,12 @@ if sigDir != 0
 // ===================================================== RANDOM CONTROL ======
 // No strategy.* calls: same window, sizing, costs, exits and ledger rules,
 // with next-bar-open fills simulated here.
+// Raw trades mode: the open position's net P&L so far and its sample.
+var float rRawPnl = 0.0
+var bool rRawOos = false
 if newDay
     rndL.dayRoll()
-    if not rndL.active() and warm and rp.dir == 0 and rp.pDir == 0 and not rp.pFlat
+    if not isRaw and not rndL.active() and warm and rp.dir == 0 and rp.pDir == 0 and not rp.pFlat
         rndL.begin(isPA, planStopLevel, oosDay)
 
 float rB0 = rndL.bal()
@@ -1049,17 +1152,24 @@ if rp.pDir != 0
     rp.openFromPending(open + rp.pDir * slipPx)
     if rndL.active()
         rndL.noteEntry()
+    if isRaw
+        rRawPnl := 0.0
+        rRawOos := tradingDayOf(time) >= oosDay
 if rp.dir != 0 and na(rM1)
     [qA, qB, qAmb] = barMarks(rp, favFirst, slipPx, pv)
     rM1 := qA
     rM2 := qB
-    if qAmb and rndL.active()
+    if qAmb and (isRaw or rndL.active())
         rndL.ambiguous += 1
     [xg, xq] = simExits(rp, rndStopFirst, slipPx, pv)
     rGross += xg
     rClosed += xq
 if rndL.active()
     rndL.realized += rGross - rClosed * rtCost
+if isRaw and rClosed > 0
+    rRawPnl += rGross - rClosed * rtCost
+    if rp.dir == 0
+        rndRaw.add(rRawOos, rRawPnl, rp.qty0)
 float rOpenClose = rp.dir != 0 ? rp.qty * rp.dir * (close - rp.entry) * pv : 0.0
 float rBClose = rndL.bal() + rOpenClose
 rndL.observeBar(rB0, rM1, rM2, rBClose)
@@ -1070,24 +1180,26 @@ if exitJuly
 
 bool rHasPos = rp.dir != 0
 bool rNow = rHasPos and (session.islastbar or (newDay and bar_index > 0))
-bool rFlat = rHasPos and not rNow and (not rndL.active() or rDll or atFlatBy)
+bool rFlat = rHasPos and not rNow and ((not isRaw and not rndL.active()) or rDll or atFlatBy)
 if rNow
     float exitPx = close - rp.dir * slipPx
     if rndL.active()
         rndL.realized += rp.qty * rp.dir * (exitPx - rp.entry) * pv - rp.qty * rtCost
         rndL.observe(rndL.bal())
+    if isRaw
+        rndRaw.add(rRawOos, rRawPnl + rp.qty * rp.dir * (exitPx - rp.entry) * pv - rp.qty * rtCost, rp.qty0)
     rp.flatten()
 else if rFlat
     rp.pFlat := true
 if rp.dir == 0 and rp.pDir == 0
     rndL.passCheck()
 
-bool rElig = warm and rndL.active() and rp.dir == 0 and rp.pDir == 0 and not rp.pFlat and inWindow and not rndL.dllHit and not session.islastbar
+bool rElig = warm and (isRaw or rndL.active()) and rp.dir == 0 and rp.pDir == 0 and not rp.pFlat and inWindow and not rndL.dllHit and not session.islastbar
 if rElig and u1 < iRndProb and not na(atrV)
     int rd = u2 < 0.5 ? 1 : -1
     float re = rNear(close)
     float rs = rd > 0 ? rDown(close - iRndAtr * atrV) : rUp(close + iRndAtr * atrV)
-    int rq = math.abs(re - rs) < tick ? 0 : sizeFor(math.abs(re - rs), iRisk, rndL.planCap(qtyPerMini, iMaxQty), pv, rtCost)
+    int rq = math.abs(re - rs) < tick ? 0 : sizeFor(math.abs(re - rs), iRisk, isRaw ? rawCap : rndL.planCap(qtyPerMini, iMaxQty), pv, rtCost)
     if rq >= 1
         rp.arm(rd, rq, re, rs, na, na)
     else
@@ -1143,7 +1255,34 @@ currentRow(int r, string ledgerName, Ledger L, float equityNow) =>
     cell(6, r, modeTxt, fg)
     cell(7, r, str.tostring(L.tradedDays), fg)
 
-if barstate.islast and iShowTable
+// Raw trades mode: one row of per-trade results for a ledger and sample.
+rawRow(int r, string ledgerName, string sample, RawStats S, int si) =>
+    int n = S.n.get(si)
+    float gl = S.grossLoss.get(si)
+    float gw = S.grossWin.get(si)
+    color fg = color.new(color.white, 0)
+    cell(0, r, ledgerName, color.new(color.silver, 0))
+    cell(1, r, sample, color.new(color.silver, 0))
+    cell(2, r, str.tostring(n), fg)
+    cell(3, r, n > 0 ? str.tostring(100.0 * S.wins.get(si) / n, "#.#") : "-", fg)
+    cell(4, r, n > 0 ? str.tostring(S.perContract.get(si) / n, "#,##0.00") : "-", fg)
+    cell(5, r, n == 0 ? "-" : gl > 0 ? str.tostring(gw / gl, "#.##") : "no losses", fg)
+    cell(6, r, n > 0 ? fmtMoney(S.net.get(si)) : "-", fg)
+
+// Size warning ("" = none): the July min stop cannot buy one contract at this
+// risk (so every July setup is skipped), or the strategy has taken no entry
+// while signals were skipped for size.
+sizeWarnText(int skipped) =>
+    float julyMinRisk = iMinStop * pv + rtCost
+    string fix = isMicro ? "." : " or chart the micro (e.g. MNQ)."
+    string w = ""
+    if iSource == SRC_JULY and iMinStop > 0 and iRisk < julyMinRisk
+        w := "Risk per trade $" + str.tostring(iRisk, "#") + " cannot buy 1 " + syminfo.root + " at the July min stop (" + str.tostring(iMinStop, "#.##") + " pt x $" + str.tostring(pv, "#.##") + " + $" + str.tostring(rtCost, "0.00") + " = $" + str.tostring(julyMinRisk, "0.00") + "): EVERY July setup is skipped. Raise Risk per trade to at least $" + str.tostring(math.ceil(julyMinRisk), "#") + fix
+    else if strategy.closedtrades + strategy.opentrades == 0 and skipped > 0
+        w := "No entries: every signal (" + str.tostring(skipped) + ") was skipped for size < 1. Raise Risk per trade" + fix
+    w
+
+if barstate.islast and iShowTable and not isRaw
     string sigName = iSource == SRC_RAND ? "Strategy (random)" : iSource == SRC_EXT ? "External" : "July setups"
     string oosTxt = str.format_time(iOOS, "yyyy-MM-dd", TZ)
     color hd = color.new(color.orange, 0)
@@ -1177,7 +1316,52 @@ if barstate.islast and iShowTable
     cell(0, 9, costTxt, nt)
     table.merge_cells(tb, 0, 9, 7, 9)
     string ambTxt = "Bars touching stop and target: signals " + str.tostring(sigL.ambiguous) + " (TradingView path decided), random " + str.tostring(rndL.ambiguous) + " (" + (rndStopFirst ? "stop-first" : "TV path") + ").\nSignal bars skipped for size < 1: signals " + str.tostring(sigL.skippedSize) + ", random " + str.tostring(rndL.skippedSize) + ". Entries: " + str.tostring(sigL.entries) + " / " + str.tostring(rndL.entries) + "."
-    cell(0, 10, ambTxt, nt)
+    string sizeWarn = sizeWarnText(sigL.skippedSize)
+    if sizeWarn != ""
+        ambTxt += "\n" + sizeWarn
+    cell(0, 10, ambTxt, sizeWarn != "" ? color.new(color.yellow, 0) : nt)
     table.merge_cells(tb, 0, 10, 7, 10)
     cell(0, 11, "Rules: Apex 50K Intraday, verified 2026-11-01. Lab only, not advice.", color.new(color.silver, 0))
     table.merge_cells(tb, 0, 11, 7, 11)
+
+if barstate.islast and iShowTable and isRaw
+    string sigName = iSource == SRC_RAND ? "Strategy (random)" : iSource == SRC_EXT ? "External" : "July setups"
+    string oosTxt = str.format_time(iOOS, "yyyy-MM-dd", TZ)
+    color hd = color.new(color.orange, 0)
+    color nt = color.new(color.gray, 10)
+    string flatTxt = str.tostring(math.floor(flatByMin / 60), "00") + ":" + str.tostring(flatByMin % 60, "00")
+    table.clear(tb, 0, 0, 7, 11)
+    cell(0, 0, "Apex 50K Eval Lab | Raw trades (no account rules) | " + iExit + " | " + (favFirst ? "favorable-first marks" : "adverse-first marks"), hd)
+    table.merge_cells(tb, 0, 0, 6, 0)
+    cell(0, 1, "Ledger", hd)
+    cell(1, 1, "Sample", hd)
+    cell(2, 1, "Trades", hd)
+    cell(3, 1, "Win %", hd)
+    cell(4, 1, "Net/trade/contract", hd)
+    cell(5, 1, "Profit factor", hd)
+    cell(6, 1, "Net P&L", hd)
+    rawRow(2, sigName, "In-sample", sigRaw, 0)
+    rawRow(3, sigName, "OOS from " + oosTxt, sigRaw, 1)
+    rawRow(4, "Random control", "In-sample", rndRaw, 0)
+    rawRow(5, "Random control", "OOS from " + oosTxt, rndRaw, 1)
+    string costTxt = "Lab costs $" + str.tostring(commSide, "#.##") + "/side/contract (" + (iCommMode == COMM_AUTO ? (isMicro ? "auto: micro" : "auto: mini") : "custom") + "), slippage 1 tick, risk $" + str.tostring(iRisk, "#") + "/trade, cap " + str.tostring(rawCap) + " " + syminfo.root + ", flat-by " + flatTxt + " ET" + (flatByMin > 16 * 60 + 40 ? " (Tradeify exports: 16:40)" : "") + ".\nRandom control: p=" + str.tostring(iRndProb, "#.###") + ", stop " + str.tostring(iRndAtr, "#.##") + " ATR, " + (rndStopFirst ? "stop-first" : "TV path") + ", seed " + str.tostring(iSeed) + "."
+    cell(0, 6, costTxt, nt)
+    table.merge_cells(tb, 0, 6, 6, 6)
+    string noteTxt = "A trade is one position (exit legs summed), net of lab costs; per contract = mean of each trade's net P&L / its contracts. The export's P&L uses the Properties-tab commission.\nSignal bars skipped for size < 1: signals " + str.tostring(sigL.skippedSize) + ", random " + str.tostring(rndL.skippedSize) + ". Bars touching stop and target: signals " + str.tostring(sigL.ambiguous) + ", random " + str.tostring(rndL.ambiguous) + "."
+    cell(0, 7, noteTxt, nt)
+    table.merge_cells(tb, 0, 7, 6, 7)
+    color wc = color.new(color.yellow, 0)
+    int r = 8
+    if exitJuly
+        cell(0, r, "Exit model is July playbook: the List of trades has one row per exit leg, and the planner sizes, caps and steps each row on its own (not the combined position), so it overstates size and understates breach risk. Set Exit model = Fixed R before exporting.", wc)
+        table.merge_cells(tb, 0, r, 6, r)
+        r += 1
+    string sizeWarn = sizeWarnText(sigL.skippedSize)
+    if sizeWarn != ""
+        cell(0, r, sizeWarn, wc)
+        table.merge_cells(tb, 0, r, 6, r)
+        r += 1
+    cell(0, r, "Export Strategy Tester > List of trades > Export as list.csv, then run: node planner/cli.mjs --firm tradeify --plan growth --trades list.csv --unit " + (isMicro ? "micro" : "mini") + " --sweep --scale risk", color.new(color.aqua, 0))
+    table.merge_cells(tb, 0, r, 6, r)
+    cell(0, r + 1, "Raw trades: no attempts, no account rules; the planner applies the firm's rules. Lab only, not advice.", color.new(color.silver, 0))
+    table.merge_cells(tb, 0, r + 1, 6, r + 1)

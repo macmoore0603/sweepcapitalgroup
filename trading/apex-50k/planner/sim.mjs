@@ -258,20 +258,20 @@ export function makeZeroEdgeSource(params) {
 
 // ---------------------------------------------------------------------------------------------- stats
 
-function quantileSorted(sorted, q) {
+export function quantileSorted(sorted, q) {
   if (sorted.length === 0) return null;
   const i = Math.min(sorted.length - 1, Math.max(0, Math.ceil(q * sorted.length) - 1)); // nearest rank
   return sorted[i];
 }
 
-function mean(arr) {
+export function mean(arr) {
   if (arr.length === 0) return 0;
   let s = 0;
   for (let i = 0; i < arr.length; i++) s += arr[i];
   return s / arr.length;
 }
 
-function sortedCopy(arr) {
+export function sortedCopy(arr) {
   return Float64Array.from(arr).sort();
 }
 
