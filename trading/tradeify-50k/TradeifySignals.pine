@@ -26,9 +26,24 @@
 //   - So the signals are prompts, not advice, and not a proven edge. Past
 //     results do not predict future results.
 //   - Pine cannot see the account. The account inputs below must be typed
-//     from the Tradeify dashboard every day. Until they are, the table shows
-//     STALE and no prompts are posted for the current session (only the
-//     flat-by reminder, which then says the inputs are STALE).
+//     from the Tradeify dashboard every day for the sizes to be right. Until
+//     they are, the table shows STALE: signals are still drawn, but in orange
+//     and marked ACCOUNT FIGURES STALE, and their alerts carry that warning
+//     (or are muted, per "When the account figures are stale").
+//
+// WHAT YOU SEE ON THE CHART
+//   - LONG (teal) and SHORT (red) arrows with a label: size, entry, stop
+//     (SL), target 1 and target 2, setup and score. Past signals are drawn
+//     the same way, marked (past), so the chart shows where setups fired.
+//   - Orange label: a live signal sized from stale account figures.
+//   - Faded label with "no size": the setup fired but one contract risks
+//     more than the budget (on NQ chart MNQ, or raise risk per trade).
+//   - Grey arrow "setup held back": an account limit (floor, daily loss
+//     limit, daily stop, profit lock, trade count, loss streak) blocked it.
+//   - Blue / red / teal lines: entry, stop and targets of the open signal;
+//     x marks and labels: its exits (T1, T2, stop, time, flat-by).
+//   - Setups outside the entry window, near the flat-by, during warm-up or
+//     while a signal is still open are not drawn.
 //
 // GETTING ALERTS ON A PHONE
 //   1. Open MNQ1! (or the front MNQ contract) on a 5-minute chart and add
@@ -46,8 +61,8 @@
 //   4. An alert keeps the inputs it was created with. After typing new daily
 //      figures, delete the old alert and create a new one. An old alert goes
 //      STALE at the first 18:00 ET session start after a 17:00 ET close that
-//      is later than its as-of time. It then posts no prompts, only the
-//      daily flat-by reminder, which says the inputs are STALE.
+//      is later than its as-of time. Its signals then carry the ACCOUNT
+//      FIGURES STALE warning (or stop, if you chose "Draw only, no alerts").
 //
 // DAILY INPUTS (type them from the Tradeify dashboard before trading, flat)
 //   Balance at last close, Trailing Max Drawdown floor (the dashboard
@@ -166,7 +181,7 @@
 // =============================================================================
 
 indicator("Tradeify 50K Signals", shorttitle = "TradeifySignals", overlay = true,
-     max_labels_count = 100, max_lines_count = 10)
+     max_labels_count = 500, max_lines_count = 10)
 
 // ------------------------------------------------------------ constants ----
 TZ = "America/New_York"
@@ -209,7 +224,7 @@ int FLATBY_EXIT_MIN = 5
 float DLL_MARGIN = 100
 float LOCK_GROWTH = 1000
 float LOCK_LIGHTNING = 600
-int MAX_KEEP_LABELS = 95
+int MAX_KEEP_LABELS = 490
 
 PLAN_GROWTH = "Growth"
 PLAN_FLEX = "Select Flex"
@@ -236,7 +251,7 @@ iTodayPnl = input.float(0, "Today's realized P&L ($)", step = 10, group = grpAcc
 iTradesToday = input.int(0, "Trades already taken today", minval = 0, group = grpAcct, confirm = true,
      tooltip = "Trades taken in the current session (since 18:00 ET). Type 0 if you read the figures between sessions.")
 iAsOf = input.time(timestamp("01 Jan 2026 00:00 -0500"), "Figures as of (date and time)", group = grpAcct,
-     tooltip = "When you read the figures. STALE (no prompts) when this is before the previous session's 17:00 ET close (Friday's for the Sunday session). Virtual P&L is added from this time on. Type the figures while flat: a virtual trade from before this time is dropped.")
+     tooltip = "When you read the figures. STALE (signals still drawn and alerted with a warning, see Display) when this is before the previous session's 17:00 ET close (Friday's for the Sunday session). Virtual P&L is added from this time on. Type the figures while flat: a virtual trade from before this time is dropped.")
 
 grpRisk = "Risk"
 iRisk = input.float(150, "Risk per trade ($)", minval = 1, step = 10, group = grpRisk)
@@ -270,7 +285,14 @@ iMinNetR = input.float(1.2, "Min net R to target 1 (after costs)", minval = 0, s
 
 grpDisp = "Display"
 iLblSize = input.string("Small", "Label size", options = ["Tiny", "Small", "Normal"], group = grpDisp)
-iShowReview = input.bool(true, "Show review prompts (past sessions, no alerts)", group = grpDisp)
+iShowReview = input.bool(true, "Show signals on past bars (no alerts)", group = grpDisp,
+     tooltip = "Draws every past signal at full colour so the chart shows where the setups fired. Past signals never alert.")
+iShowBlocked = input.bool(true, "Show setups blocked by an account limit (grey)", group = grpDisp,
+     tooltip = "A setup that passed the setup rules but was held back by the drawdown floor, the daily loss limit, your daily stop, the profit lock, the trade count or the loss streak is drawn in grey with the reason. It never alerts.")
+STALE_ALERT = "Draw and alert, with a warning"
+STALE_QUIET = "Draw only, no alerts"
+iStaleMode = input.string(STALE_ALERT, "When the account figures are stale", options = [STALE_ALERT, STALE_QUIET], group = grpDisp,
+     tooltip = "Stale figures never hide a signal. With the first option the alert still goes out, marked ACCOUNT FIGURES STALE, and the size is worked out from the old figures: check the floor and the daily loss room on the Tradeify dashboard before entering.")
 iShowTable = input.bool(true, "Show table", group = grpDisp)
 
 // -------------------------------------------------------- symbol & costs ----
@@ -789,6 +811,8 @@ var line lnB = line.new(bar_index, close, bar_index + 1, close, color = color.ne
 
 bool longNow = false
 bool shortNow = false
+bool blockedNow = false
+int blockedDir = 0
 bool longAlert = false
 bool shortAlert = false
 bool exitAlert = false
@@ -885,19 +909,31 @@ if barstate.isconfirmed
         if liveBar
             fbWarnNow := true
             string openTxt = vt.dir != 0 ? " | virtual " + (vt.dir > 0 ? "LONG " : "SHORT ") + str.tostring(vt.qty, "#") + " still open, trade P&L " + fmtSigned(vt.net + vt.openPnl()) : ""
-            string staleTxt = asOfFuture ? " | as-of time is in the future: no prompts until it is fixed" : stale ? " | inputs STALE: no prompts until you type today's figures and as-of time and recreate the alert" : ""
+            string staleTxt = asOfFuture ? " | as-of time is in the future: fix it so sizes use today's figures" : stale ? " | account figures STALE: sizes use old figures until you type today's figures and as-of time and recreate the alert" : ""
             alertTxt := addLine(alertTxt, syminfo.root + " FLAT-BY in 10 min: be flat by " + flatTxt + " ET" + openTxt + staleTxt + " | " + tagTxt)
 
-    // F. A new prompt from the best July setup that passed its gates.
+    // F. A new prompt from the best July setup that passed its gates. Every setup that passes the setup rules
+    // is drawn: stale or future account figures only add a warning (and, per the input, mute the alert); an
+    // account limit draws it in grey with the reason; window, warm-up, flat-by and an open virtual trade hide it.
     if julyPass
         [dP, rF, rD, hD, hS, hL] = acctNow(liveBar, dayVirt, vt.openPnl())
-        string why = gateWhy(liveBar, warm, rF, hD, hS, hL, dayTrades, lossStreak, vt.dir != 0 or pDir != 0, inWindow, nearFlatBy)
+        bool figWarn = liveBar and (stale or asOfFuture)
+        // live = false skips the stale / future checks inside gateWhy: they are handled as a warning here
+        string why = gateWhy(false, warm, rF, hD, hS, hL, dayTrades, lossStreak, vt.dir != 0 or pDir != 0, inWindow, nearFlatBy)
+        bool quietWhy = why == "warming up" or why == "virtual trade open" or why == "outside the entry window" or why == "within 20 min of flat-by"
         string side = jDir > 0 ? "LONG" : "SHORT"
         string scoreTxt = jName + " " + str.tostring(jSc, "#")
+        string warnTxt = figWarn ? (asOfFuture ? "as-of time in the future" : "ACCOUNT FIGURES STALE") : ""
+        bool alertOk = liveBar and (not figWarn or iStaleMode == STALE_ALERT)
         if why != ""
             if curSess
                 nPaused += 1
                 lastPauseWhy := scoreTxt + ": " + why
+            if iShowBlocked and not quietWhy and showMark(liveBar)
+                blockedNow := true
+                blockedDir := jDir
+                string bTxt = side + " setup held back\n" + why + "\n" + scoreTxt + (liveBar ? "" : "  (past)")
+                keepLabel(labs, label.new(bar_index, jDir > 0 ? low : high, bTxt, yloc = jDir > 0 ? yloc.belowbar : yloc.abovebar, style = jDir > 0 ? label.style_label_up : label.style_label_down, color = color.new(color.gray, 25), textcolor = color.white, size = size.tiny))
         else
             [q, perC, budget, bind] = sizeFor(jStopPts, rF, rD, dP)
             if q < 1
@@ -905,8 +941,11 @@ if barstate.isconfirmed
                     nNoSize += 1
                     lastPauseWhy := scoreTxt + ": no size (" + bind + ")"
                 if showMark(liveBar)
-                    string nsTxt = "no size: " + bind + " " + fmtUsd0(budget) + " < " + fmtUsd2(perC) + "/contract\n" + side + " " + scoreTxt
-                    keepLabel(labs, label.new(bar_index, jDir > 0 ? low : high, nsTxt, yloc = jDir > 0 ? yloc.belowbar : yloc.abovebar, style = jDir > 0 ? label.style_label_up : label.style_label_down, color = color.new(color.gray, 45), textcolor = color.white, size = size.tiny))
+                    longNow := jDir > 0
+                    shortNow := jDir < 0
+                    string hint = isMicro ? "lower the stop or raise risk per trade" : "chart the micro (MNQ) or raise risk per trade"
+                    string nsTxt = side + " @ " + fmtPx(jE) + "  SL " + fmtPx(jS) + "\nno size: " + bind + " " + fmtUsd0(budget) + " < " + fmtUsd2(perC) + "/contract (" + hint + ")\n" + scoreTxt + (liveBar ? "" : "  (past)")
+                    keepLabel(labs, label.new(bar_index, jDir > 0 ? low : high, nsTxt, yloc = jDir > 0 ? yloc.belowbar : yloc.abovebar, style = jDir > 0 ? label.style_label_up : label.style_label_down, color = color.new(jDir > 0 ? color.teal : color.red, 45), textcolor = color.white, size = lblSize))
             else
                 pDir := jDir
                 pQty := q
@@ -920,17 +959,17 @@ if barstate.isconfirmed
                 pBar := bar_index
                 if curSess
                     nPosted += 1
-                lastSigTxt := str.format_time(time_close, "MM-dd HH:mm", TZ) + " " + side + " " + str.tostring(q) + " @ " + fmtPx(jE) + " " + scoreTxt + (liveBar ? "" : " (review)")
+                lastSigTxt := str.format_time(time_close, "MM-dd HH:mm", TZ) + " " + side + " " + str.tostring(q) + " @ " + fmtPx(jE) + " " + scoreTxt + (liveBar ? (figWarn ? " (" + warnTxt + ")" : "") : " (past)")
                 if showMark(liveBar)
                     longNow := jDir > 0
                     shortNow := jDir < 0
                     color base = jDir > 0 ? color.teal : color.red
-                    string lt = side + " " + str.tostring(q) + " @ " + fmtPx(jE) + "\nSL " + fmtPx(jS) + "  T1 " + fmtPx(jA) + "  T2 " + fmtPx(jB) + "\n" + scoreTxt + (liveBar ? "" : "  (review)")
-                    keepLabel(labs, label.new(bar_index, jDir > 0 ? low : high, lt, yloc = jDir > 0 ? yloc.belowbar : yloc.abovebar, style = jDir > 0 ? label.style_label_up : label.style_label_down, color = color.new(base, liveBar ? 0 : 55), textcolor = color.white, size = lblSize))
-                if liveBar
+                    string lt = side + " " + str.tostring(q) + " @ " + fmtPx(jE) + "\nSL " + fmtPx(jS) + "  T1 " + fmtPx(jA) + "  T2 " + fmtPx(jB) + "\n" + scoreTxt + (liveBar ? (figWarn ? "\n" + warnTxt + ": check size" : "") : "  (past)")
+                    keepLabel(labs, label.new(bar_index, jDir > 0 ? low : high, lt, yloc = jDir > 0 ? yloc.belowbar : yloc.abovebar, style = jDir > 0 ? label.style_label_up : label.style_label_down, color = color.new(figWarn ? color.orange : base, 0), textcolor = color.white, size = lblSize))
+                if alertOk
                     longAlert := jDir > 0
                     shortAlert := jDir < 0
-                    string msg = syminfo.root + " " + side + " " + str.tostring(q) + " @ " + fmtPx(jE) + " | stop " + fmtPx(jS) + " (" + str.tostring(jStopPts, "#,##0.00") + " pts, " + fmtUsd2(q * perC) + " risk) | T1 " + fmtPx(jA) + " | T2 " + fmtPx(jB) + " | " + scoreTxt + " | floor room " + fmtUsd0(rF) + " | DLL room " + fmtUsd0(rD) + " | " + tagTxt
+                    string msg = (figWarn ? warnTxt + ": size uses old figures, check your Tradeify floor and DLL room first | " : "") + syminfo.root + " " + side + " " + str.tostring(q) + " @ " + fmtPx(jE) + " | stop " + fmtPx(jS) + " (" + str.tostring(jStopPts, "#,##0.00") + " pts, " + fmtUsd2(q * perC) + " risk) | T1 " + fmtPx(jA) + " | T2 " + fmtPx(jB) + " | " + scoreTxt + " | floor room " + fmtUsd0(rF) + " | DLL room " + fmtUsd0(rD) + " | " + tagTxt
                     alertTxt := addLine(alertTxt, msg)
 
     // G. Entry, stop, T1 and T2 lines while a prompt is pending or open.
@@ -955,8 +994,10 @@ if barstate.isconfirmed
         alert(alertTxt, alert.freq_once_per_bar_close)
 
 // ============================================================== MARKERS ======
-plotshape(longNow, "Long prompt", shape.triangleup, location.belowbar, color.new(color.teal, liveBar ? 0 : 55), size = size.tiny)
-plotshape(shortNow, "Short prompt", shape.triangledown, location.abovebar, color.new(color.red, liveBar ? 0 : 55), size = size.tiny)
+plotshape(longNow, "Long signal", shape.triangleup, location.belowbar, color.teal, size = size.small, text = "LONG", textcolor = color.teal)
+plotshape(shortNow, "Short signal", shape.triangledown, location.abovebar, color.red, size = size.small, text = "SHORT", textcolor = color.red)
+plotshape(blockedNow and blockedDir > 0, "Long setup held back", shape.triangleup, location.belowbar, color.new(color.gray, 20), size = size.tiny)
+plotshape(blockedNow and blockedDir < 0, "Short setup held back", shape.triangledown, location.abovebar, color.new(color.gray, 20), size = size.tiny)
 plotshape(exitMarkPx, "Virtual exit", shape.xcross, location.absolute, color.new(color.gray, 0), size = size.tiny)
 
 alertcondition(longAlert, "Long signal", "Tradeify 50K Signals: LONG prompt on {{ticker}} at {{close}}. Size, stop and targets are on the chart and in the alert() message.")
@@ -974,13 +1015,14 @@ tcell(int r, string k, string v, color vc) =>
 if barstate.islast and iShowTable
     float tOpen = vt.openPnl()
     [tDay, tRoom, tDllRoom, tDllHit, tSelf, tLock] = acctNow(liveBar, dayVirt, tOpen)
-    string tWhy = asOfFuture ? "as-of time is in the future" : stale ? "STALE inputs: type today's dashboard figures and as-of time" : not curSess ? "waiting for the session (18:00 ET)" : not liveBar ? "no bar has closed after the as-of time yet" : gateWhy(true, warm, tRoom, tDllHit, tSelf, tLock, dayTrades, lossStreak, vt.dir != 0 or pDir != 0, inWindow, nearFlatBy)
+    string tWhy = asOfFuture ? "as-of time is in the future (signals drawn with a warning)" : stale ? "STALE figures: signals drawn with a warning; type today's dashboard figures and as-of time" : not curSess ? "waiting for the session (18:00 ET)" : not liveBar ? "no bar has closed after the as-of time yet" : gateWhy(true, warm, tRoom, tDllHit, tSelf, tLock, dayTrades, lossStreak, vt.dir != 0 or pDir != 0, inWindow, nearFlatBy)
     // A budget that cannot size 1 contract even at the minimum stop posts nothing.
     if tWhy == ""
         [mq, mPerC, mBudget, mBind] = sizeFor(iMinStop, tRoom, tDllRoom, tDay)
         if mq < 1
             tWhy := mBind + " " + fmtUsd2(mBudget) + " cannot size 1 " + syminfo.root + " even at a " + str.tostring(iMinStop) + "-pt stop (needs " + fmtUsd2(mPerC) + ")" + (mBind == "risk per trade" and not isMicro ? ": use the micro contract or raise the risk" : "")
-    string status = tWhy == "" ? "ARMED" : "PAUSED: " + tWhy
+    bool figWarnT = stale or asOfFuture
+    string status = tWhy == "" ? "ARMED" : figWarnT ? "ARMED, " + tWhy : "PAUSED: " + tWhy
     color white = color.new(color.white, 0)
     color good = color.new(color.lime, 0)
     color warnC = color.new(color.orange, 0)
@@ -996,7 +1038,7 @@ if barstate.islast and iShowTable
     tcell(7, "Today's P&L", liveBar ? fmtSigned(tDay) + " (typed " + fmtSigned(iTodayPnl) + " + virtual " + fmtSigned(dayVirt + tOpen) + ")" : "virtual " + fmtSigned(tDay) + " (not live)", tDay < 0 ? warnC : white)
     tcell(8, "Day limits", "risk " + fmtUsd0(iRisk) + " / " + str.tostring(iShare) + "% of room | stop " + (iSelfStop > 0 ? fmtUsd0(iSelfStop) : "off") + " | lock " + (na(lockVal) ? "off" : fmtUsd0(lockVal)), white)
     tcell(9, "Trades today", str.tostring(dayTrades) + " / " + str.tostring(iMaxTrades) + " | losses in a row " + str.tostring(lossStreak) + " / " + str.tostring(iMaxLosses), white)
-    tcell(10, "Status", status, tWhy == "" ? good : stale or asOfFuture ? bad : warnC)
+    tcell(10, "Status", status, tWhy == "" ? good : warnC)
     tcell(11, "Setups this session", "posted " + str.tostring(nPosted) + ", paused " + str.tostring(nPaused) + ", no size " + str.tostring(nNoSize) + (lastPauseWhy != "" ? "\nlast held: " + lastPauseWhy : ""), white)
     tcell(12, "Last signal", lastSigTxt, white)
     table.cell(tb, 0, 13, "Unproven signals: prompts, not advice", text_color = color.new(color.silver, 0), text_size = size.small, text_halign = text.align_left)
