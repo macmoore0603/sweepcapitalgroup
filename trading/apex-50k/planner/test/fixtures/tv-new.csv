@@ -1,0 +1,7 @@
+Trade #;Type;Date and time;Signal;Price USD;Position size (qty);Position size (value);Net P&L USD;Net P&L %;Favorable excursion USD;Favorable excursion %;Adverse excursion USD;Adverse excursion %;Cumulative P&L USD;Cumulative P&L %
+1;Entry long;2025-06-02 09:31;"Long; ORB";21500,25;3;64 500,75;2 010,00;0,94;2 400,00;1,12;−150,00;−0,07;2 010,00;0,94
+1;Exit long;2025-06-02 10:02;"TP; full";21534,75;3;64 604,25;2 010,00;0,94;2 400,00;1,12;−150,00;−0,07;2 010,00;0,94
+2;Entry short;2025-06-03 13:15;Short;21610,00;1;21 610,00;−1.250,50;−0,58;75,00;0,03;1.300,00;0,60;759,50;0,35
+2;Exit short;2025-06-03 14:40;SL;21672,50;1;21 672,50;−1.250,50;−0,58;75,00;0,03;1.300,00;0,60;759,50;0,35
+3;Entry long;2025-06-03 15:05;Long;21650,00;2;43 300,00;−12,00;−0,01;60,00;0,03;−48,00;−0,02;747,50;0,35
+3;Exit long;2025-06-03 15:20;Close;21647,00;2;43 294,00;−12,00;−0,01;60,00;0,03;−48,00;−0,02;747,50;0,35

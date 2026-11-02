@@ -1,0 +1,1183 @@
+//@version=6
+// =============================================================================
+// Apex 50K Eval Lab  (TradingView Pine Script v6 strategy)
+// =============================================================================
+//
+// WHAT THIS IS
+//   A backtest research lab built to answer one question honestly: if a
+//   signal had been run on an Apex Trader Funding 50K Intraday Trailing
+//   Drawdown evaluation, attempt after attempt through the chart's history,
+//   how often would an attempt have passed, compared with random entries that
+//   have no edge but use the same session window, sizing, costs, exits and
+//   account rules?
+//
+//   This is a lab. It is NOT a live signal and NOT advice, and nothing it
+//   shows is a recommendation to place a trade. It has no alerts. Results on
+//   past bars do not predict future results, and a result is only as good as
+//   the model described below.
+//
+// RULES MODELLED (from trading/apex-50k/rules.json, verifiedOn 2026-11-01)
+//   Evaluation: start 50,000; profit target +3,000 on closed P&L (open profit
+//   does not count); trailing drawdown 2,000 from the peak balance INCLUDING
+//   open profit; the threshold never moves down and stops rising at 53,000 on
+//   Rithmic/WealthCharts (it keeps trailing on Tradovate); the account is
+//   breached when the balance touches or falls below the threshold; maximum
+//   6 minis or 60 micros; no daily loss limit; 30 calendar days of access.
+//   Performance Account (PA): threshold stops rising at 50,100; contract cap
+//   and daily loss limit come from the scaling tier set by the prior
+//   session's closing balance (never below Level 1):
+//     L1 profit 0 -> 2 minis, DLL 1,000     L2 1,500 -> 3 minis, DLL 1,000
+//     L3 3,000 -> 4 minis, DLL 2,000        L4 6,000 -> 4 minis, DLL 3,000
+//   A DLL hit flattens and pauses the rest of the session; the PA stays open.
+//   Sources (re-check them before relying on any number; the firm can change
+//   its rules at any time):
+//     https://apextraderfunding.com/help-center/evaluation-accounts-ea/intraday-trailing-drawdown-evaluations/
+//     https://apextraderfunding.com/help-center/intraday-trailing-drawdown-accounts/intraday-trailing-drawdown-explained/
+//     https://apextraderfunding.com/help-center/additional-helpful-items/position-sizing-evaluation
+//     https://apextraderfunding.com/help-center/intraday-trailing-drawdown-accounts/intraday-trailing-drawdown-performance-accounts-pa/
+//     https://apextraderfunding.com/help-center/additional-helpful-items/scaling-levels-pa-explained/
+//     https://apextraderfunding.com/help-center/intraday-trailing-drawdown-accounts/intraday-trailing-drawdown-payouts/
+//
+// HOW TO USE
+//   1. Open MNQ1! or NQ1! (or one specific contract month) on a 1 to 5 minute
+//      chart. The default $100 risk per trade suits MNQ; on NQ ($20/point) a
+//      $100 budget covers only stops under about 4.9 points, so most setups
+//      are skipped for size.
+//   2. Add this strategy and open the Strategy Tester. The table at the top
+//      right is the lab's result: attempts, passes, breaches and expiries for
+//      the signal ledger and for the random control, split into attempts whose
+//      first trading day is before the out-of-sample date and attempts whose
+//      first trading day is on or after it.
+//   3. Pick the signal source: the built-in July NQ setups, an external
+//      indicator's plot (value > 0 long, < 0 short, 0 none), or the random
+//      control only (the strategy itself then trades the random entries,
+//      which also cross-checks the random ledger against TradingView fills).
+//   4. Compare the signal's pass rate with the random control's, above all on
+//      out-of-sample attempts. A signal that does not clearly beat random
+//      there has not shown an edge. A handful of attempts is anecdote, not a
+//      rate; the counts are shown so the sample size can be judged.
+//
+// HOW THE LEDGER COUNTS
+//   - Each attempt starts at 50,000 on the first bar of a trading session
+//     (18:00 ET for CME futures) once the ledger is flat; after a pass,
+//     breach or expiry the next attempt starts at the next session. Attempts
+//     never overlap. The first attempt waits for indicator warm-up.
+//   - Every bar the ledger observes the balance (closed P&L net of costs plus
+//     open P&L) at the bar's extremes, limited to what the position could see
+//     while its stop and targets were working, then at the close.
+//   - Pass: flat with closed P&L >= +3,000. Expiry: 30 calendar days after
+//     the attempt's first trading day. "Days to pass" counts traded sessions
+//     (sessions with at least one entry), as Apex counts trading days.
+//   - Performance Account mode has no target: an attempt ends on a breach or
+//     when it has survived the PA horizon (input, in sessions), and a fresh
+//     one starts. The table shows the share of finished attempts breached
+//     within the horizon and the median traded days to breach; the attempt
+//     still running is shown only in the current-attempt rows.
+//
+// LIMITS
+//   - History: TradingView limits intraday bar history by subscription plan,
+//     so the number of attempts available depends on the plan.
+//   - Intrabar order is unknown on OHLC bars. By default the ledger observes a
+//     bar's FAVOURABLE extreme first (raising peak and threshold), then its
+//     ADVERSE extreme (breach check), then the close: the worst case for an
+//     intraday trailing threshold. "Adverse first" is offered as an option.
+//   - Fills: signals are evaluated on bar close only and entries fill at the
+//     next bar's open with 1 tick of slippage; stops fill with 1 tick of
+//     slippage (at the open if price gaps through); targets fill at the limit.
+//   - The strategy's fills come from TradingView's broker emulator, which
+//     resolves a bar that touches both stop and target with its own OHLC path
+//     rule. The random control resolves such bars stop-first by default. The
+//     table counts these bars for both ledgers; set the random control's rule
+//     to "TradingView OHLC path" for a like-for-like comparison.
+//   - Costs: both ledgers are charged the lab's commission model (input; auto
+//     = $0.75 per side per mini, $0.25 per side per micro). The Strategy
+//     Tester's own P&L uses the Properties-tab commission (declared $0.75);
+//     the lab ledger removes that and applies its own model, so the table and
+//     the Strategy Tester can differ by the commission difference.
+//   - Breach, daily-loss-limit and flat-by exits are market orders that fill
+//     at the next bar's open, so a realised loss can run past the level that
+//     triggered it. The ledger's verdict comes from the observed touch.
+//   - Flat-by is capped at Apex's 16:59 ET deadline and is sent on the last
+//     bar whose close (the next bar's open, where it fills) is at or before
+//     the flat-by time, so it lands in time on any intraday timeframe.
+//   - Holiday early closes are not scheduled: a position still open on a
+//     session's last bar, or carried into a new session, is closed at that
+//     bar's close.
+//   - Not modelled: payout, consistency, news and inactivity rules.
+//   - 15-minute bias uses request.security with lookahead on and a [1]
+//     offset: the last completed 15-minute bar, the same on historical and
+//     live bars, never the future. On the last chart bar inside a 15-minute
+//     bar it is one 15-minute bar older than the bar that has just closed.
+//   - Prior-day high/low are built on the chart from the trading day's bars
+//     (request.security("D", high[1]) with lookahead off would return the
+//     day before yesterday on historical bars).
+//   - July setups follow the Python engine (signals.py, indicators.py,
+//     market.py, playbook.py): best candidate by score, then the score,
+//     stop-size and net-R gates. Lunch is not blocked (the engine treats it as
+//     a soft warning; its -15 score penalty still applies).
+// =============================================================================
+
+strategy("Apex 50K Eval Lab", shorttitle = "ApexEvalLab", overlay = true,
+     initial_capital = 50000, currency = currency.USD,
+     default_qty_type = strategy.fixed, default_qty_value = 1,
+     pyramiding = 0, process_orders_on_close = false,
+     calc_on_every_tick = false, calc_on_order_fills = false,
+     commission_type = strategy.commission.cash_per_contract, commission_value = 0.75,
+     slippage = 1, margin_long = 0, margin_short = 0,
+     max_labels_count = 5, max_lines_count = 5, max_boxes_count = 5)
+
+// <<RULES:BEGIN>>
+// Apex 50K Intraday Trailing Drawdown. Values must match rules.json exactly
+// (na = null in rules.json: no stop / no limit; FLAT_BY_ET_MIN = flatByEt in
+// minutes after midnight ET).
+float START_BAL = 50000
+float EVAL_TARGET = 3000
+float EVAL_DD = 2000
+float EVAL_STOP_RITHMIC = 53000
+float EVAL_STOP_TRADOVATE = na
+float EVAL_DLL = na
+int EVAL_MAX_MINIS = 6
+int EVAL_ACCESS_DAYS = 30
+float PA_DD = 2000
+float PA_STOP = 50100
+float PA_T2_PROFIT = 1500
+float PA_T3_PROFIT = 3000
+float PA_T4_PROFIT = 6000
+int PA_T1_MINIS = 2
+int PA_T2_MINIS = 3
+int PA_T3_MINIS = 4
+int PA_T4_MINIS = 4
+float PA_T1_DLL = 1000
+float PA_T2_DLL = 1000
+float PA_T3_DLL = 2000
+float PA_T4_DLL = 3000
+int MICROS_PER_MINI = 10
+int FLAT_BY_ET_MIN = 1019
+// <<RULES:END>>
+
+// ------------------------------------------------------------ constants ----
+TZ = "America/New_York"
+int DAY_MS = 86400000
+int WARMUP_BARS = 200
+int SLIP_TICKS = 1          // must equal the slippage set in the strategy declaration above
+
+int ST_IDLE = 0
+int ST_ACTIVE = 1
+int ST_PASSED = 2
+int ST_BREACHED = 3
+int ST_EXPIRED = 4
+
+int REG_UP = 1
+int REG_DOWN = 2
+int REG_CHOP = 3
+int REG_EXP = 4
+int REG_QUIET = 5
+
+SRC_JULY = "July NQ setups"
+SRC_EXT = "External indicator"
+SRC_RAND = "Random control only"
+EXIT_FIXED = "Fixed R"
+EXIT_JULY = "July playbook"
+ORD_FAV = "Conservative (favorable first)"
+ORD_ADV = "Adverse first"
+AMB_STOP = "Stop first (conservative)"
+AMB_TV = "TradingView OHLC path"
+COMM_AUTO = "Auto by symbol class"
+COMM_CUSTOM = "Custom"
+
+// --------------------------------------------------------------- inputs ----
+grpAcct = "Apex account"
+iMode = input.string("Evaluation", "Account mode", options = ["Evaluation", "Performance Account"], group = grpAcct)
+iFeed = input.string("Rithmic/WealthCharts", "Data feed", options = ["Rithmic/WealthCharts", "Tradovate"], group = grpAcct,
+     tooltip = "Evaluation only. Rithmic/WealthCharts: the threshold stops rising at 53,000. Tradovate: it keeps trailing. A Performance Account always stops at 50,100.")
+iOrder = input.string(ORD_FAV, "Intrabar ordering", options = [ORD_FAV, ORD_ADV], group = grpAcct,
+     tooltip = "Order in which the ledger observes each bar's extremes. Favorable first raises the peak and threshold before the adverse extreme is checked: the worst case for a trailing threshold.")
+iPaHorizon = input.int(20, "PA horizon (sessions)", minval = 1, group = grpAcct,
+     tooltip = "Performance Account only. An attempt that has not breached after this many sessions ends as survived and a fresh one starts, so the breach rate is the share of attempts breached within this many sessions.")
+
+grpSig = "Signal"
+iSource = input.string(SRC_JULY, "Signal source", options = [SRC_JULY, SRC_EXT, SRC_RAND], group = grpSig,
+     tooltip = "Random control only: the strategy itself trades the random-control entries (same generator), which also cross-checks the random ledger against TradingView fills.")
+iUseTP = input.bool(true, "Trend Pullback", group = grpSig)
+iUseORB = input.bool(true, "Opening Range Breakout", group = grpSig)
+iUseVR = input.bool(true, "VWAP Reclaim", group = grpSig)
+iUseFB = input.bool(true, "Failed Breakout Reversal", group = grpSig)
+iUseFade = input.bool(true, "VWAP Fade", group = grpSig)
+iMinScore = input.float(55.0, "Minimum setup score (0-100)", minval = 0, maxval = 100, step = 5, group = grpSig)
+iMinStop = input.float(8.0, "July min stop (points)", minval = 0, step = 1, group = grpSig)
+iMaxStop = input.float(60.0, "July max stop (points)", minval = 1, step = 5, group = grpSig)
+iMinNetR = input.float(1.2, "July min net R to target 1 (after costs)", minval = 0, step = 0.1, group = grpSig)
+iExtSrc = input.source(close, "External signal", group = grpSig,
+     tooltip = "Choose another indicator's plot. Read on bar close: value > 0 long, < 0 short, 0 none. If that indicator repaints, so will the result.")
+iExtAtr = input.float(1.0, "External signal stop (ATR multiple)", minval = 0.1, step = 0.1, group = grpSig)
+
+grpExit = "Exits"
+iExit = input.string(EXIT_FIXED, "Exit model", options = [EXIT_FIXED, EXIT_JULY], group = grpExit,
+     tooltip = "Fixed R: one stop and one target at the R multiple. July playbook: half off at target 1 (1.5R), stop to breakeven once 1R is touched, the rest at the setup's target 2 (2.5R for external and random entries). A single contract exits whole at target 1.")
+iRMult = input.float(2.0, "Fixed R target (R multiple)", minval = 0.1, step = 0.25, group = grpExit)
+
+grpRisk = "Risk and costs"
+iRisk = input.float(100.0, "Risk per trade ($)", minval = 1, step = 25, group = grpRisk,
+     tooltip = "Stop distance x point value + round-trip cost per contract decides size. $100 is 5% of the 2,000 drawdown.")
+iMaxQty = input.int(0, "Max contracts override (0 = plan cap)", minval = 0, group = grpRisk,
+     tooltip = "In contracts of the charted symbol. Never exceeds the plan cap (Evaluation 6 minis / 60 micros; PA tier cap).")
+iCommMode = input.string(COMM_AUTO, "Commission model", options = [COMM_AUTO, COMM_CUSTOM], group = grpRisk,
+     tooltip = "Auto: $0.75 per side per mini contract, $0.25 per side per micro. Charged to both ledgers.")
+iCommCustom = input.float(0.75, "Custom commission per side per contract ($)", minval = 0, step = 0.05, group = grpRisk)
+
+grpSess = "Session (America/New_York)"
+iWindow = input.session("0935-1530", "New entries window", group = grpSess,
+     tooltip = "An entry is allowed when its fill time (the signal bar's close) is inside this window.")
+iFlatH = input.int(16, "Flat-by time (hour : minute)", minval = 0, maxval = 23, group = grpSess, inline = "fb")
+iFlatM = input.int(55, "", minval = 0, maxval = 59, group = grpSess, inline = "fb",
+     tooltip = "Positions are closed by this time: the market close is sent on the last bar whose close is at or before it and fills at the next bar's open. Capped at 16:59 ET, Apex's flat-by deadline.")
+iOOS = input.time(timestamp("01 Aug 2026 00:00 -0400"), "Out-of-sample start", group = grpSess,
+     tooltip = "Attempts whose first trading day is before this date (ET) are in-sample; on or after it, out-of-sample. The default is after the July setups were written.")
+
+grpRnd = "Random control"
+iRndProb = input.float(0.03, "Entry probability per eligible bar", minval = 0, maxval = 1, step = 0.01, group = grpRnd)
+iRndAtr = input.float(1.0, "Stop (ATR multiple)", minval = 0.1, step = 0.1, group = grpRnd)
+iSeed = input.int(12345, "Seed", group = grpRnd)
+iAmb = input.string(AMB_STOP, "Bar touching stop and target", options = [AMB_STOP, AMB_TV], group = grpRnd,
+     tooltip = "How the random control resolves a bar that touches both its stop and a target. The strategy's fills always follow TradingView's OHLC path rule.")
+
+grpDisp = "Display"
+iShowTable = input.bool(true, "Show results table", group = grpDisp)
+
+// -------------------------------------------------------- symbol & costs ----
+var array<string> MICRO_ROOTS = array.from("MNQ", "MES", "MYM", "M2K", "MGC", "MCL", "M6E", "M6A", "M6B", "MJY", "MSF", "MCD", "MBT", "MET", "SIL", "MHG", "MNG")
+isMicro = array.includes(MICRO_ROOTS, syminfo.root)
+int qtyPerMini = isMicro ? MICROS_PER_MINI : 1
+float commSide = iCommMode == COMM_AUTO ? (isMicro ? 0.25 : 0.75) : iCommCustom
+float rtCost = 2.0 * commSide
+float pv = syminfo.pointvalue
+float tick = syminfo.mintick
+float slipPx = SLIP_TICKS * tick
+bool isPA = iMode == "Performance Account"
+float evalStop = iFeed == "Tradovate" ? EVAL_STOP_TRADOVATE : EVAL_STOP_RITHMIC
+float planStopLevel = isPA ? PA_STOP : evalStop
+bool favFirst = iOrder == ORD_FAV
+bool rndStopFirst = iAmb == AMB_STOP
+bool exitJuly = iExit == EXIT_JULY
+
+// --------------------------------------------------------------- helpers ----
+rNear(float p) =>
+    na(p) ? na : math.round(p / syminfo.mintick) * syminfo.mintick
+rDown(float p) =>
+    na(p) ? na : math.floor(p / syminfo.mintick + 1e-9) * syminfo.mintick
+rUp(float p) =>
+    na(p) ? na : math.ceil(p / syminfo.mintick - 1e-9) * syminfo.mintick
+
+etMinutes(int t) =>
+    hour(t, TZ) * 60 + minute(t, TZ)
+
+parseHM(string s, int at) =>
+    float h = str.tonumber(str.substring(s, at, at + 2))
+    float m = str.tonumber(str.substring(s, at + 2, at + 4))
+    na(h) or na(m) ? na : h * 60 + m
+
+// Park-Miller minimal standard generator, reseeded each trading day from the
+// day and the seed, so a given bar draws the same numbers on every run.
+pmNext(int s) =>
+    (s * 48271) % 2147483647
+rngSeed(int dayMs, int seed) =>
+    int dayNum = int(math.floor(dayMs / 86400000.0))
+    int r0 = (dayNum * 7919 + math.abs(seed) * 104729) % 67108859 + 1
+    int r1 = (r0 * r0) % 2147483647
+    pmNext(pmNext(r1 == 0 ? 1 : r1))
+
+// ------------------------------------------------------------- clock -------
+bool newDay = bar_index == 0 or time_tradingday != time_tradingday[1]
+int etMin = etMinutes(time)
+int closeMin = etMinutes(time_close)
+float winStart = parseHM(iWindow, 0)
+float winEnd = parseHM(iWindow, 5)
+float tfMin = timeframe.in_seconds(timeframe.period) / 60.0
+int flatByMin = math.min(iFlatH * 60 + iFlatM, FLAT_BY_ET_MIN)
+// The flat-by close is a market order filling at the next bar's open (this
+// bar's close time), so it goes out on the first bar whose NEXT close would
+// be after the flat-by time; entries stop before that bar.
+bool atFlatBy = closeMin + tfMin > flatByMin and closeMin < 18 * 60
+bool inWindow = not na(winStart) and not na(winEnd) and closeMin >= winStart and closeMin < winEnd and closeMin < flatByMin and not atFlatBy
+// Out-of-sample split by the attempt's first trading day (time_tradingday is
+// 00:00 UTC of the trading date) against the chosen calendar date in ET.
+int oosDay = timestamp("UTC", year(iOOS, TZ), month(iOOS, TZ), dayofmonth(iOOS, TZ), 0, 0)
+float minsSinceOpen = (time - timestamp(TZ, year(time, TZ), month(time, TZ), dayofmonth(time, TZ), 9, 30)) / 60000.0
+bool sessDrive = etMin >= 570 and etMin < 600
+bool sessMorning = etMin >= 600 and etMin < 690
+bool sessLunch = etMin >= 690 and etMin < 810
+bool sessPower = etMin >= 900 and etMin < 950
+
+// --------------------------------------------- July NQ indicator stack -----
+// Same EMAs, Wilder ATR/RSI/ADX, session VWAP with volume-weighted bands,
+// ATR percentile, pivots, 15m bias, prior-day levels and opening range as the
+// July nqcopilot engine (indicators.py / market.py).
+float emaF = ta.ema(close, 9)
+float emaM = ta.ema(close, 21)
+float emaS = ta.ema(close, 50)
+float atrV = ta.atr(14)
+float rsiV = ta.rsi(close, 14)
+[diPlus, diMinus, adxV] = ta.dmi(14, 14)
+[vwapV, vwapU1, vwapL1] = ta.vwap(hlc3, newDay, 1.0)
+float vwapSd = vwapU1 - vwapV
+float atrRank = ta.percentrank(atrV, 100)
+float volAvgPrev = ta.sma(volume, 20)[1]
+float rvol = na(volAvgPrev) or volAvgPrev <= 0 ? na : volume / volAvgPrev
+float lo4 = ta.lowest(low, 4)
+float hi4 = ta.highest(high, 4)
+float lo10 = ta.lowest(low, 10)
+float hi10 = ta.highest(high, 10)
+float belowN = math.sum(close < vwapV ? 1 : 0, 6)[1]
+float aboveN = math.sum(close > vwapV ? 1 : 0, 6)[1]
+
+// 15-minute bias from the last completed 15m bar: close vs EMA21 with the
+// EMA's 5-point least-squares slope agreeing (market.py _bias_from).
+// lookahead_on with [1] gives the same completed bar historically and live.
+htfBiasCalc() =>
+    float e = ta.ema(close, 21)
+    float slope = (2.0 * (e - e[4]) + (e[1] - e[3])) / 10.0
+    int b = 0
+    if not na(e)
+        if close > e and (na(slope) or slope >= 0)
+            b := 1
+        else if close < e and (na(slope) or slope <= 0)
+            b := -1
+    b
+int htfBiasRaw = request.security(syminfo.tickerid, "15", htfBiasCalc()[1], lookahead = barmerge.lookahead_on)
+int htfBias = nz(htfBiasRaw, 0)
+
+// Prior trading day's high/low, computed on the chart (no request.security).
+var float dayHi = na
+var float dayLo = na
+var float pdHigh = na
+var float pdLow = na
+if newDay
+    if not na(dayHi)
+        pdHigh := dayHi
+        pdLow := dayLo
+    dayHi := high
+    dayLo := low
+else
+    dayHi := math.max(dayHi, high)
+    dayLo := math.min(dayLo, low)
+
+// Confirmed swing pivots (3 left / 3 right, ties allowed), published 3 bars late.
+bool isPH = bar_index >= 6 and high <= high[3] and high[1] <= high[3] and high[2] <= high[3] and high[4] <= high[3] and high[5] <= high[3] and high[6] <= high[3]
+bool isPL = bar_index >= 6 and low >= low[3] and low[1] >= low[3] and low[2] >= low[3] and low[4] >= low[3] and low[5] >= low[3] and low[6] >= low[3]
+var float lastPH = na
+var float lastPL = na
+if isPH
+    lastPH := high[3]
+if isPL
+    lastPL := low[3]
+
+// Opening range 09:30-10:00 ET, complete once a bar opens at or after 10:00.
+var float orHi = na
+var float orLo = na
+var bool orDone = false
+if newDay
+    orHi := na
+    orLo := na
+    orDone := false
+if etMin >= 570 and etMin < 600
+    orHi := na(orHi) ? high : math.max(orHi, high)
+    orLo := na(orLo) ? low : math.min(orLo, low)
+else if etMin >= 600 and not na(orHi)
+    orDone := true
+
+int emaStack = na(emaF) or na(emaM) or na(emaS) ? 0 : emaF > emaM and emaM > emaS ? 1 : emaF < emaM and emaM < emaS ? -1 : 0
+int regime = not na(atrRank) and atrRank >= 90 ? REG_EXP : not na(atrRank) and atrRank <= 15 ? REG_QUIET : na(adxV) or na(diPlus) or na(diMinus) ? REG_CHOP : adxV >= 23 and diPlus > diMinus and emaStack >= 0 ? REG_UP : adxV >= 23 and diMinus > diPlus and emaStack <= 0 ? REG_DOWN : REG_CHOP
+bool isRange = regime == REG_CHOP or regime == REG_QUIET
+float closePos = high - low <= 0 ? 0.5 : (close - low) / (high - low)
+bool warm = bar_index >= WARMUP_BARS and not na(emaS) and not na(atrV) and not na(adxV) and not na(vwapV) and not na(atrRank)
+
+// Context support for a direction (signals.py _confluence).
+confluence(int dir) =>
+    float pts = 0.0
+    pts += htfBias == dir ? 15 : htfBias == -dir ? -12 : 0
+    pts += emaStack == dir ? 10 : emaStack == -dir ? -8 : 0
+    if not na(vwapV)
+        pts += (dir > 0 ? close > vwapV : close < vwapV) ? 10 : -6
+    if not na(adxV)
+        pts += math.max(0.0, math.min(15.0, (adxV - 15.0) * 0.9))
+    if not na(rvol)
+        pts += rvol >= 1.3 ? 10 : rvol < 0.7 ? -8 : 0
+    pts += sessDrive or sessMorning ? 10 : sessLunch ? -15 : sessPower ? 5 : 0
+    if not na(rsiV)
+        pts += dir > 0 and rsiV > 78 ? -10 : dir < 0 and rsiV < 22 ? -10 : 0
+    pts
+float scoreL = confluence(1)
+float scoreS = confluence(-1)
+
+// Snap to ticks (stops and targets rounded the conservative way) and reject
+// broken geometry (signals.py _build_setup).
+buildSetup(int dir, float entryRaw, float stopRaw, float t1Raw, float t2Raw, float scoreRaw) =>
+    float e = rNear(entryRaw)
+    float s = dir > 0 ? rDown(stopRaw) : rUp(stopRaw)
+    float a = dir > 0 ? rDown(t1Raw) : rUp(t1Raw)
+    float b = dir > 0 ? rDown(t2Raw) : rUp(t2Raw)
+    bool okNum = dir != 0 and not na(e) and not na(s) and not na(a) and not na(b) and not na(scoreRaw)
+    bool okGeo = okNum and (dir > 0 ? s < e and e < a and a <= b : s > e and e > a and a >= b) and math.abs(e - s) >= syminfo.mintick
+    [okGeo, e, s, a, b, math.max(0.0, math.min(100.0, nz(scoreRaw)))]
+
+float stopStructL = (na(lastPL) ? lo10 : math.min(lastPL, lo10)) - 0.25 * atrV
+float stopStructS = (na(lastPH) ? hi10 : math.max(lastPH, hi10)) + 0.25 * atrV
+
+// 1. Trend Pullback (detect_trend_pullback)
+int tpDir0 = regime == REG_UP ? 1 : regime == REG_DOWN ? -1 : 0
+float refHi = na(vwapV) ? emaM : math.max(emaM, vwapV)
+float refLo = na(vwapV) ? emaM : math.min(emaM, vwapV)
+bool tpLong = tpDir0 == 1 and lo4 <= refHi + 0.35 * atrV and close > open and closePos >= 0.6 and close > emaM
+bool tpShort = tpDir0 == -1 and hi4 >= refLo - 0.35 * atrV and close <= open and closePos <= 0.4 and close < emaM
+int tpDir = not na(emaM) and (tpLong or tpShort) ? tpDir0 : 0
+float tpStop = tpDir > 0 ? stopStructL : stopStructS
+float tpRisk = math.abs(close - tpStop)
+[tpOk, tpE, tpS, tpA, tpB, tpSc] = buildSetup(tpDir, close, tpStop, close + tpRisk * 1.5 * tpDir, close + tpRisk * 3.0 * tpDir, (tpDir > 0 ? scoreL : scoreS) + 22)
+
+// 2. Opening Range Breakout (detect_orb_breakout)
+float orW = orHi - orLo
+bool orbGate = orDone and not na(orHi) and not na(orLo) and minsSinceOpen >= 30 and minsSinceOpen <= 180 and orW <= 3.0 * atrV and orW >= 0.4 * atrV and not isRange
+int orbRaw = close > orHi and close[1] <= orHi ? 1 : close < orLo and close[1] >= orLo ? -1 : 0
+bool orbBar = orbRaw == 1 ? closePos >= 0.55 : orbRaw == -1 ? closePos <= 0.45 : false
+int orbDir = orbGate and orbBar ? orbRaw : 0
+float orbStop = orbDir > 0 ? math.min(stopStructL, orHi - 0.3 * atrV) : math.max(stopStructS, orLo + 0.3 * atrV)
+float orbRisk = math.abs(close - orbStop)
+[orbOk, orbE, orbS, orbA, orbB, orbSc] = buildSetup(orbDir, close, orbStop, close + orbRisk * 1.5 * orbDir, close + math.max(orbRisk * 2.5, orW) * orbDir, (orbDir > 0 ? scoreL : scoreS) + 25)
+
+// 3. VWAP Reclaim (detect_vwap_reclaim)
+bool vrGate = bar_index >= 6 and not na(vwapV) and not na(vwapV[6]) and regime != REG_EXP
+int vrRaw = belowN >= 4 and close > vwapV and close > open ? 1 : aboveN >= 4 and close < vwapV and close <= open ? -1 : 0
+int vrDir = vrGate ? vrRaw : 0
+float vrStop = vrDir > 0 ? math.min(stopStructL, vwapV - 0.4 * atrV) : math.max(stopStructS, vwapV + 0.4 * atrV)
+float vrRisk = math.abs(close - vrStop)
+[vrOk, vrE, vrS, vrA, vrB, vrSc] = buildSetup(vrDir, close, vrStop, close + vrRisk * 1.5 * vrDir, close + vrRisk * 2.5 * vrDir, (vrDir > 0 ? scoreL : scoreS) + 15)
+
+// 4. Failed Breakout Reversal (detect_failed_breakout)
+int fbRaw = not na(pdHigh) and hi4 > pdHigh and close < pdHigh ? -1 : not na(pdLow) and lo4 < pdLow and close > pdLow ? 1 : 0
+float fbLevel = fbRaw < 0 ? hi4 : lo4
+float fbRef = fbRaw < 0 ? pdHigh : pdLow
+bool fbValid = bar_index >= 3 and fbRaw != 0 and math.abs(fbLevel - fbRef) >= 0.15 * atrV and (fbRaw > 0 ? close > open : close <= open)
+int fbDir = fbValid ? fbRaw : 0
+float fbStop = fbDir < 0 ? fbLevel + 0.3 * atrV : fbLevel - 0.3 * atrV
+float fbRisk = math.abs(close - fbStop)
+float fbT2 = not na(vwapV) and (vwapV - close) * fbDir > fbRisk * 2 ? vwapV : close + fbRisk * 2.5 * fbDir
+[fbOk, fbE, fbS, fbA, fbB, fbSc] = buildSetup(fbDir, close, fbStop, close + fbRisk * 1.5 * fbDir, fbT2, (fbDir > 0 ? scoreL : scoreS) + 18)
+
+// 5. VWAP Fade (detect_vwap_fade), range regimes only
+float sigma = not na(vwapSd) and vwapSd > 0 ? (close - vwapV) / vwapSd : na
+int fadeRaw = isRange and not na(sigma) and math.abs(sigma) >= 2.0 ? (sigma > 0 ? -1 : 1) : 0
+float bodyAbs = math.abs(close - open)
+bool fadeShortOk = (high - math.max(open, close) > bodyAbs * 0.8 or close <= open) and (na(rsiV) or rsiV > 62)
+bool fadeLongOk = (math.min(open, close) - low > bodyAbs * 0.8 or close > open) and (na(rsiV) or rsiV < 38)
+int fadeDir = fadeRaw < 0 and fadeShortOk ? -1 : fadeRaw > 0 and fadeLongOk ? 1 : 0
+float fadeStop = fadeDir < 0 ? high + 0.5 * atrV : low - 0.5 * atrV
+float fadeRisk = math.abs(close - fadeStop)
+float fadeT1 = close + math.min(math.abs(close - vwapV) * 0.6, fadeRisk * 1.5) * fadeDir
+[fadeOk, fadeE, fadeS, fadeA, fadeB, fadeSc] = buildSetup(fadeRisk > 0 ? fadeDir : 0, close, fadeStop, fadeT1, vwapV, (fadeDir > 0 ? scoreL : scoreS) + 12)
+
+// Best enabled candidate by score; ties keep detector order (detect_all).
+int jDir = 0
+float jE = na
+float jS = na
+float jA = na
+float jB = na
+float jSc = -1.0
+if iUseTP and tpOk and tpSc > jSc
+    jDir := tpDir
+    jE := tpE
+    jS := tpS
+    jA := tpA
+    jB := tpB
+    jSc := tpSc
+if iUseORB and orbOk and orbSc > jSc
+    jDir := orbDir
+    jE := orbE
+    jS := orbS
+    jA := orbA
+    jB := orbB
+    jSc := orbSc
+if iUseVR and vrOk and vrSc > jSc
+    jDir := vrDir
+    jE := vrE
+    jS := vrS
+    jA := vrA
+    jB := vrB
+    jSc := vrSc
+if iUseFB and fbOk and fbSc > jSc
+    jDir := fbDir
+    jE := fbE
+    jS := fbS
+    jA := fbA
+    jB := fbB
+    jSc := fbSc
+if iUseFade and fadeOk and fadeSc > jSc
+    jDir := fadeDir
+    jE := fadeE
+    jS := fadeS
+    jA := fadeA
+    jB := fadeB
+    jSc := fadeSc
+// July playbook gates on the best candidate only: score, stop sanity, net R.
+float jStopPts = math.abs(jE - jS)
+float jNetR = (math.abs(jA - jE) * pv - rtCost) / (jStopPts * pv + rtCost)
+bool julyPass = jDir != 0 and jSc >= iMinScore and jStopPts >= iMinStop and jStopPts <= iMaxStop and jNetR >= iMinNetR
+
+// ------------------------------------------------------------ random draws --
+var int rngState = 1
+if newDay
+    rngState := rngSeed(time_tradingday, iSeed)
+rngState := pmNext(rngState)
+float u1 = rngState / 2147483647.0
+rngState := pmNext(rngState)
+float u2 = rngState / 2147483647.0
+
+// ======================================================== APEX LEDGER =======
+// One type, one set of methods, used by both the signal ledger (fills from
+// strategy.*) and the random-control ledger (fills simulated in plain Pine).
+type Ledger
+    int status = 0
+    float realized = 0.0
+    float peak = 50000.0
+    float threshold = 48000.0
+    float dd = 2000.0
+    float stopLevel = na
+    bool pa = false
+    int startTime = 0
+    int startDay = 0
+    bool oos = false
+    int tradedDays = 0
+    int lastTradeDay = 0
+    int sessions = 0
+    float dayStartBal = 50000.0
+    int tier = 1
+    bool dllHit = false
+    int dayEvent = 0
+    array<int> nStarted
+    array<int> nPassed
+    array<int> nBreached
+    array<int> nExpired
+    array<float> daysIS
+    array<float> daysOOS
+    int ambiguous = 0
+    int skippedSize = 0
+    int entries = 0
+
+newLedger() =>
+    Ledger.new(nStarted = array.new<int>(2, 0), nPassed = array.new<int>(2, 0), nBreached = array.new<int>(2, 0), nExpired = array.new<int>(2, 0), daysIS = array.new<float>(), daysOOS = array.new<float>())
+
+method bal(Ledger L) =>
+    START_BAL + L.realized
+
+method active(Ledger L) =>
+    L.status == ST_ACTIVE
+
+method begin(Ledger L, bool pa, float stopLevel, int oosFrom) =>
+    L.status := ST_ACTIVE
+    L.realized := 0.0
+    L.peak := START_BAL
+    L.dd := pa ? PA_DD : EVAL_DD
+    L.threshold := START_BAL - L.dd
+    L.stopLevel := stopLevel
+    L.pa := pa
+    L.startTime := time
+    L.startDay := time_tradingday
+    L.oos := time_tradingday >= oosFrom
+    L.tradedDays := 0
+    L.lastTradeDay := 0
+    L.sessions := 1
+    L.dayStartBal := START_BAL
+    L.tier := 1
+    L.dllHit := false
+    int si = L.oos ? 1 : 0
+    L.nStarted.set(si, L.nStarted.get(si) + 1)
+
+// Close the attempt with a terminal status and record it.
+method finish(Ledger L, int st) =>
+    if L.status == ST_ACTIVE
+        L.status := st
+        L.dayEvent := st
+        int si = L.oos ? 1 : 0
+        bool recordDays = (st == ST_PASSED and not L.pa) or (st == ST_BREACHED and L.pa)
+        if st == ST_PASSED
+            L.nPassed.set(si, L.nPassed.get(si) + 1)
+        else if st == ST_BREACHED
+            L.nBreached.set(si, L.nBreached.get(si) + 1)
+        else if st == ST_EXPIRED
+            L.nExpired.set(si, L.nExpired.get(si) + 1)
+        if recordDays
+            if L.oos
+                L.daysOOS.push(L.tradedDays)
+            else
+                L.daysIS.push(L.tradedDays)
+
+// observe(b): raise peak/threshold on a new high, then breach on a touch.
+method observe(Ledger L, float b) =>
+    if L.status == ST_ACTIVE and not na(b)
+        if b > L.peak
+            L.peak := b
+            float trail = L.peak - L.dd
+            float capped = na(L.stopLevel) ? trail : math.min(trail, L.stopLevel)
+            L.threshold := math.max(L.threshold, capped)
+        if b <= L.threshold
+            L.finish(ST_BREACHED)
+
+// One bar: b0 is the balance at the bar's start, m1/m2 open-P&L marks already
+// in observation order (see barMarks), bClose the balance at the close.
+method observeBar(Ledger L, float b0, float m1, float m2, float bClose) =>
+    if not na(m1)
+        L.observe(b0 + m1)
+    if not na(m2)
+        L.observe(b0 + m2)
+    L.observe(bClose)
+
+// New trading session: tier from the prior session's closing balance, DLL
+// reset, the 30-calendar-day evaluation access window, and the PA horizon
+// (a PA that survived iPaHorizon sessions ends as ST_EXPIRED = survived).
+method dayRoll(Ledger L) =>
+    if L.status == ST_ACTIVE
+        float closeBal = L.bal()
+        L.dayStartBal := closeBal
+        L.dllHit := false
+        if L.pa
+            if L.sessions >= iPaHorizon
+                L.finish(ST_EXPIRED)
+            else
+                L.sessions += 1
+                float prof = closeBal - START_BAL
+                L.tier := prof >= PA_T4_PROFIT ? 4 : prof >= PA_T3_PROFIT ? 3 : prof >= PA_T2_PROFIT ? 2 : 1
+        else if time_tradingday - L.startDay >= EVAL_ACCESS_DAYS * DAY_MS
+            L.finish(ST_EXPIRED)
+    L.status
+
+// Daily loss limit on the session's worst observed balance: the PA tier's,
+// or EVAL_DLL in the evaluation (na = none).
+method dllCheck(Ledger L, float worstBal) =>
+    bool hit = false
+    float dll = L.pa ? (L.tier == 4 ? PA_T4_DLL : L.tier == 3 ? PA_T3_DLL : L.tier == 2 ? PA_T2_DLL : PA_T1_DLL) : EVAL_DLL
+    if L.status == ST_ACTIVE and not L.dllHit and not na(worstBal) and not na(dll)
+        if worstBal - L.dayStartBal <= -dll
+            L.dllHit := true
+            hit := true
+    hit
+
+// Evaluation pass: flat, closed P&L at or above the target.
+method passCheck(Ledger L) =>
+    if L.status == ST_ACTIVE and not L.pa and L.realized >= EVAL_TARGET
+        L.finish(ST_PASSED)
+
+method planCap(Ledger L, int perMini, int override) =>
+    int minis = L.pa ? (L.tier == 4 ? PA_T4_MINIS : L.tier == 3 ? PA_T3_MINIS : L.tier == 2 ? PA_T2_MINIS : PA_T1_MINIS) : EVAL_MAX_MINIS
+    int cap = minis * perMini
+    override > 0 ? math.min(cap, override) : cap
+
+method noteEntry(Ledger L) =>
+    L.entries += 1
+    if time_tradingday != L.lastTradeDay
+        L.tradedDays += 1
+        L.lastTradeDay := time_tradingday
+
+// qty = floor(risk$ / (stop points x point value + round-trip cost)), capped.
+sizeFor(float stopPts, float riskUsd, int cap, float pointValue, float roundTrip) =>
+    float perC = stopPts * pointValue + roundTrip
+    na(perC) or perC <= 0 ? 0 : math.min(cap, int(math.floor(riskUsd / perC)))
+
+// ============================================================ POSITION ======
+type Pos
+    int dir = 0
+    float qty0 = 0.0
+    float qty = 0.0
+    float qtyT1 = 0.0
+    float entry = na
+    float stop = na
+    float stop0 = na
+    float t1 = na
+    float tgt = na
+    bool t1Done = false
+    bool beDone = false
+    string eid = ""
+    int pDir = 0
+    float pQty = 0.0
+    float pQtyT1 = 0.0
+    float pStop = na
+    float pT1 = na
+    float pTgt = na
+    bool pFlat = false
+
+method openFromPending(Pos p, float fillPx) =>
+    p.dir := p.pDir
+    p.qty0 := p.pQty
+    p.qty := p.pQty
+    p.qtyT1 := p.pQtyT1
+    p.entry := fillPx
+    p.stop := p.pStop
+    p.stop0 := p.pStop
+    p.t1 := p.pT1
+    p.tgt := p.pTgt
+    p.t1Done := false
+    p.beDone := false
+    p.pDir := 0
+
+method flatten(Pos p) =>
+    p.dir := 0
+    p.qty := 0.0
+
+// Gross open P&L marks for one bar, limited to what the position could see
+// while its stop and targets were working, returned in observation order.
+// Also reports whether the bar touched both the stop and a target.
+barMarks(Pos p, bool favorableFirst, float slip, float pointValue) =>
+    float d = p.dir
+    float eF = d * p.entry
+    float oF = d * open
+    float hiF = d > 0 ? high : -low
+    float loF = d > 0 ? low : -high
+    float sF = d * p.stop
+    float tgF = d * p.tgt
+    bool t1P = p.qtyT1 > 0 and not p.t1Done
+    float t1F = t1P ? d * p.t1 : na
+    float q = p.qty
+    float qT1 = t1P ? p.qtyT1 : 0.0
+    float mFirst = na
+    float mSecond = na
+    bool amb = false
+    if oF <= sF
+        mFirst := q * (oF - slip - eF) * pointValue
+        mSecond := mFirst
+    else if oF >= tgF
+        mFirst := q * (oF - eF) * pointValue
+        mSecond := mFirst
+    else
+        bool stopHit = loF <= sF
+        bool t1Hit = t1P and hiF >= t1F
+        bool tgtHit = hiF >= tgF
+        amb := stopHit and (t1Hit or tgtHit)
+        float favPx = math.min(hiF, tgF)
+        float advPx = stopHit ? sF - slip : loF
+        float realT1 = t1Hit ? qT1 * (math.max(oF, t1F) - eF) * pointValue : 0.0
+        float favPnl = t1Hit ? realT1 + (q - qT1) * (favPx - eF) * pointValue : q * (favPx - eF) * pointValue
+        if favorableFirst
+            float rem = tgtHit ? 0.0 : t1Hit ? q - qT1 : q
+            mFirst := favPnl
+            mSecond := tgtHit ? favPnl : realT1 + rem * (advPx - eF) * pointValue
+        else
+            // A T1 limit the open gapped through filled at the open (as in
+            // simExits), so that leg cannot reach the low or the stop.
+            bool t1Gap = t1P and oF >= t1F
+            float advPnl = t1Gap ? realT1 + (q - qT1) * (advPx - eF) * pointValue : q * (advPx - eF) * pointValue
+            mFirst := advPnl
+            mSecond := stopHit ? advPnl : favPnl
+    [mFirst, mSecond, amb]
+
+// Shadow fills for one bar: gaps fill at the open, then either stop-first or
+// TradingView's OHLC path decides a bar that touches both sides.
+// Returns [gross P&L closed, contracts closed].
+simExits(Pos p, bool stopFirst, float slip, float pointValue) =>
+    float d = p.dir
+    float eF = d * p.entry
+    float oF = d * open
+    float hiF = d > 0 ? high : -low
+    float loF = d > 0 ? low : -high
+    float sF = d * p.stop
+    float tgF = d * p.tgt
+    bool t1P = p.qtyT1 > 0 and not p.t1Done
+    float t1F = t1P ? d * p.t1 : na
+    float gross = 0.0
+    float closed = 0.0
+    float q = p.qty
+    if oF <= sF
+        gross := q * (oF - slip - eF) * pointValue
+        closed := q
+        q := 0.0
+    else if oF >= tgF
+        gross := q * (oF - eF) * pointValue
+        closed := q
+        q := 0.0
+    else
+        bool t1Now = false
+        if t1P and oF >= t1F
+            gross += p.qtyT1 * (oF - eF) * pointValue
+            closed += p.qtyT1
+            q -= p.qtyT1
+            t1Now := true
+        bool stopHit = loF <= sF
+        bool t1Hit = t1P and not t1Now and hiF >= t1F
+        bool tgtHit = hiF >= tgF
+        bool highFirst = high - open < open - low
+        bool favPath = stopFirst ? false : d > 0 ? highFirst : not highFirst
+        if favPath
+            if t1Hit
+                gross += p.qtyT1 * (t1F - eF) * pointValue
+                closed += p.qtyT1
+                q -= p.qtyT1
+                t1Now := true
+            if tgtHit
+                gross += q * (tgF - eF) * pointValue
+                closed += q
+                q := 0.0
+            else if stopHit
+                gross += q * (sF - slip - eF) * pointValue
+                closed += q
+                q := 0.0
+        else
+            if stopHit
+                gross += q * (sF - slip - eF) * pointValue
+                closed += q
+                q := 0.0
+            else
+                if t1Hit
+                    gross += p.qtyT1 * (t1F - eF) * pointValue
+                    closed += p.qtyT1
+                    q -= p.qtyT1
+                    t1Now := true
+                if tgtHit
+                    gross += q * (tgF - eF) * pointValue
+                    closed += q
+                    q := 0.0
+        if t1Now
+            p.t1Done := true
+    p.qty := q
+    if q <= 0
+        p.dir := 0
+    [gross, closed]
+
+// Stop to breakeven once the position has touched +1R (July playbook).
+method breakeven(Pos p) =>
+    if p.dir != 0 and not p.beDone
+        float oneR = p.entry + p.dir * math.abs(p.entry - p.stop0)
+        if p.dir > 0 ? high >= oneR : low <= oneR
+            p.stop := p.entry
+            p.beDone := true
+
+// Pending entry: stop and targets from the signal bar's close.
+method arm(Pos p, int dir, float qty, float entryEst, float stopPx, float t1Px, float t2Px) =>
+    float risk = math.abs(entryEst - stopPx)
+    p.pDir := dir
+    p.pQty := qty
+    p.pStop := stopPx
+    if exitJuly
+        float a = na(t1Px) ? (dir > 0 ? rDown(entryEst + 1.5 * risk) : rUp(entryEst - 1.5 * risk)) : t1Px
+        float b = na(t2Px) ? (dir > 0 ? rDown(entryEst + 2.5 * risk) : rUp(entryEst - 2.5 * risk)) : t2Px
+        p.pT1 := a
+        p.pQtyT1 := qty >= 2 ? math.floor(qty / 2) : 0.0
+        p.pTgt := qty >= 2 ? b : a
+    else
+        p.pT1 := na
+        p.pQtyT1 := 0.0
+        p.pTgt := dir > 0 ? rDown(entryEst + iRMult * risk) : rUp(entryEst - iRMult * risk)
+
+var Ledger sigL = newLedger()
+var Ledger rndL = newLedger()
+var Pos sp = Pos.new()
+var Pos rp = Pos.new()
+sigL.dayEvent := 0
+rndL.dayEvent := 0
+
+// ===================================================== SIGNAL LEDGER =======
+// Fills come from the strategy.* broker emulator; the ledger reads them back.
+var float npAtStart = 0.0
+var float paidComm = 0.0
+var float labCost = 0.0
+var float paidAtStart = 0.0
+var float labAtStart = 0.0
+var int prevClosed = 0
+var int tradeNo = 0
+
+// Read back every trade the emulator closed since the last bar. A trade that
+// exited at an earlier bar's close (strategy.close_all(immediately = true))
+// belongs to that bar, so it is booked before this bar's day roll and marks.
+float bookedNow = 0.0
+int closedBefore = prevClosed
+int nowClosed = strategy.closedtrades
+if nowClosed > prevClosed
+    for i = prevClosed to nowClosed - 1
+        float tradeComm = strategy.closedtrades.commission(i)
+        float tradeLab = rtCost * math.abs(strategy.closedtrades.size(i))
+        paidComm += tradeComm
+        labCost += tradeLab
+        if strategy.closedtrades.exit_bar_index(i) >= bar_index
+            bookedNow += strategy.closedtrades.profit(i) + tradeComm - tradeLab
+    prevClosed := nowClosed
+// realized = strategy.netprofit - netprofit at attempt start, with the
+// Properties-tab commission swapped for the lab's cost model.
+float sRealizedNow = (strategy.netprofit - npAtStart) + (paidComm - paidAtStart) - (labCost - labAtStart)
+if sigL.active()
+    sigL.realized := sRealizedNow - bookedNow
+
+if newDay
+    // A session-end close_all(immediately = true) is read back on this bar.
+    // Settle the breach or pass it caused before the day roll, so it belongs
+    // to the session that produced it (as in the random ledger), the access
+    // window cannot expire it first, and the next attempt can start now.
+    if strategy.position_size == 0 and sp.dir == 0 and sp.pDir == 0 and not sp.pFlat
+        sigL.observe(sigL.bal())
+        sigL.passCheck()
+    sigL.dayRoll()
+    if not sigL.active() and warm and strategy.position_size == 0 and sp.dir == 0 and sp.pDir == 0 and not sp.pFlat
+        sigL.begin(isPA, planStopLevel, oosDay)
+        npAtStart := strategy.netprofit
+        paidAtStart := paidComm
+        labAtStart := labCost
+        sRealizedNow := 0.0
+
+float sB0 = sigL.bal()
+float sM1 = na
+float sM2 = na
+if sp.pFlat and sp.dir != 0
+    sM1 := sp.qty * (sp.dir * (open - sp.entry) - slipPx) * pv
+    sM2 := sM1
+    sp.flatten()
+sp.pFlat := false
+if sp.pDir != 0
+    float fillPx = strategy.position_size != 0 ? strategy.position_avg_price : nowClosed > closedBefore ? strategy.closedtrades.entry_price(nowClosed - 1) : na
+    if na(fillPx)
+        sp.pDir := 0
+    else
+        sp.openFromPending(fillPx)
+        if sigL.active()
+            sigL.noteEntry()
+if sp.dir != 0 and na(sM1)
+    [mA, mB, mAmb] = barMarks(sp, favFirst, slipPx, pv)
+    sM1 := mA
+    sM2 := mB
+    if mAmb and sigL.active()
+        sigL.ambiguous += 1
+
+// Sync with the broker emulator: this bar's exits, then the position left.
+if sigL.active()
+    sigL.realized := sRealizedNow
+float posSize = strategy.position_size
+if posSize == 0
+    sp.flatten()
+else
+    sp.qty := math.abs(posSize)
+    if sp.qtyT1 > 0 and sp.qty <= sp.qty0 - sp.qtyT1
+        sp.t1Done := true
+float sOpenClose = posSize != 0 ? (close - strategy.position_avg_price) * posSize * pv : 0.0
+float sBClose = sigL.bal() + sOpenClose
+sigL.observeBar(sB0, sM1, sM2, sBClose)
+float sWorst = math.min(na(sM1) ? sBClose : sB0 + math.min(sM1, sM2), sBClose)
+bool sDll = sigL.dllCheck(sWorst)
+if posSize == 0 and sp.pDir == 0
+    sigL.passCheck()
+if exitJuly
+    sp.breakeven()
+
+// Decide what the strategy does at this close.
+bool sHasPos = posSize != 0
+bool sNow = sHasPos and (session.islastbar or (newDay and bar_index > 0))
+bool sFlat = sHasPos and not sNow and (not sigL.active() or sDll or atFlatBy or sp.dir == 0)
+bool sElig = warm and sigL.active() and not sHasPos and sp.pDir == 0 and inWindow and not sigL.dllHit and not session.islastbar
+
+int sigDir = 0
+float sigE = na
+float sigStop = na
+float sigT1 = na
+float sigT2 = na
+if sElig
+    if iSource == SRC_JULY
+        if julyPass
+            sigDir := jDir
+            sigE := jE
+            sigStop := jS
+            sigT1 := jA
+            sigT2 := jB
+    else if iSource == SRC_EXT
+        int xd = iExtSrc > 0 ? 1 : iExtSrc < 0 ? -1 : 0
+        if xd != 0 and not na(atrV)
+            sigDir := xd
+            sigE := rNear(close)
+            sigStop := xd > 0 ? rDown(close - iExtAtr * atrV) : rUp(close + iExtAtr * atrV)
+    else
+        if u1 < iRndProb and not na(atrV)
+            sigDir := u2 < 0.5 ? 1 : -1
+            sigE := rNear(close)
+            sigStop := sigDir > 0 ? rDown(close - iRndAtr * atrV) : rUp(close + iRndAtr * atrV)
+int sQty = 0
+if sigDir != 0 and math.abs(sigE - sigStop) < tick
+    sigDir := 0
+if sigDir != 0
+    sQty := sizeFor(math.abs(sigE - sigStop), iRisk, sigL.planCap(qtyPerMini, iMaxQty), pv, rtCost)
+    if sQty < 1
+        sigL.skippedSize += 1
+        sigDir := 0
+
+if sNow
+    strategy.close_all(comment = "session end", immediately = true)
+    sp.flatten()
+else if sFlat
+    strategy.close_all(comment = not sigL.active() ? "attempt over" : sDll ? "DLL" : "flat-by")
+    sp.pFlat := true
+else if sHasPos
+    if sp.qtyT1 > 0
+        if not sp.t1Done
+            strategy.exit("t1" + sp.eid, sp.eid, qty = sp.qtyT1, stop = sp.stop, limit = sp.t1)
+        strategy.exit("t2" + sp.eid, sp.eid, qty = sp.qty0 - sp.qtyT1, stop = sp.stop, limit = sp.tgt)
+    else
+        strategy.exit("x" + sp.eid, sp.eid, stop = sp.stop, limit = sp.tgt)
+
+if sigDir != 0
+    tradeNo += 1
+    sp.arm(sigDir, sQty, sigE, sigStop, sigT1, sigT2)
+    sp.eid := (sigDir > 0 ? "L" : "S") + str.tostring(tradeNo)
+    strategy.entry(sp.eid, sigDir > 0 ? strategy.long : strategy.short, qty = sQty)
+    if sp.pQtyT1 > 0
+        strategy.exit("t1" + sp.eid, sp.eid, qty = sp.pQtyT1, stop = sp.pStop, limit = sp.pT1)
+        strategy.exit("t2" + sp.eid, sp.eid, qty = sp.pQty - sp.pQtyT1, stop = sp.pStop, limit = sp.pTgt)
+    else
+        strategy.exit("x" + sp.eid, sp.eid, stop = sp.pStop, limit = sp.pTgt)
+
+// ===================================================== RANDOM CONTROL ======
+// No strategy.* calls: same window, sizing, costs, exits and ledger rules,
+// with next-bar-open fills simulated here.
+if newDay
+    rndL.dayRoll()
+    if not rndL.active() and warm and rp.dir == 0 and rp.pDir == 0 and not rp.pFlat
+        rndL.begin(isPA, planStopLevel, oosDay)
+
+float rB0 = rndL.bal()
+float rM1 = na
+float rM2 = na
+float rGross = 0.0
+float rClosed = 0.0
+if rp.pFlat and rp.dir != 0
+    rM1 := rp.qty * (rp.dir * (open - rp.entry) - slipPx) * pv
+    rM2 := rM1
+    rGross += rM1
+    rClosed += rp.qty
+    rp.flatten()
+rp.pFlat := false
+if rp.pDir != 0
+    rp.openFromPending(open + rp.pDir * slipPx)
+    if rndL.active()
+        rndL.noteEntry()
+if rp.dir != 0 and na(rM1)
+    [qA, qB, qAmb] = barMarks(rp, favFirst, slipPx, pv)
+    rM1 := qA
+    rM2 := qB
+    if qAmb and rndL.active()
+        rndL.ambiguous += 1
+    [xg, xq] = simExits(rp, rndStopFirst, slipPx, pv)
+    rGross += xg
+    rClosed += xq
+if rndL.active()
+    rndL.realized += rGross - rClosed * rtCost
+float rOpenClose = rp.dir != 0 ? rp.qty * rp.dir * (close - rp.entry) * pv : 0.0
+float rBClose = rndL.bal() + rOpenClose
+rndL.observeBar(rB0, rM1, rM2, rBClose)
+float rWorst = math.min(na(rM1) ? rBClose : rB0 + math.min(rM1, rM2), rBClose)
+bool rDll = rndL.dllCheck(rWorst)
+if exitJuly
+    rp.breakeven()
+
+bool rHasPos = rp.dir != 0
+bool rNow = rHasPos and (session.islastbar or (newDay and bar_index > 0))
+bool rFlat = rHasPos and not rNow and (not rndL.active() or rDll or atFlatBy)
+if rNow
+    float exitPx = close - rp.dir * slipPx
+    if rndL.active()
+        rndL.realized += rp.qty * rp.dir * (exitPx - rp.entry) * pv - rp.qty * rtCost
+        rndL.observe(rndL.bal())
+    rp.flatten()
+else if rFlat
+    rp.pFlat := true
+if rp.dir == 0 and rp.pDir == 0
+    rndL.passCheck()
+
+bool rElig = warm and rndL.active() and rp.dir == 0 and rp.pDir == 0 and not rp.pFlat and inWindow and not rndL.dllHit and not session.islastbar
+if rElig and u1 < iRndProb and not na(atrV)
+    int rd = u2 < 0.5 ? 1 : -1
+    float re = rNear(close)
+    float rs = rd > 0 ? rDown(close - iRndAtr * atrV) : rUp(close + iRndAtr * atrV)
+    int rq = math.abs(re - rs) < tick ? 0 : sizeFor(math.abs(re - rs), iRisk, rndL.planCap(qtyPerMini, iMaxQty), pv, rtCost)
+    if rq >= 1
+        rp.arm(rd, rq, re, rs, na, na)
+    else
+        rndL.skippedSize += 1
+
+// ============================================================ DISPLAY ======
+plotchar(sigL.dayEvent == ST_PASSED, "Signal attempt passed", "P", location.top, color.new(color.teal, 0), size = size.tiny)
+plotchar(sigL.dayEvent == ST_BREACHED, "Signal attempt breached", "B", location.top, color.new(color.red, 0), size = size.tiny)
+plotchar(sigL.dayEvent == ST_EXPIRED, "Signal attempt expired (PA: survived horizon)", "E", location.top, color.new(color.gray, 0), size = size.tiny)
+
+statusText(int st) =>
+    st == ST_ACTIVE ? "ACTIVE" : st == ST_PASSED ? "PASSED" : st == ST_BREACHED ? "BREACHED" : st == ST_EXPIRED ? (isPA ? "SURVIVED" : "EXPIRED") : "WAITING"
+
+fmtMoney(float v) =>
+    na(v) ? "-" : str.tostring(v, "#,##0")
+
+medianText(array<float> a) =>
+    a.size() > 0 ? str.tostring(a.median(), "#.#") : "-"
+
+var table tb = table.new(position.top_right, 8, 12, bgcolor = color.new(color.black, 12), frame_color = color.new(color.gray, 50), frame_width = 1, border_color = color.new(color.gray, 70), border_width = 1)
+
+cell(int c, int r, string txt, color tc) =>
+    table.cell(tb, c, r, txt, text_color = tc, text_size = size.small, text_halign = text.align_center)
+
+// Finished attempts only (the running one is in the current-attempt rows).
+// PA: Expired counts attempts that survived the horizon; rate = breached share.
+statsRow(int r, string ledgerName, string sample, Ledger L, int si) =>
+    int ps = L.nPassed.get(si)
+    int br = L.nBreached.get(si)
+    int ex = L.nExpired.get(si)
+    int done = ps + br + ex
+    array<float> days = si == 0 ? L.daysIS : L.daysOOS
+    color fg = color.new(color.white, 0)
+    cell(0, r, ledgerName, color.new(color.silver, 0))
+    cell(1, r, sample, color.new(color.silver, 0))
+    cell(2, r, str.tostring(done), fg)
+    cell(3, r, isPA ? "-" : str.tostring(ps), fg)
+    cell(4, r, str.tostring(br), fg)
+    cell(5, r, str.tostring(ex), fg)
+    cell(6, r, done > 0 ? str.tostring(100.0 * (isPA ? br : ps) / done, "#.#") : "-", fg)
+    cell(7, r, medianText(days), fg)
+
+currentRow(int r, string ledgerName, Ledger L, float equityNow) =>
+    color fg = color.new(color.white, 0)
+    float room = equityNow - L.threshold
+    string modeTxt = isPA ? "PA L" + str.tostring(L.tier) + (L.dllHit ? " DLL" : "") + " | session " + str.tostring(L.sessions) + "/" + str.tostring(iPaHorizon) : na(planStopLevel) ? "EVAL (no stop)" : "EVAL (stop " + fmtMoney(planStopLevel) + ")"
+    cell(0, r, ledgerName, color.new(color.silver, 0))
+    cell(1, r, fmtMoney(equityNow), fg)
+    cell(2, r, fmtMoney(L.peak), fg)
+    cell(3, r, fmtMoney(L.threshold), fg)
+    cell(4, r, fmtMoney(room), fg)
+    cell(5, r, statusText(L.status), fg)
+    cell(6, r, modeTxt, fg)
+    cell(7, r, str.tostring(L.tradedDays), fg)
+
+if barstate.islast and iShowTable
+    string sigName = iSource == SRC_RAND ? "Strategy (random)" : iSource == SRC_EXT ? "External" : "July setups"
+    string oosTxt = str.format_time(iOOS, "yyyy-MM-dd", TZ)
+    color hd = color.new(color.orange, 0)
+    color nt = color.new(color.gray, 10)
+    table.clear(tb, 0, 0, 7, 11)
+    cell(0, 0, "Apex 50K Eval Lab | " + (isPA ? "Performance Account" : "Evaluation, " + iFeed) + " | " + iExit + " | " + (favFirst ? "favorable-first marks" : "adverse-first marks"), hd)
+    table.merge_cells(tb, 0, 0, 7, 0)
+    cell(0, 1, "Ledger", hd)
+    cell(1, 1, "Sample", hd)
+    cell(2, 1, "Attempts", hd)
+    cell(3, 1, "Passed", hd)
+    cell(4, 1, "Breached", hd)
+    cell(5, 1, isPA ? "Survived " + str.tostring(iPaHorizon) : "Expired", hd)
+    cell(6, 1, isPA ? "Breach %" : "Pass %", hd)
+    cell(7, 1, isPA ? "Med days to breach" : "Med days to pass", hd)
+    statsRow(2, sigName, "In-sample", sigL, 0)
+    statsRow(3, sigName, "OOS from " + oosTxt, sigL, 1)
+    statsRow(4, "Random control", "In-sample", rndL, 0)
+    statsRow(5, "Random control", "OOS from " + oosTxt, rndL, 1)
+    cell(0, 6, "Current attempt", hd)
+    cell(1, 6, "Balance", hd)
+    cell(2, 6, "Peak", hd)
+    cell(3, 6, "Threshold", hd)
+    cell(4, 6, "Room", hd)
+    cell(5, 6, "Status", hd)
+    cell(6, 6, "Mode / tier", hd)
+    cell(7, 6, "Traded days", hd)
+    currentRow(7, sigName, sigL, sBClose)
+    currentRow(8, "Random control", rndL, rBClose)
+    string costTxt = "Lab costs $" + str.tostring(commSide, "#.##") + "/side/contract (" + (iCommMode == COMM_AUTO ? (isMicro ? "auto: micro" : "auto: mini") : "custom") + "), slippage 1 tick, risk $" + str.tostring(iRisk, "#") + "/trade, cap " + str.tostring(sigL.planCap(qtyPerMini, iMaxQty)) + " " + syminfo.root + ".\nRandom control: p=" + str.tostring(iRndProb, "#.###") + ", stop " + str.tostring(iRndAtr, "#.##") + " ATR, " + (rndStopFirst ? "stop-first" : "TV path") + ", seed " + str.tostring(iSeed) + "."
+    cell(0, 9, costTxt, nt)
+    table.merge_cells(tb, 0, 9, 7, 9)
+    string ambTxt = "Bars touching stop and target: signals " + str.tostring(sigL.ambiguous) + " (TradingView path decided), random " + str.tostring(rndL.ambiguous) + " (" + (rndStopFirst ? "stop-first" : "TV path") + ").\nSignal bars skipped for size < 1: signals " + str.tostring(sigL.skippedSize) + ", random " + str.tostring(rndL.skippedSize) + ". Entries: " + str.tostring(sigL.entries) + " / " + str.tostring(rndL.entries) + "."
+    cell(0, 10, ambTxt, nt)
+    table.merge_cells(tb, 0, 10, 7, 10)
+    cell(0, 11, "Rules: Apex 50K Intraday, verified 2026-11-01. Lab only, not advice.", color.new(color.silver, 0))
+    table.merge_cells(tb, 0, 11, 7, 11)

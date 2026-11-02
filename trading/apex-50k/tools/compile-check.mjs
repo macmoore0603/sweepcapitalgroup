@@ -17,6 +17,7 @@
 
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 
 const ENDPOINT =
   "https://pine-facade.tradingview.com/pine-facade/translate_light" +
@@ -107,7 +108,7 @@ async function main(argv) {
   return failed ? 1 : 0;
 }
 
-const isMain = import.meta.url === new URL(`file://${resolve(process.argv[1] ?? "")}`).href;
+const isMain = process.argv[1] !== undefined && import.meta.url === pathToFileURL(resolve(process.argv[1])).href;
 if (isMain) {
   main(process.argv).then(
     (code) => process.exit(code),
