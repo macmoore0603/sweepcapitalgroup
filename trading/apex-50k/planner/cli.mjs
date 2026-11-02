@@ -19,6 +19,7 @@ import { NY, SESSION_ROLL_HOUR } from './time.mjs';
 import {
   makeParametricSource,
   makeEmpiricalSource,
+  defaultSizes,
   zeroEdgeWinRate,
   sweep,
   replayEval,
@@ -31,7 +32,7 @@ class UsageError extends Error {}
 const VALUED = new Set([
   'trades', 'extra-cost', 'tz', 'session-roll', 'date-order', 'decimal',
   'win', 'rr', 'loss-r', 'risk', 'tpd', 'cost', 'mfe-losers', 'mae-winners', 'r-spread',
-  'contracts', 'unit', 'mode', 'feed', 'order', 'dll-fill', 'attempts', 'pa-runs', 'days', 'horizon', 'fee', 'seed', 'rules',
+  'contracts', 'scale', 'unit', 'mode', 'feed', 'order', 'dll-fill', 'attempts', 'pa-runs', 'days', 'horizon', 'fee', 'seed', 'rules',
 ]);
 const FLAGS = new Set(['sweep', 'json', 'help', 'zero-edge']);
 /** CLI default for --r-spread: real stops vary in width, so a fixed size does not risk exactly 1R per trade. */
@@ -157,6 +158,10 @@ Trade source (one of):
                         trades (real trades per session and their order are kept)
     --extra-cost $      extra round-trip cost per contract on top of the CSV P&L (default 0; TradingView
                         P&L already includes the strategy's commission)
+    --scale auto|contracts|risk   how a CSV trade is resized: contracts = every trade at the simulated size
+                        (fixed-size strategies); risk = every trade at its own as-traded size times the
+                        simulated multiplier, capped at the plan's contract limit (strategies that size by
+                        dollar risk, like the Eval Lab); auto (default) = risk when trade sizes vary
     --tz ZONE           time zone of the CSV timestamps (chart time zone; default ${NY})
     --session-roll H|off   exits at/after H:00 New York time count toward the next day's session
                         (default ${SESSION_ROLL_HOUR}, the Apex / CME Globex roll; off = calendar date)
@@ -177,7 +182,8 @@ Trade source (one of):
 
 Size and run:
   --contracts SPEC      N, A..B, A..B:step or A,B,C (default: --sweep)
-  --sweep               every size from 1 to the evaluation cap (${cap})
+  --sweep               every size from 1 to the evaluation cap (${cap}); with risk scaling, risk
+                        multipliers 1x to the first one at which every trade is capped
   --unit mini|micro     contract unit (default mini)
   --mode eval|pa|both   evaluation, performance account after a pass, or both (default both)
   --feed rithmic|tradovate   evaluation feed; Rithmic/WealthCharts threshold ${stop} (default rithmic)
@@ -220,12 +226,24 @@ function buildSource(args, rules) {
     const meta = readTvCsv(path, { tz: args.tz ?? NY, rollHour, dateOrder, decimal });
     if (meta.trades.length === 0) throw new UsageError(`no trades could be read from ${path}`);
     const extraCost = number(args, 'extra-cost', { def: 0, min: 0 });
-    const source = makeEmpiricalSource(meta.trades, { extraCost });
+    const scaleArg = String(args.scale ?? 'auto').toLowerCase();
+    if (!['auto', 'contracts', 'risk'].includes(scaleArg)) throw new UsageError(`--scale must be auto, contracts or risk, got "${args.scale}"`);
+    const sizesVary = new Set(meta.trades.map((t) => t.contracts)).size > 1;
+    const scaling = scaleArg === 'auto' ? (sizesVary ? 'risk' : 'contracts') : scaleArg;
+    const source = makeEmpiricalSource(meta.trades, { extraCost, scaling });
+    const losses = meta.trades.map((t) => t.pnl).filter((x) => x < 0).sort((a, b) => a - b);
+    const medianLossAsTraded = losses.length ? losses[Math.floor((losses.length - 1) / 2)] : null;
     return {
       source,
       trades: meta.trades,
       info: {
         kind: 'empirical',
+        scaling,
+        scaleAuto: scaleArg === 'auto',
+        sizesVary,
+        minQty: source.minQty,
+        maxQty: source.maxQty,
+        medianLossAsTraded,
         file: path,
         trades: source.trades,
         days: source.days,
@@ -245,6 +263,9 @@ function buildSource(args, rules) {
         fileWarnings: meta.fileWarnings,
       },
     };
+  }
+  if (args.scale != null && !/^(auto|contracts)$/i.test(String(args.scale))) {
+    throw new UsageError('--scale risk needs --trades: assumed stats have no as-traded sizes to scale');
   }
   for (const k of ['extra-cost', 'tz', 'session-roll', 'date-order', 'decimal']) {
     if (args[k] != null) throw new UsageError(`--${k} only applies with --trades`);
@@ -272,6 +293,7 @@ function buildSource(args, rules) {
     trades: null,
     info: {
       kind: 'parametric',
+      scaling: 'contracts',
       zeroEdge: Boolean(args['zero-edge']),
       ...source.params,
       expectancyBeforeCosts: source.expectancyBeforeCosts,
@@ -296,7 +318,9 @@ export function run(argv) {
   if (!['eval', 'pa', 'both'].includes(mode)) throw new UsageError(`--mode must be eval, pa or both, got "${args.mode}"`);
   const evalCap = rules.evaluation.maxContractsMini * (unit === 'micro' ? rules.microsPerMini : 1);
   if (args.sweep && args.contracts != null) throw new UsageError('use --contracts or --sweep, not both');
-  const sizes = args.contracts != null ? parseSizes(args.contracts, evalCap) : Array.from({ length: evalCap }, (_, i) => i + 1);
+  const risk = source.scaling === 'risk';
+  const sizeCap = risk ? Math.max(1, Math.ceil(evalCap / (source.minQty || 1))) : evalCap;
+  const sizes = args.contracts != null ? parseSizes(args.contracts, sizeCap) : defaultSizes(source, evalCap);
   const attempts = number(args, 'attempts', { def: 20000, min: 1, int: true });
   const settings = asUsage(() => ({
     mode,
@@ -316,7 +340,14 @@ export function run(argv) {
   const replay =
     trades && mode !== 'pa'
       ? sizes.map((q) => {
-          const r = replayEval(rules, trades, { contracts: q, feed: settings.feed, order: settings.order, unit, extraCost: info.extraCost });
+          const r = replayEval(rules, trades, {
+            contracts: q,
+            scaling: source.scaling,
+            feed: settings.feed,
+            order: settings.order,
+            unit,
+            extraCost: info.extraCost,
+          });
           delete r.attempts; // per-attempt detail is long; the summary counts are what the table shows
           return r;
         })
@@ -328,6 +359,7 @@ export function run(argv) {
     source: info,
     settings: {
       ...settings,
+      scaling: source.scaling ?? 'contracts',
       sizes,
       evalCap,
       evalSessionBudgets: evalSessionBudgets(rules, settings.tradingDays),
@@ -353,6 +385,11 @@ function describeSource(s, unitName) {
         `(${fx(s.tradesPerActiveDay, 2)} per active session), win ${pct(s.winRate)}`,
       `expectancy ${usd(s.expectancyPerContract, 2)} per trade per ${unitName} after ${usd(s.extraCost, 2)} extra cost; ` +
         `whole sessions bootstrapped (${roll})${rowWarnings > 0 ? `; ${rowWarnings} row warning(s)` : ''}`,
+      s.scaling === 'risk'
+        ? `sizing: risk scaling${s.scaleAuto ? ' (auto: trade sizes vary)' : ''}: "Risk x" k = each trade's as-traded size ` +
+          `(${int(s.minQty)}-${int(s.maxQty)} ${unitName}s) times k, capped at the plan limit; at 1x the median losing trade lost ` +
+          `${s.medianLossAsTraded == null ? '-' : usd(-s.medianLossAsTraded, 2)}`
+        : `sizing: fixed contracts: every trade resized to "Qty" ${unitName}s${s.sizesVary ? ' (trade sizes vary in this file; --scale risk keeps them)' : ''}`,
       ...(s.fileWarnings ?? []).map((w) => `WARNING: ${w}`),
     ];
   }
@@ -371,6 +408,7 @@ function renderText(out, rules) {
   const e = rules.evaluation;
   const pa = rules.performanceAccount;
   const unitName = s.unit === 'micro' ? 'micro' : 'mini';
+  const sizeLabel = s.scaling === 'risk' ? 'Risk x' : 'Qty';
   const stop = Number.isFinite(s.evalThresholdStop) ? `stops at ${usd(s.evalThresholdStop)}` : 'never stops';
   const lines = [];
   const src = describeSource(out.source, unitName);
@@ -412,7 +450,7 @@ function renderText(out, rules) {
       ];
     });
     lines.push(
-      table(['Qty', 'P(pass)', 'P(breach)', 'P(expire)', 'Days to pass med/p90', 'Attempts/pass', 'Fees/pass', ''], rows, new Set([7])),
+      table([sizeLabel, 'P(pass)', 'P(breach)', 'P(expire)', 'Days to pass med/p90', 'Attempts/pass', 'Fees/pass', ''], rows, new Set([7])),
     );
   }
   if (s.mode !== 'eval') {
@@ -434,7 +472,7 @@ function renderText(out, rules) {
     });
     lines.push(
       table(
-        ['Qty', 'P(1+ payout)', 'Payouts mean/med', 'Paid mean/med', 'P(breach<1st pay)', 'P(pass+payout)*', 'Paid/attempt*', 'Paid/$1 fee*', ''],
+        [sizeLabel, 'P(1+ payout)', 'Payouts mean/med', 'Paid mean/med', 'P(breach<1st pay)', 'P(pass+payout)*', 'Paid/attempt*', 'Paid/$1 fee*', ''],
         rows,
         new Set([8]),
       ),
@@ -447,7 +485,7 @@ function renderText(out, rules) {
       `HISTORICAL REPLAY (actual trade order; each attempt starts at the session after the previous one ends; ${e.accessDays}-calendar-day expiry)`,
     );
     const rows = out.replay.map((r) => [r.contracts, r.total, r.passed, r.breached, r.expired, r.open, pct(r.passRate)]);
-    lines.push(table(['Qty', 'Attempts', 'Passed', 'Breached', 'Expired', 'Open', 'Pass rate'], rows));
+    lines.push(table([sizeLabel, 'Attempts', 'Passed', 'Breached', 'Expired', 'Open', 'Pass rate'], rows));
   }
   lines.push('', out.summary);
   return lines.join('\n');
@@ -457,7 +495,8 @@ function summaryLine(out) {
   const s = out.settings;
   const b = out.best;
   const parts = [];
-  const plural = (q) => `${q} ${s.unit === 'micro' ? 'micro' : 'mini'}${q === 1 ? '' : 's'}`;
+  const plural = (q) =>
+    s.scaling === 'risk' ? `risk x${q}` : `${q} ${s.unit === 'micro' ? 'micro' : 'mini'}${q === 1 ? '' : 's'}`;
   const find = (q) => out.results.find((r) => r.contracts === q);
   if (s.mode !== 'pa') {
     if (b.pass) {

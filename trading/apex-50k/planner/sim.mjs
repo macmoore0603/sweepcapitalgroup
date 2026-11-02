@@ -92,12 +92,26 @@ export function sessionCalendar(days) {
  * extraCost is per contract round trip (default 0: TradingView P&L already includes the strategy's
  * commission).
  */
-export function makeEmpiricalSource(trades, { extraCost = 0 } = {}) {
+/**
+ * Risk multipliers the risk-scaling sweep tries by default (each trade's as-traded size times k, capped at the
+ * plan's contract limit). 1 = the size the strategy actually traded.
+ */
+export const RISK_MULTIPLIERS = Object.freeze([1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 20, 25, 30, 40, 50, 60]);
+
+/**
+ * Empirical source from parsed CSV trades. scaling 'contracts' (default): every trade is resized to the
+ * simulated size, the right model for a fixed-size strategy. scaling 'risk': every trade keeps its own
+ * as-traded size times the simulated multiplier, capped at the plan's contract limit, the right model for a
+ * strategy that sizes each trade by dollar risk (stop width varies, so contracts vary).
+ */
+export function makeEmpiricalSource(trades, { extraCost = 0, scaling = 'contracts' } = {}) {
   if (!trades || trades.length === 0) throw new Error('empirical source needs at least one trade');
+  if (scaling !== 'contracts' && scaling !== 'risk') throw new Error(`scaling must be 'contracts' or 'risk', got "${scaling}"`);
   const days = groupTradesByDay(trades);
   const byKey = new Map(days.map((d) => [d.dayKey, d]));
   const sessions = sessionCalendar(days);
   const data = new Float64Array(trades.length * 3);
+  const qty = new Float64Array(trades.length); // as-traded contracts per trade, aligned with data / 3
   const start = new Int32Array(sessions.length);
   const len = new Int32Array(sessions.length);
   let k = 0;
@@ -112,15 +126,26 @@ export function makeEmpiricalSource(trades, { extraCost = 0 } = {}) {
       data[3 * k] = t.pnlPer;
       data[3 * k + 1] = t.mfePer;
       data[3 * k + 2] = t.maePer;
+      qty[k] = t.contracts >= 1 ? t.contracts : 1;
       sumPnl += t.pnlPer;
       if (t.pnlPer > 0) wins++;
       k++;
     }
   });
   const nSessions = sessions.length;
+  let minQty = Infinity;
+  let maxQty = 0;
+  for (let i = 0; i < qty.length; i++) {
+    if (qty[i] < minQty) minQty = qty[i];
+    if (qty[i] > maxQty) maxQty = qty[i];
+  }
   return {
     kind: 'empirical',
+    scaling,
     extraCost,
+    qty,
+    minQty,
+    maxQty,
     buf: data,
     off: 0,
     days: days.length, // sessions with at least one trade
@@ -296,8 +321,11 @@ function assertSize(q) {
 export function simulateEval(rules, source, opts = {}) {
   const o = simOptions(rules, opts);
   assertSize(o.contracts);
-  const q = Math.min(o.contracts, o.evalCap);
+  const risk = source.scaling === 'risk';
+  const q = risk ? o.contracts : Math.min(o.contracts, o.evalCap);
+  const qty = source.qty;
   const cost = source.extraCost;
+  let cappedTrades = 0;
   const passDays = [];
   let passed = 0;
   let breached = 0;
@@ -315,7 +343,13 @@ export function simulateEval(rules, source, opts = {}) {
       const buf = source.buf;
       const off = source.off;
       for (let i = 0, k = off; i < n; i++, k += 3) {
-        stepTradeRaw(L, q * buf[k + 1], q * buf[k + 2], q * buf[k] - q * cost, q * cost);
+        let c = q;
+        if (risk) {
+          const want = q * qty[k / 3];
+          c = want > o.evalCap ? o.evalCap : want;
+          if (c < want) cappedTrades++;
+        }
+        stepTradeRaw(L, c * buf[k + 1], c * buf[k + 2], c * buf[k] - c * cost, c * cost);
         trades++;
         if (L.status !== ACTIVE) break;
       }
@@ -332,8 +366,10 @@ export function simulateEval(rules, source, opts = {}) {
   const sortedDays = sortedCopy(passDays);
   return {
     contracts: q,
+    scaling: risk ? 'risk' : 'contracts',
     requestedContracts: o.contracts,
-    capped: q < o.contracts,
+    capped: risk ? cappedTrades > 0 : q < o.contracts,
+    cappedTradeShare: risk ? (trades > 0 ? cappedTrades / trades : 0) : null,
     attempts: N,
     sessionBudgets: budgets,
     passed,
@@ -362,6 +398,8 @@ export function simulateEval(rules, source, opts = {}) {
 export function simulatePa(rules, source, opts = {}) {
   const o = simOptions(rules, opts);
   assertSize(o.contracts);
+  const risk = source.scaling === 'risk';
+  const qty = source.qty;
   const cost = source.extraCost;
   const R = o.paRuns;
   const maxPayouts = rules.performanceAccount.payout.maxPayouts;
@@ -381,13 +419,15 @@ export function simulatePa(rules, source, opts = {}) {
     let firstPayoutDay = 0;
     for (let d = 1; d <= o.horizonDays; d++) {
       startDay(L, d);
-      const q = Math.min(o.contracts, L.tier.maxContractsMini * unitMult); // == contractCap(L, o.unit)
+      const capU = L.tier.maxContractsMini * unitMult; // == contractCap(L, o.unit)
+      const q = Math.min(o.contracts, capU);
       const n = source.sampleDay(rng);
       const buf = source.buf;
       const off = source.off;
       for (let i = 0, k = off; i < n; i++, k += 3) {
         if (L.dayHalted) break;
-        stepTradeRaw(L, q * buf[k + 1], q * buf[k + 2], q * buf[k] - q * cost, q * cost);
+        const c = risk ? Math.min(o.contracts * qty[k / 3], capU) : q;
+        stepTradeRaw(L, c * buf[k + 1], c * buf[k + 2], c * buf[k] - c * cost, c * cost);
         if (L.status !== ACTIVE) break;
       }
       tradingDaysUsed++;
@@ -413,6 +453,7 @@ export function simulatePa(rules, source, opts = {}) {
   const sd = sortedCopy(paid);
   return {
     contracts: o.contracts,
+    scaling: risk ? 'risk' : 'contracts',
     runs: R,
     horizonDays: o.horizonDays,
     pPayout: withPayout / R,
@@ -463,10 +504,21 @@ function argmax(rows, f) {
   return best && bestV > 0 ? best : null;
 }
 
+/**
+ * Default sweep: contracts 1..cap; with risk scaling, the RISK_MULTIPLIERS up to the first one at which even
+ * the smallest as-traded trade hits the cap (beyond it every trade is capped and results stop changing).
+ */
+export function defaultSizes(source, evalCap) {
+  if (source?.scaling !== 'risk') return Array.from({ length: evalCap }, (_, i) => i + 1);
+  const limit = Math.ceil(evalCap / (source.minQty || 1));
+  const out = RISK_MULTIPLIERS.filter((k) => k <= limit);
+  return out.length ? out : [1];
+}
+
 /** Sizes 1..cap (or opts.sizes): runs every size and identifies the best ones. */
 export function sweep(rules, source, opts = {}) {
   const o = simOptions(rules, opts);
-  const sizes = opts.sizes ?? Array.from({ length: o.evalCap }, (_, i) => i + 1);
+  const sizes = opts.sizes ?? defaultSizes(source, o.evalCap);
   const results = sizes.map((contracts) => runSize(rules, source, { ...opts, contracts }));
   const bestPass = argmax(results, (r) => r.eval?.pPass);
   const bestPayout =
@@ -511,7 +563,8 @@ export function sweep(rules, source, opts = {}) {
 export function replayEval(rules, trades, opts = {}) {
   const o = simOptions(rules, opts);
   assertSize(o.contracts);
-  const q = Math.min(o.contracts, o.evalCap);
+  const risk = (opts.scaling ?? 'contracts') === 'risk';
+  const q = risk ? o.contracts : Math.min(o.contracts, o.evalCap);
   const cost = opts.extraCost ?? 0;
   const ordered = trades.slice().sort(byTime);
   const cal = ordered.every((t) => ISO_DAY.test(String(t.dayKey)));
@@ -557,7 +610,8 @@ export function replayEval(rules, trades, opts = {}) {
         begin(k);
       }
     }
-    stepTradeRaw(L, q * t.mfePer, q * t.maePer, q * t.pnlPer - q * cost, q * cost);
+    const c = risk ? Math.min(q * (t.contracts >= 1 ? t.contracts : 1), o.evalCap) : q;
+    stepTradeRaw(L, c * t.mfePer, c * t.maePer, c * t.pnlPer - c * cost, c * cost);
     cur.trades++;
     cur.endDay = k;
     if (L.status !== ACTIVE) {
@@ -570,6 +624,7 @@ export function replayEval(rules, trades, opts = {}) {
   const done = attempts.length - count('OPEN');
   return {
     contracts: q,
+    scaling: risk ? 'risk' : 'contracts',
     attempts,
     total: attempts.length,
     passed: count(PASSED),
