@@ -13,10 +13,15 @@ The indicator places no orders and is not advice. The TradingView connector in C
 - **The old signals were turned off on purpose.** On October 29–30 the session that built the risk tools found that the AI-TPS v2.4 pullback strategy lost money on 14 years of real NQ data. It turned the watcher's signals off on your Mac (`"tradeSignals": false` in `~/signal-analysis/watcher-config.json`) and hid the "AI Trend Pullback Signals" study on your chart. To bring those back, set that value to `true` on your Mac and unhide the study in TradingView.
 - **The tools built since show no signals by design.** The Prop Firm Risk HUD and Risk Lines are risk displays only. The Eval Lab is a backtest with no alerts.
 - **This indicator is the new way to get signals.** It draws every signal on the chart, today's and past ones, whether or not you have typed today's figures. Stale figures only add a warning to the label and the alert.
+- **Your alerts, as of November 2.** These were read through the TradingView connector:
+  - The only active alert is on the old AI Trend Pullback strategy (MNQ1!, 5-minute). It was created October 20 and has never fired.
+  - The 15-minute v2.4 alert has stopped after a script error. TradingView does not restart such an alert by itself.
+  - No alert exists yet for this indicator.
+  - Phone notifications work: the October 16 test alert arrived.
 
 ## Set up the indicator (about 5 minutes)
 
-1. In TradingView open the Pine Editor, choose **Create new → Indicator**, press ⌘A then Delete so the editor is empty, and paste all of `TradeifySignals.pine`. Line 1 must read `//@version=6`. Save it and add it to an **MNQ1!** 5-minute chart.
+1. In TradingView open the Pine Editor, choose **Create new → Indicator**, press ⌘A then Delete so the editor is empty, and paste all of `TradeifySignals.pine`. Line 1 must read `//@version=6`. Save it and add it to an **MNQ1!** 5-minute chart. Keep the chart's session on **Electronic trading hours** (Settings → Symbol → Session), which is the default. On Regular trading hours the table warns you, because the flat-by exit and the overnight levels then work differently.
 2. In the indicator's settings, pick your **Plan**: Growth, Select Flex, Select Daily or Lightning. Tick **Legacy** if the account was bought before September 12, 2025.
 3. Each day before trading, while flat, type in these figures from the Tradeify dashboard:
    - balance at last close;
@@ -25,6 +30,9 @@ The indicator places no orders and is not advice. The TradingView connector in C
    - today's realized P&L and the trades already taken (both 0 if you read them between sessions);
    - the date and time you read them.
 4. Create the alert: **Alerts → Create alert**, Condition = "Tradeify 50K Signals", then **Any alert() function call**. Tick **Notify in app**, and allow TradingView notifications on your phone.
+   - **This needs a paid TradingView plan.** An alert on an indicator counts as a "technical alert". The free Basic plan allows none: it gets only 3 price alerts. Essential allows 20 technical alerts, Plus 100 and Premium 400.
+   - If a renewal failed and the account dropped to Basic, TradingView stops every active alert. They can only be restarted within the new plan's limits.
+   - Basic alerts last up to 1 month, Essential and Plus up to 2 months.
 5. An alert keeps the inputs it was created with. Delete and re-create it after each daily update. An old alert stops posting prompts at the next session, and only its flat-by reminder still arrives, saying the inputs are STALE.
 
 Use **MNQ**, not NQ. At the default $150 risk per trade, one NQ contract with the minimum 8-point stop costs about $171, so every NQ setup shows "no size". The table says so and names the limit that binds.
@@ -37,25 +45,54 @@ Use **MNQ**, not NQ. At the default $150 risk per trade, one NQ contract with th
 - **Grey "setup held back":** an account limit blocked it, such as the floor, the daily loss limit, your daily stop, the profit lock, the trade count or the loss streak. No alert.
 - **Lines:** entry, stop and targets of the open signal, then its exits (T1, T2, stop, time, flat-by).
 
-**Expect about 3 to 4 signals a week on MNQ 5-minute,** almost all Trend Pullback. From October 5 to November 2, 2026, TradingView's MNQ1! data gave 11. Only one reached target 2, and seven were stopped out. A lower "Minimum setup score" shows more: on 49 sessions, 55 gave 34 signals, 45 gave 52 and 40 gave 61. None of those levels has shown an edge.
+**Expect about 2 to 3 signals a week on MNQ 5-minute,** almost all Trend Pullback. From October 5 to November 2, 2026, TradingView's MNQ1! data gave 11, and seven were stopped out.
 
-To check the indicator on your chart, scroll back to these bars. Times are the start of the 5-minute signal bar in ET. All 11 were Trend Pullback, and the entry is the next bar's open.
+A lower "Minimum setup score" shows more. These counts take signals one at a time, as the chart draws them:
 
-| Date | Time | Side | Score | Entry | Stop | T1 | T2 | Outcome |
-|---|---|---|---|---|---|---|---|---|
-| Mon Oct 5 | 11:40 | LONG | 57 | 31240.50 | 31198.50 | 31303.25 | 31366.00 | T1, then time stop |
-| Wed Oct 7 | 14:15 | LONG | 56 | 31381.25 | 31335.25 | 31451.75 | 31521.75 | stop |
-| Mon Oct 12 | 11:20 | SHORT | 74 | 30891.75 | 30936.25 | 30827.25 | 30762.00 | stop |
-| Mon Oct 12 | 13:30 | SHORT | 69 | 30876.50 | 30931.00 | 30795.75 | 30714.50 | time stop |
-| Wed Oct 14 | 13:00 | SHORT | 57 | 30262.50 | 30320.50 | 30175.25 | 30088.00 | T2 |
-| Mon Oct 19 | 13:40 | SHORT | 68 | 29766.25 | 29822.50 | 29682.75 | 29598.75 | stop |
-| Wed Oct 21 | 14:00 | LONG | 71 | 30053.50 | 30033.50 | 30082.50 | 30112.00 | T1, then breakeven stop |
-| Mon Oct 26 | 12:05 | LONG | 56 | 29476.75 | 29436.50 | 29538.00 | 29599.00 | stop |
-| Tue Oct 27 | 13:05 | LONG | 57 | 29802.75 | 29767.25 | 29855.00 | 29907.75 | stop |
-| Wed Oct 28 | 11:15 | SHORT | 68 | 29842.00 | 29873.00 | 29796.25 | 29750.25 | stop |
-| Thu Oct 29 | 14:55 | SHORT | 68 | 29464.50 | 29503.25 | 29407.25 | 29349.50 | stop |
+| Minimum score | 49 sessions, Aug 24 to Oct 30 | Oct 5 to Nov 2 |
+|---|---|---|
+| 55 | 22 | 11 |
+| 45 | about 25 | 11 |
+| 40 | about 30 | 12 |
 
-Small differences against your chart are expected, because the history TradingView loads differs slightly by plan and the indicator needs a warm-up.
+None of those levels has shown an edge.
+
+To check the indicator on your chart, scroll back to these bars. All 11 were Trend Pullback. In the table:
+- **Time** is the start of the 5-minute signal bar, in ET.
+- **Label @** is the signal bar's close, the price the chart label and the alert show.
+- **Fill** is the virtual entry: the next bar's open plus 1 tick against you.
+- **Outcome** is what the chart shows at the default inputs.
+
+| Date | Time | Side | Score | Label @ | Fill | Stop | T1 | T2 | Outcome |
+|---|---|---|---|---|---|---|---|---|---|
+| Mon Oct 5 | 11:40 | LONG | 57 | 31240.50 | 31240.50 | 31198.50 | 31303.25 | 31366.00 | T1 (1 MNQ exits whole) |
+| Wed Oct 7 | 14:15 | LONG | 56 | 31382.00 | 31381.25 | 31335.25 | 31451.75 | 31521.75 | stop |
+| Mon Oct 12 | 11:20 | SHORT | 74 | 30892.50 | 30891.75 | 30936.25 | 30827.25 | 30762.00 | stop |
+| Mon Oct 12 | 13:30 | SHORT | 69 | 30876.75 | 30876.50 | 30931.00 | 30795.75 | 30714.50 | time stop |
+| Wed Oct 14 | 13:00 | SHORT | 57 | 30262.25 | 30262.50 | 30320.50 | 30175.25 | 30088.00 | T1 (1 MNQ exits whole) |
+| Mon Oct 19 | 13:40 | SHORT | 68 | 29766.50 | 29766.25 | 29822.50 | 29682.75 | 29598.75 | stop |
+| Wed Oct 21 | 14:00 | LONG | 71 | 30053.25 | 30053.50 | 30033.50 | 30082.50 | 30112.00 | T1, then breakeven stop |
+| Mon Oct 26 | 12:05 | LONG | 56 | 29477.25 | 29476.75 | 29436.50 | 29538.00 | 29599.00 | stop |
+| Tue Oct 27 | 13:05 | LONG | 57 | 29802.50 | 29802.75 | 29767.25 | 29855.00 | 29907.75 | stop |
+| Wed Oct 28 | 11:15 | SHORT | 68 | 29842.25 | 29842.00 | 29873.00 | 29796.25 | 29750.25 | stop |
+| Thu Oct 29 | 14:55 | SHORT | 68 | 29464.75 | 29464.50 | 29503.25 | 29407.25 | 29349.50 | stop |
+
+**Size changes some outcomes.** At the default $150 risk, Oct 5 and Oct 14 size to 1 MNQ, and a single contract exits whole at target 1. With 2 or more contracts, half goes off at T1 and the rest runs: Oct 5 then ends at the time stop, and Oct 14 reaches T2.
+
+**Your typed figures change the table.** Past signals are sized and gated with the figures you type, and daily limits apply to past days too. The table needs a budget of at least $118 per trade, both as risk per trade and as the share of your room to the floor. That means at least $1,190 of room at the default 10% share. Oct 14 costs $118.00 per contract, and Oct 12 13:30 costs $110.00 after that morning's $90 loss.
+
+With a smaller budget, some rows show "no size" and start no virtual trade, so a later setup can appear instead. For example, at $100 risk:
+- Oct 12 13:30, Oct 14 and Oct 19 show "no size";
+- a SHORT Trend Pullback 63 appears at Oct 12 13:55.
+
+**Your TradingView plan limits how far back you can see.** The indicator needs 200 bars of warm-up, and intraday history depends on the plan:
+
+| Plan | Intraday bars | On November 2 |
+|---|---|---|
+| Basic | 5,000, about 18 trading days of 5-minute MNQ | the chart starts at Oct 7 14:00 ET and draws from about Oct 8 07:40 ET, so the Oct 5 and Oct 7 rows are missing |
+| Essential, Plus | 10,000 | all 11 rows show until about mid-November |
+
+Each day the history window moves forward one trading day, so on Basic the Oct 12 rows drop off around Nov 5. Bar Replay also works for checking.
 
 ### What a signal looks like
 
@@ -63,12 +100,14 @@ Small differences against your chart are expected, because the history TradingVi
 MNQ LONG 3 @ 21534.25 | stop 21510.00 (24.25 pts, $147.00 risk) | T1 21570.50 | T2 21606.75 | Trend Pullback 72 | floor room $2,000 | DLL room $1,250 | Tradeify Growth 50K
 ```
 
-The indicator then follows the trade as a virtual position. It posts the exit: T1 (half off, stop to breakeven), T2, stop, time stop or flat-by. A reminder arrives 10 minutes before the 4:45 PM ET flat time.
+The indicator then follows the trade as a virtual position. It posts the exit: T1 (half off, stop to breakeven; a single contract exits whole at T1), T2, stop, time stop or flat-by. A reminder arrives 10 minutes before the 4:45 PM ET flat time.
+
+On early-close days the flat-by is 12:59 PM ET, with the reminder and the exit moved earlier to match. The indicator only knows the dates in its **Early-close dates** input: November 26 and 27 and December 24, 2026. Add later dates from the CME holiday calendar. If the session still ends before a prompt fills, the indicator sends a CANCEL alert.
 
 ### What hides or holds back a signal
 
 Not drawn at all:
-- outside 9:35 AM–3:30 PM ET, or within 20 minutes of the 4:45 PM ET flat time;
+- outside 9:35 AM–3:30 PM ET, or within 20 minutes of the flat time (4:45 PM ET, or 12:59 PM ET on the listed early-close dates);
 - while an earlier signal is still open, or during warm-up.
 
 Drawn grey, with no alert:
@@ -96,7 +135,7 @@ The profit lock keeps any one day under the consistency limit. Growth allows no 
 Rules shared by all four plans:
 - **Drawdown floor:** it moves only at the end of the day, but it is enforced live against balance plus open P&L. Touching it intraday fails the account, even if the price comes back.
 - **Lock:** the floor locks at $50,100 once an end-of-day balance reaches $52,100, or as soon as a payout is requested.
-- **Flat by 4:45 PM ET**, or 12:59 PM ET on early-close days.
+- **Flat by 4:45 PM ET**, or 12:59 PM ET on early-close days. The indicator applies the early time on the dates in its "Early-close dates" input.
 - **Payouts:** you receive 90%.
 
 Four readings the help pages leave open are listed under `unverified` in `rules.json`.

@@ -96,8 +96,9 @@
 //     Lightning 1,250, or 2,000 once the balance at last close is 53,000 or
 //     more (legacy Growth: no limit from 53,000); Select Daily 1,000; Select
 //     Flex none.
-//   - Session 18:00-17:00 ET, flat by 16:45 ET (12:59 ET on early-close
-//     days, which are not scheduled here: flatten those yourself).
+//   - Session 18:00-17:00 ET, flat by 16:45 ET, or 12:59 ET on the dates in
+//     the "Early-close dates" input (keep that list current from the CME
+//     holiday calendar). The chart must be on Electronic trading hours.
 //   - Consistency (Growth 35%, Lightning 20-30%, Select none) is a payout
 //     rule. The daily profit lock input is a guard against one outsized day,
 //     not the rule itself. Its Auto values fit the first payout only; after
@@ -217,6 +218,7 @@ int SEL_T2_MINIS = 3
 int SEL_T3_MINIS = 4
 int MICROS_PER_MINI = 10
 int FLAT_BY_CAP_MIN = 1005
+int EARLY_FLAT_BY_MIN = 779
 int SESSION_START_H = 18
 int SESSION_END_H = 17
 // <<RULES:END>>
@@ -272,10 +274,12 @@ iCommCustom = input.float(1.50, "Custom round-trip commission per contract ($)",
 
 grpSess = "Session (America/New_York)"
 iWindow = input.session("0935-1530", "Entry window (ET)", group = grpSess,
-     tooltip = "A prompt is allowed when the signal bar closes inside this window.")
+     tooltip = "A prompt is allowed when the signal bar closes inside this window, end time included.")
 iFlatH = input.int(16, "Flat-by (hour : minute ET)", minval = 0, maxval = 23, group = grpSess, inline = "fb")
 iFlatM = input.int(45, "", minval = 0, maxval = 59, group = grpSess, inline = "fb",
-     tooltip = "Capped at 16:45 ET, Tradeify's flat-by time. No prompts within 20 minutes of it; a reminder alert 10 minutes before it; the virtual trade exits 5 minutes before it.")
+     tooltip = "Capped at 16:45 ET, Tradeify's flat-by time, and at 12:59 ET on the early-close dates below. No prompts within 20 minutes of it; a reminder alert 10 minutes before it; the virtual trade exits 5 minutes before it.")
+iEarly = input.string("2026-11-26,2026-11-27,2026-12-24", "Early-close dates (yyyy-MM-dd, comma-separated)", group = grpSess,
+     tooltip = "Tradeify's flat-by is 12:59 ET on these days. CME equity index futures halt at 13:00 ET on Thu 2026-11-26 and close at 13:15 ET on Fri 2026-11-27 and Thu 2026-12-24. Add later dates from the CME holiday calendar.")
 
 grpSig = "Setups"
 iUseTP = input.bool(true, "Trend Pullback", group = grpSig)
@@ -358,13 +362,19 @@ int closeMin = etMinutes(time_close)
 float winStart = parseHM(iWindow, 0)
 float winEnd = parseHM(iWindow, 5)
 float tfMin = timeframe.in_seconds(timeframe.period) / 60.0
-int flatByMin = math.min(iFlatH * 60 + iFlatM, FLAT_BY_CAP_MIN)
+int flatByBase = math.min(iFlatH * 60 + iFlatM, FLAT_BY_CAP_MIN)
+bool earlyDay = str.contains(iEarly, str.format_time(time, "yyyy-MM-dd", TZ))
+int flatByMin = earlyDay ? math.min(flatByBase, EARLY_FLAT_BY_MIN) : flatByBase
+// On a Regular-trading-hours chart no bar exists overnight; the table warns.
+var bool sawOvernight = false
+if etMin >= 18 * 60 or etMin < 9 * 60 + 30
+    sawOvernight := true
 string flatTxt = str.tostring(math.floor(flatByMin / 60), "00") + ":" + str.tostring(flatByMin % 60, "00")
 // The virtual trade is closed at the close of the last bar that closes at
 // least 5 minutes before the flat-by time (the first bar whose next close
 // would be later), so its EXIT alert arrives before the deadline.
-bool atFlatBy = closeMin + tfMin > flatByMin - FLATBY_EXIT_MIN and closeMin < 18 * 60
-bool inWindow = not na(winStart) and not na(winEnd) and closeMin >= winStart and closeMin < winEnd and closeMin < flatByMin and not atFlatBy
+bool atFlatBy = (closeMin + tfMin > flatByMin - FLATBY_EXIT_MIN and closeMin < 18 * 60) or session.islastbar
+bool inWindow = not na(winStart) and not na(winEnd) and closeMin >= winStart and closeMin <= winEnd and closeMin < flatByMin and not atFlatBy
 bool nearFlatBy = closeMin < 18 * 60 and closeMin >= flatByMin - FLATBY_NO_ENTRY_MIN
 bool fbWarnBar = closeMin < 18 * 60 and closeMin <= flatByMin and closeMin + tfMin > flatByMin - FLATBY_WARN_MIN
 float minsSinceOpen = (time - timestamp(TZ, year(time, TZ), month(time, TZ), dayofmonth(time, TZ), 9, 30)) / 60000.0
@@ -854,6 +864,14 @@ if barstate.isconfirmed
                 exitAlert := true
             vt.dir := 0
         vt.resetBar()
+        // A prompt still waiting for its fill when the session ended (an
+        // unlisted early close) is cancelled with an alert.
+        if pDir != 0
+            if showMark(pLive)
+                keepLabel(labs, label.new(bar_index, open, "cancelled: session ended before the fill", style = label.style_label_left, color = color.new(color.gray, 30), textcolor = color.white, size = size.tiny))
+            if pLive and not muteAlerts
+                alertTxt := addLine(alertTxt, syminfo.root + " CANCEL " + (pDir > 0 ? "LONG" : "SHORT") + " " + pName + ": the session ended before the fill - do not enter | " + tagTxt)
+                exitAlert := true
         pDir := 0
         dayVirt := 0.0
         dayTrades := 0
@@ -914,7 +932,10 @@ if barstate.isconfirmed
             if vt.closedNow
                 vt.dir := 0
 
-    // E. Flat-by reminder, once per session, about 10 minutes before.
+    // E. Flat-by reminder, once per session, about 10 minutes before. The
+    //    evening reset covers a holiday reopen that starts no new trading day.
+    if closeMin >= 18 * 60
+        fbWarned := false
     if fbWarnBar and not fbWarned
         fbWarned := true
         if liveBar and not muteAlerts
@@ -1028,7 +1049,9 @@ tcell(int r, string k, string v, color vc) =>
 if barstate.islast and iShowTable
     float tOpen = vt.openPnl()
     [tDay, tRoom, tDllRoom, tDllHit, tSelf, tLock] = acctNow(liveBar, dayVirt, tOpen)
-    string tFig = asOfFuture ? "as-of time in the future" : stale ? "STALE figures: sizes use old figures; type today's dashboard figures and as-of time" : ""
+    string tRth = sawOvernight ? "" : "chart is on RTH: set Settings > Symbol > Session to Electronic trading hours"
+    string tFig0 = asOfFuture ? "as-of time in the future" : stale ? "STALE figures: sizes use old figures; type today's dashboard figures and as-of time" : ""
+    string tFig = tRth == "" ? tFig0 : tFig0 == "" ? tRth : tRth + " | " + tFig0
     string tWhy = not curSess ? "waiting for the session (18:00 ET)" : not liveBar ? "no bar has closed after the as-of time yet" : gateWhy(false, warm, tRoom, tDllHit, tSelf, tLock, dayTrades, lossStreak, vt.dir != 0 or pDir != 0, inWindow, nearFlatBy)
     // A budget that cannot size 1 contract even at the minimum stop posts nothing.
     if tWhy == ""
