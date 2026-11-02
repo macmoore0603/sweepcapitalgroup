@@ -393,6 +393,55 @@ export function inspectTvCsv(text, opts = {}) {
   return { trades, delimiter, columns, warnings: [...fileWarnings, ...warnings], fileWarnings };
 }
 
+/**
+ * Merge the exit legs of one position into one trade. TradingView lists a position that scales out (several
+ * exit orders, such as the Eval Lab's half at target 1 and the rest at target 2) as one trade per exit leg;
+ * the legs share the side and the entry time. Sizing and contract caps apply to the position, so the
+ * planner must see it whole. The merged trade sums contracts, P&L, run-up and drawdown and exits with its
+ * last leg. Summing the legs' excursions can only overstate the position's (each leg's extreme is at least
+ * its share of the position's at any moment), which is the conservative side for both the trailing
+ * threshold and the breach check. Trades without an entry time or side are left as they are.
+ * Returns { trades, merged } where merged is the number of legs folded into another trade.
+ */
+export function mergeLegs(trades) {
+  const out = [];
+  const byKey = new Map();
+  let merged = 0;
+  for (const t of trades) {
+    if (!t.entryTime || !t.side || Number.isNaN(t.entryTime.getTime?.())) {
+      out.push(t);
+      continue;
+    }
+    const key = `${t.side}|${t.entryTime.getTime()}`;
+    const m = byKey.get(key);
+    if (!m) {
+      const c = { ...t, legs: 1 };
+      byKey.set(key, c);
+      out.push(c);
+      continue;
+    }
+    merged++;
+    m.legs++;
+    m.contracts += t.contracts;
+    m.pnl += t.pnl;
+    m.runUp += t.runUp;
+    m.drawdown += t.drawdown;
+    if (t.exitTime > m.exitTime) {
+      m.exitTime = t.exitTime;
+      m.dayKey = t.dayKey;
+    }
+  }
+  for (const m of out) {
+    if (m.legs > 1) {
+      m.pnlPer = m.pnl / m.contracts;
+      m.mfePer = m.runUp / m.contracts;
+      m.maePer = 0 - Math.abs(m.drawdown) / m.contracts;
+    }
+  }
+  out.sort((a, b) => a.exitTime - b.exitTime || a.tradeNo - b.tradeNo);
+  return { trades: out, merged };
+}
+
 /** Parse CSV text into trades (see inspectTvCsv for options). */
 export function parseTvCsv(text, opts = {}) {
   return inspectTvCsv(text, opts).trades;

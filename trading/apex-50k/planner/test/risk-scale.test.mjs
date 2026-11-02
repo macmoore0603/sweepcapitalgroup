@@ -106,3 +106,68 @@ test('CLI --scale auto picks risk when trade sizes vary and contracts when they 
   assert.throws(() => run(['--win', '0.5', '--rr', '1', '--risk', '100', '--scale', 'risk']), /needs --trades/);
   assert.throws(() => run(['--trades', write('g.csv', [1]), '--scale', 'nope']), /--scale must be/);
 });
+
+import { mergeLegs } from '../tv-csv.mjs';
+
+test('scale-out legs (same side and entry time) merge into one position before sizing and caps', () => {
+  const entry = new Date('2024-01-02T14:35:00Z');
+  const leg = (n, qty, pnlPer, exitMin) => ({
+    tradeNo: n,
+    side: 'long',
+    entryTime: entry,
+    exitTime: new Date(entry.getTime() + exitMin * 60000),
+    dayKey: '2024-01-02',
+    contracts: qty,
+    pnl: pnlPer * qty,
+    runUp: Math.max(0, pnlPer) * qty,
+    drawdown: -250 * qty,
+    pnlPer,
+    mfePer: Math.max(0, pnlPer),
+    maePer: -250,
+  });
+  const { trades, merged } = mergeLegs([leg(1, 3, -250, 10), leg(2, 3, -250, 12), { ...leg(3, 2, 100, 30), entryTime: new Date('2024-01-02T15:00:00Z') }]);
+  assert.equal(merged, 1);
+  assert.equal(trades.length, 2);
+  const p = trades[0];
+  assert.equal(p.contracts, 6);
+  assert.equal(p.pnl, -1500);
+  assert.equal(p.legs, 2);
+  assert.equal(p.maePer, -250);
+  assert.equal(p.exitTime.getTime(), entry.getTime() + 12 * 60000, 'exits with the last leg');
+  // The 6-lot position already sits at the 6-mini eval cap: risk x2 must stay capped at 6, not 12.
+  const rep = replayEval(rules, [p], { contracts: 2, scaling: 'risk' });
+  assert.equal(rep.breached, 0, 'capped at 6 minis: -$1,500 does not breach the $2,000 drawdown');
+  const legsApart = replayEval(rules, [leg(1, 3, -250, 10), leg(2, 3, -250, 12)], { contracts: 2, scaling: 'risk' });
+  assert.equal(legsApart.breached, 1, 'without merging, each leg is capped on its own and the position doubles');
+});
+
+test('risk sweep includes the first multiplier that caps every trade; CLI messages and calendar options', () => {
+  const r9 = makeEmpiricalSource([mk(0, '2024-01-01', 9, 10, 10, 0)], { scaling: 'risk' });
+  assert.deepEqual(defaultSizes(r9, 60), [1, 2, 3, 4, 5, 6, 8], '9 x 6 = 54 < 60, so 8 (72) is the first fully capped multiplier');
+  const dir = mkdtempSync(join(tmpdir(), 'apex-cal-'));
+  const lines = ['Trade #,Type,Date and time,Signal,Price USD,Position size (qty),Net P&L USD,Favorable excursion USD,Adverse excursion USD'];
+  [['2024-01-03', 1], ['2024-01-04', 2]].forEach(([d, q], i) => {
+    for (const typ of ['Entry long', 'Exit long']) lines.push(`${i + 1},${typ},${d} 10:00,S,100,${q},${50 * q},${60 * q},${-20 * q}`);
+  });
+  const f = join(dir, 'c.csv');
+  writeFileSync(f, `${lines.join('\n')}\n`);
+  const base = run(['--trades', f, '--contracts', '1', '--mode', 'eval', '--attempts', '20', '--json']).data;
+  assert.equal(base.source.sessions, 2);
+  const wide = run(['--trades', f, '--from', '2024-01-01', '--to', '2024-01-12', '--contracts', '1', '--mode', 'eval', '--attempts', '20', '--json']).data;
+  assert.equal(wide.source.sessions, 10, 'Mon 1 Jan .. Fri 12 Jan: 10 weekday sessions');
+  assert.throws(() => run(['--trades', f, '--from', '2024-13-01']), /--from must be a date/);
+  assert.throws(() => run(['--trades', f, '--from', '2024-01-12', '--to', '2024-01-01']), /must not be after/);
+  assert.throws(() => run(['--win', '0.5', '--rr', '1', '--risk', '100', '--from', '2024-01-01']), /only applies with --trades/);
+  assert.throws(() => run(['--win', '0.5', '--rr', '1', '--risk', '100', '--scale', 'nope']), /--scale must be auto, contracts or risk/);
+  assert.throws(() => run(['--trades', f, '--contracts', '61', '--mode', 'eval']), /risk multiplier/);
+  // A micro-sized export read as minis: trades above the 6-mini cap are flagged.
+  const big = join(dir, 'big.csv');
+  const bl = [lines[0]];
+  [['2024-01-03', 8], ['2024-01-04', 12]].forEach(([d, q], i) => {
+    for (const typ of ['Entry long', 'Exit long']) bl.push(`${i + 1},${typ},${d} 10:00,S,100,${q},${5 * q},${6 * q},${-2 * q}`);
+  });
+  writeFileSync(big, `${bl.join('\n')}\n`);
+  const warned = run(['--trades', big, '--contracts', '1', '--mode', 'eval', '--attempts', '20']).text;
+  assert.match(warned, /WARNING: 2 of 2 trades exceed the evaluation cap \(6 minis\)/);
+  assert.match(warned, /Capped/);
+});

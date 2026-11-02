@@ -75,12 +75,14 @@ const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
  * that holds trades (exchange holidays are not known, so they count as sessions without trades).
  * Day keys that are not 'YYYY-MM-DD' have no calendar, so only the traded days are returned.
  */
-export function sessionCalendar(days) {
+export function sessionCalendar(days, { from = null, to = null } = {}) {
   const keys = days.map((d) => d.dayKey);
   if (keys.length === 0 || !keys.every((k) => ISO_DAY.test(String(k)))) return keys;
   const traded = new Set(keys);
+  const first = from && ISO_DAY.test(from) && from < keys[0] ? from : keys[0];
+  const last = to && ISO_DAY.test(to) && to > keys[keys.length - 1] ? to : keys[keys.length - 1];
   const out = [];
-  for (let k = keys[0]; k <= keys[keys.length - 1]; k = addDays(k, 1)) if (traded.has(k) || isWeekday(k)) out.push(k);
+  for (let k = first; k <= last; k = addDays(k, 1)) if (traded.has(k) || isWeekday(k)) out.push(k);
   return out;
 }
 
@@ -104,12 +106,12 @@ export const RISK_MULTIPLIERS = Object.freeze([1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 
  * as-traded size times the simulated multiplier, capped at the plan's contract limit, the right model for a
  * strategy that sizes each trade by dollar risk (stop width varies, so contracts vary).
  */
-export function makeEmpiricalSource(trades, { extraCost = 0, scaling = 'contracts' } = {}) {
+export function makeEmpiricalSource(trades, { extraCost = 0, scaling = 'contracts', from = null, to = null } = {}) {
   if (!trades || trades.length === 0) throw new Error('empirical source needs at least one trade');
   if (scaling !== 'contracts' && scaling !== 'risk') throw new Error(`scaling must be 'contracts' or 'risk', got "${scaling}"`);
   const days = groupTradesByDay(trades);
   const byKey = new Map(days.map((d) => [d.dayKey, d]));
-  const sessions = sessionCalendar(days);
+  const sessions = sessionCalendar(days, { from, to }); // from/to widen the pool to a shared calendar
   const data = new Float64Array(trades.length * 3);
   const qty = new Float64Array(trades.length); // as-traded contracts per trade, aligned with data / 3
   const start = new Int32Array(sessions.length);
@@ -511,8 +513,8 @@ function argmax(rows, f) {
 export function defaultSizes(source, evalCap) {
   if (source?.scaling !== 'risk') return Array.from({ length: evalCap }, (_, i) => i + 1);
   const limit = Math.ceil(evalCap / (source.minQty || 1));
-  const out = RISK_MULTIPLIERS.filter((k) => k <= limit);
-  return out.length ? out : [1];
+  const i = RISK_MULTIPLIERS.findIndex((k) => k >= limit); // include the first multiplier that caps every trade
+  return i < 0 ? [...RISK_MULTIPLIERS] : RISK_MULTIPLIERS.slice(0, i + 1);
 }
 
 /** Sizes 1..cap (or opts.sizes): runs every size and identifies the best ones. */

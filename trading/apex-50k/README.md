@@ -7,6 +7,8 @@ Two tools for one goal: pass the Apex Trader Funding 50K Intraday evaluation and
 
 Neither tool places orders, sends alerts or gives trade advice.
 
+**On a Tradeify account?** See `../tradeify-50k/`. It has a signals indicator with phone alerts, sized to Tradeify's 50K funded rules. The planner here simulates a Tradeify funded account with `--firm tradeify`.
+
 ## Why this exists
 
 Earlier research on this project found no signal with an edge:
@@ -46,6 +48,7 @@ Two readings could not be confirmed from the pages and are listed under `unverif
 
 Other signal sources:
 - **External indicator** tests any indicator's plot: a value above 0 means long, below 0 means short.
+- **Raw trades** (Account mode) takes every signal with no account rules, for exporting the List of trades to the planner. Use Exit model = Fixed R, and flat-by 16:40 for Tradeify.
 - **Random control only** trades the random entries in the Strategy Tester itself, which cross-checks the lab's ledger against TradingView's fills.
 
 Limits:
@@ -78,6 +81,12 @@ It bootstraps whole trading sessions from your history, keeping the real number 
 
 Pass your evaluation price with `--fee` to rank sizes by payout per dollar of fees.
 
+How the planner reads a trade list:
+- **Risk-sized strategies:** a strategy that sizes by dollar risk, like the lab, trades different contract counts per trade. The planner then scales each trade's own size by a multiplier (`Risk x`) and caps every trade at the plan limit. This happens automatically when sizes vary; force it with `--scale risk`, or turn it off with `--scale contracts`.
+- **Scale-out legs:** TradingView lists each exit leg of a scaled-out position as its own trade. The planner merges legs with the same side and entry time back into one position, so the cap applies to the whole position. Use `--no-merge-legs` to keep them apart.
+- **Shared calendar:** `--from YYYY-MM-DD --to YYYY-MM-DD` puts several trade lists from the same data on the same calendar.
+- **Cap warning:** trades larger than the plan cap at 1x get a warning, usually because a micro export was read as minis. Use `--unit micro` for those.
+
 **From assumed stats.** For example:
 
 ```
@@ -104,18 +113,42 @@ That is well below the 40% a plain ±$2,000/$3,000 coin flip would suggest. The 
 
 At 1 mini, most attempts run out of time. At 6, too many breach. The best size is in the middle, and in this example about 26% of attempts both pass and collect a payout within 120 trading days. Your own CSV will give your own curve.
 
+## Real-data check (August 24 to October 30, 2026)
+
+`research/fetch_yahoo.py` downloads recent NQ or MNQ bars. `research/run_real.py` runs the July setups through the July engine on those bars, beside 20 seeded random-entry runs that face the same score gate, stop gate, risk limits, sizing, fills and exits. Both scripts are in this folder, and the runner needs the nqcopilot package from the Mac repo. The data was 49 regular sessions of MNQ 5-minute bars:
+
+| | Trades | Win rate | Mean per trade |
+|---|---|---|---|
+| July setups | 18 | 39% | −0.12R (95% interval −0.64R to +0.46R), −$12.58 per micro |
+| Random entries, median of 20 runs | 19.5 on average | n/a | −0.12R |
+
+Ten of the 20 random runs did better than the setups. In planner terms, on the same calendar:
+
+| | Setups | Random, median | Random runs that did better |
+|---|---|---|---|
+| Apex evaluation, best chance of passing | 5.3% | 1.5% | 4 of 20 |
+| Tradeify Growth, best chance of a payout within 120 days | 17.2% | 9.2% | 8 of 20 |
+
+On this sample the setups cannot be told apart from random entries.
+
+Two notes on running it:
+- The July engine holds an entry made after 4:00 PM ET past the close, so the runner blocks both arms from 3:50 PM.
+- Give `--roll` at the bar where Yahoo's continuous series switches contract: 2026-09-15T07:30Z for MNQ=F in September 2026.
+
 ## Tests
 
 ```
 node --test planner/test/
 ```
 
-There are 61 tests, covering:
+There are 96 tests, covering:
 - the ledger rules at their exact boundaries;
 - the trailing and threshold-stop behavior;
 - Performance Account tiers, the daily loss limit and payout gating;
 - Monte Carlo checks against closed-form results;
 - TradingView CSV variants;
+- risk scaling, leg merging and the shared calendar;
+- the Tradeify funded-account rules and payout policies;
 - a sync test that fails if the Pine rules block and `rules.json` disagree.
 
 ## Files
@@ -129,5 +162,8 @@ There are 61 tests, covering:
 | `planner/sim.mjs` | Monte Carlo, bootstrap and historical replay |
 | `planner/tv-csv.mjs` | TradingView "List of trades" CSV parser |
 | `planner/time.mjs` | New York session and calendar helpers |
+| `planner/tradeify.mjs` | Tradeify 50K funded-account rules, payouts and simulation |
 | `planner/cli.mjs` | Command-line interface |
+| `research/fetch_yahoo.py` | Download recent NQ / MNQ bars from Yahoo Finance |
+| `research/run_real.py` | July setups and random controls through the July engine on real bars |
 | `planner/test/` | Tests and CSV fixtures |

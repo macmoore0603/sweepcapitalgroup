@@ -15,7 +15,7 @@ import {
   normalizeUnit,
   normalizeDllFill,
 } from './ledger.mjs';
-import { readTvCsv } from './tv-csv.mjs';
+import { readTvCsv, mergeLegs } from './tv-csv.mjs';
 import { NY, SESSION_ROLL_HOUR, addDays } from './time.mjs';
 import {
   makeParametricSource,
@@ -48,9 +48,9 @@ const VALUED = new Set([
   'trades', 'extra-cost', 'tz', 'session-roll', 'date-order', 'decimal',
   'win', 'rr', 'loss-r', 'risk', 'tpd', 'cost', 'mfe-losers', 'mae-winners', 'r-spread',
   'contracts', 'scale', 'unit', 'mode', 'feed', 'order', 'dll-fill', 'attempts', 'pa-runs', 'days', 'horizon', 'fee', 'seed', 'rules',
-  'firm', 'plan', 'payout', 'runs', 'early-close',
+  'firm', 'plan', 'payout', 'runs', 'early-close', 'from', 'to',
 ]);
-const FLAGS = new Set(['sweep', 'json', 'help', 'zero-edge', 'legacy', 'select-caps-before-2026-09-01']);
+const FLAGS = new Set(['sweep', 'json', 'help', 'zero-edge', 'legacy', 'select-caps-before-2026-09-01', 'no-merge-legs']);
 /** Options that only apply with --firm tradeify, and Apex evaluation / PA options that do not apply there. */
 const TRADEIFY_ONLY = ['plan', 'legacy', 'select-caps-before-2026-09-01', 'payout', 'runs', 'early-close'];
 const APEX_ONLY = ['feed', 'attempts', 'pa-runs', 'days', 'fee'];
@@ -107,6 +107,17 @@ function number(args, key, { def, min = -Infinity, max = Infinity, int = false, 
     throw new UsageError(`--${key} must be ${int ? 'an integer' : 'a number'} ${range}, got "${args[key]}"`);
   }
   return v;
+}
+
+/** Warn (in the source's file warnings) when trades exceed the plan cap as traded, e.g. a micro export read as minis. */
+function noteOverCap(info, trades, cap, unit, capName) {
+  const over = trades.filter((t) => t.contracts > cap).length;
+  if (!over) return;
+  info.fileWarnings = [
+    ...(info.fileWarnings ?? []),
+    `${over} of ${trades.length} trades exceed ${capName} (${cap} ${unit}s) as traded, so they are capped even at 1x; check --unit (a micro export needs --unit micro)`,
+  ];
+  info.warnings = [...(info.warnings ?? []), info.fileWarnings[info.fileWarnings.length - 1]];
 }
 
 /** "3" | "1..4" | "2..60:2" | "1,2,4" -> sorted unique sizes */
@@ -198,6 +209,10 @@ Trade source (one of):
                         (fixed-size strategies); risk = every trade at its own as-traded size times the
                         simulated multiplier, capped at the plan's contract limit (strategies that size by
                         dollar risk, like the Eval Lab); auto (default) = risk when trade sizes vary
+    --no-merge-legs     keep scale-out exit legs (same side and entry time) as separate trades; by default
+                        they are merged into one position so sizing and caps apply to the whole position
+    --from DAY --to DAY widen the bootstrap's session pool to DAY..DAY (YYYY-MM-DD), so trade lists from the
+                        same data range are compared on the same calendar
     --tz ZONE           time zone of the CSV timestamps (chart time zone; default ${NY})
     --session-roll H|off   exits at/after H:00 New York time count toward the next day's session
                         (default ${SESSION_ROLL_HOUR}, the Apex / CME Globex roll; off = calendar date)
@@ -304,14 +319,25 @@ function buildSource(args, rules, { defaultRollHour = SESSION_ROLL_HOUR } = {}) 
     const extraCost = number(args, 'extra-cost', { def: 0, min: 0 });
     const scaleArg = String(args.scale ?? 'auto').toLowerCase();
     if (!['auto', 'contracts', 'risk'].includes(scaleArg)) throw new UsageError(`--scale must be auto, contracts or risk, got "${args.scale}"`);
-    const sizesVary = new Set(meta.trades.map((t) => t.contracts)).size > 1;
+    const legs = args['no-merge-legs'] ? { trades: meta.trades, merged: 0 } : mergeLegs(meta.trades);
+    const csvTrades = legs.trades;
+    const isoDay = (k) => {
+      if (args[k] == null) return null;
+      const v = String(args[k]);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(v) || Number.isNaN(Date.parse(`${v}T00:00:00Z`))) throw new UsageError(`--${k} must be a date YYYY-MM-DD, got "${v}"`);
+      return v;
+    };
+    const from = isoDay('from');
+    const to = isoDay('to');
+    if (from && to && from > to) throw new UsageError('--from must not be after --to');
+    const sizesVary = new Set(csvTrades.map((t) => t.contracts)).size > 1;
     const scaling = scaleArg === 'auto' ? (sizesVary ? 'risk' : 'contracts') : scaleArg;
-    const source = makeEmpiricalSource(meta.trades, { extraCost, scaling });
-    const losses = meta.trades.map((t) => t.pnl).filter((x) => x < 0).sort((a, b) => a - b);
+    const source = makeEmpiricalSource(csvTrades, { extraCost, scaling, from, to });
+    const losses = csvTrades.map((t) => t.pnl).filter((x) => x < 0).sort((a, b) => a - b);
     const medianLossAsTraded = losses.length ? losses[Math.floor((losses.length - 1) / 2)] : null;
     return {
       source,
-      trades: meta.trades,
+      trades: csvTrades,
       info: {
         kind: 'empirical',
         scaling,
@@ -321,6 +347,10 @@ function buildSource(args, rules, { defaultRollHour = SESSION_ROLL_HOUR } = {}) 
         maxQty: source.maxQty,
         medianLossAsTraded,
         file: path,
+        rows: meta.trades.length,
+        legsMerged: legs.merged,
+        calendarFrom: from,
+        calendarTo: to,
         trades: source.trades,
         days: source.days,
         sessions: source.sessions,
@@ -340,8 +370,13 @@ function buildSource(args, rules, { defaultRollHour = SESSION_ROLL_HOUR } = {}) 
       },
     };
   }
-  if (args.scale != null && !/^(auto|contracts)$/i.test(String(args.scale))) {
-    throw new UsageError('--scale risk needs --trades: assumed stats have no as-traded sizes to scale');
+  if (args.scale != null) {
+    const sc = String(args.scale).toLowerCase();
+    if (!['auto', 'contracts', 'risk'].includes(sc)) throw new UsageError(`--scale must be auto, contracts or risk, got "${args.scale}"`);
+    if (sc === 'risk') throw new UsageError('--scale risk needs --trades: assumed stats have no as-traded sizes to scale');
+  }
+  for (const k of ['from', 'to', 'no-merge-legs']) {
+    if (args[k] != null) throw new UsageError(`--${k} only applies with --trades`);
   }
   for (const k of ['extra-cost', 'tz', 'session-roll', 'date-order', 'decimal']) {
     if (args[k] != null) throw new UsageError(`--${k} only applies with --trades`);
@@ -410,8 +445,12 @@ export function run(argv) {
   const evalCap = rules.evaluation.maxContractsMini * (unit === 'micro' ? rules.microsPerMini : 1);
   if (args.sweep && args.contracts != null) throw new UsageError('use --contracts or --sweep, not both');
   const risk = source.scaling === 'risk';
-  const sizeCap = risk ? Math.max(1, Math.ceil(evalCap / (source.minQty || 1))) : evalCap;
-  const sizes = args.contracts != null ? parseSizes(args.contracts, sizeCap) : defaultSizes(source, evalCap);
+  const sizeCap = risk ? Math.max(...defaultSizes(source, evalCap)) : evalCap;
+  const sizes =
+    args.contracts != null
+      ? parseSizes(args.contracts, sizeCap, risk ? 'risk multiplier; beyond it every trade is capped' : 'evaluation cap for this unit')
+      : defaultSizes(source, evalCap);
+  if (trades) noteOverCap(info, trades, evalCap, unit, 'the evaluation cap');
   const attempts = number(args, 'attempts', { def: 20000, min: 1, int: true });
   const settings = asUsage(() => ({
     mode,
@@ -476,6 +515,8 @@ function describeSource(s, unitName) {
         `(${fx(s.tradesPerActiveDay, 2)} per active session), win ${pct(s.winRate)}`,
       `expectancy ${usd(s.expectancyPerContract, 2)} per trade per ${unitName} after ${usd(s.extraCost, 2)} extra cost; ` +
         `whole sessions bootstrapped (${roll})${rowWarnings > 0 ? `; ${rowWarnings} row warning(s)` : ''}`,
+      ...(s.legsMerged > 0 ? [`exit legs: ${int(s.legsMerged)} scale-out legs merged into their positions (${int(s.rows)} CSV trades -> ${int(s.trades)} positions; --no-merge-legs keeps them apart)`] : []),
+      ...(s.calendarFrom || s.calendarTo ? [`calendar: session pool widened to ${s.calendarFrom ?? s.firstDay}..${s.calendarTo ?? s.lastDay} (--from/--to), so sessions without trades at either end are drawn too`] : []),
       s.scaling === 'risk'
         ? `sizing: risk scaling${s.scaleAuto ? ' (auto: trade sizes vary)' : ''}: "Risk x" k = each trade's as-traded size ` +
           `(${int(s.minQty)}-${int(s.maxQty)} ${unitName}s) times k, capped at the plan limit; at 1x the median losing trade lost ` +
@@ -537,12 +578,13 @@ function renderText(out, rules) {
         v.medianDaysToPass == null ? '-' : `${v.medianDaysToPass}/${v.p90DaysToPass}`,
         fx(v.attemptsPerPass, 1),
         s.fee > 0 ? usd(v.feesPerPass) : '-',
+        ...(s.scaling === 'risk' ? [pct(v.cappedTradeShare ?? 0)] : []),
         r.contracts === bestPass ? '<- best P(pass)' : '',
       ];
     });
-    lines.push(
-      table([sizeLabel, 'P(pass)', 'P(breach)', 'P(expire)', 'Days to pass med/p90', 'Attempts/pass', 'Fees/pass', ''], rows, new Set([7])),
-    );
+    const head = [sizeLabel, 'P(pass)', 'P(breach)', 'P(expire)', 'Days to pass med/p90', 'Attempts/pass', 'Fees/pass'];
+    if (s.scaling === 'risk') head.push('Capped');
+    lines.push(table([...head, ''], rows, new Set([head.length])));
   }
   if (s.mode !== 'eval') {
     lines.push('', `PERFORMANCE ACCOUNT after a pass (${s.horizonDays} trading days; per funded account unless noted)`);
@@ -656,7 +698,8 @@ function runTradeify(args) {
   const cap = planCap(rules, plan, unit);
   if (args.sweep && args.contracts != null) throw new UsageError('use --contracts or --sweep, not both');
   const risk = source.scaling === 'risk';
-  const sizeCap = risk ? Math.max(1, Math.ceil(cap / (source.minQty || 1))) : cap;
+  const sizeCap = risk ? Math.max(...defaultSizes(source, cap)) : cap;
+  if (trades) noteOverCap(info, trades, cap, unit, `the ${plan.name} cap`);
   const sizes =
     args.contracts != null
       ? parseSizes(args.contracts, sizeCap, risk ? `beyond it every trade is capped at the ${plan.name} limit` : `${plan.name} cap for this unit`)
