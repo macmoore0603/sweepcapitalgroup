@@ -129,22 +129,26 @@
 //   qty    = floor(budget / per-contract risk), capped at the plan's limit
 //   room to floor = balance at last close + today's realized P&L + virtual
 //            P&L since the as-of time - floor
-//   A setup that cannot be sized to 1 contract is drawn as a small grey
-//   "no size" marker with the reason and sends no alert. On NQ ($20/point)
-//   a $150 budget is below one contract's risk for any 8-point stop
-//   ($171.50), so NQ prompts are "no size": use MNQ or raise the risk. The
-//   table then shows PAUSED with the reason instead of ARMED.
+//   A setup that cannot be sized to 1 contract is drawn with a faded arrow
+//   and a faded "no size" label with the reason and a hint, and sends no
+//   alert. On NQ ($20/point) a $150 budget is below one contract's risk for
+//   any 8-point stop ($171.50), so NQ setups are "no size": chart MNQ or
+//   raise the risk. The table then shows PAUSED with the reason.
 //
-// HOW A PROMPT IS GATED (the table shows ARMED or PAUSED: reason)
-//   No prompt when: the inputs are stale; the signal bar closes outside the
-//   entry window or within 20 minutes of flat-by; room to floor <= 0; the
+// HOW A SIGNAL IS GATED (the table shows ARMED, DRAW ONLY or PAUSED: reason)
+//   Not drawn: the signal bar closes outside the entry window or within 20
+//   minutes of flat-by, during warm-up, or while a virtual trade is open or
+//   pending. Drawn grey as "held back", no alert: room to floor <= 0; the
 //   DLL, your daily stop or the daily profit lock is hit; the day's trade
-//   count or the losses-in-a-row limit is reached; a virtual trade is open
-//   or pending; the budget cannot size 1 contract even at the minimum stop
-//   (table only). Prompts are decided on confirmed bars only, so they do not
+//   count or the losses-in-a-row limit is reached. Stale or future account
+//   figures only add a warning: the signal is drawn orange and alerted with
+//   ACCOUNT FIGURES STALE, or drawn with every alert muted if you chose
+//   "Draw only, no alerts" (the table then says DRAW ONLY). With stale
+//   figures the typed realized P&L and trades taken belong to an earlier
+//   session: they stay in the balance but not in today's daily limits. Prompts are decided on confirmed bars only, so they do not
 //   repaint within a session. Which bars are live depends on the current
 //   time and the typed figures: after the session rolls, a reload or new
-//   inputs, earlier bars are recomputed as review prompts and can differ
+//   inputs, earlier bars are recomputed as past signals and can differ
 //   from what was alerted. Keep your own record of the alerts you acted on.
 //
 // THE VIRTUAL TRADE (as the July Python backtest manages it)
@@ -167,8 +171,9 @@
 //     P&L start at the as-of time. A review trade still open or pending at
 //     the as-of time is dropped then, so the typed figures stand alone.
 //   - Past sessions, and the current session before the as-of time, show
-//     faded "review" prompts gated with the typed figures as a stand-in for
-//     that day's account. They never alert. Turn them off under Display.
+//     past signals at full colour, marked (past), gated with the typed
+//     figures as a stand-in for that day's account. They never alert. Turn
+//     them off under Display ("Show signals on past bars").
 //   - The entry window is judged on the signal bar's close time; overnight
 //     windows (start after end) are not supported.
 //   - Setups, gates and indicators are copied from the compiled July port
@@ -384,7 +389,10 @@ int prevClose = timestamp(TZ, year(closeRef, TZ), month(closeRef, TZ), dayofmont
 bool stale = iAsOf < prevClose
 bool asOfFuture = iAsOf > timenow
 bool curSess = time >= sessStartNow
-bool liveBar = curSess and time_close > iAsOf
+// While the as-of time is in the future the whole current session is live (with a warning).
+bool liveBar = curSess and (asOfFuture or time_close > iAsOf)
+// "Draw only, no alerts" with stale or future figures mutes every alert, exits and reminders included.
+bool muteAlerts = (stale or asOfFuture) and iStaleMode == STALE_QUIET
 
 // --------------------------------------------- July NQ indicator stack -----
 // Copied from the compiled July port (Apex 50K Eval Lab): same EMAs, Wilder
@@ -611,8 +619,10 @@ bool julyPass = jDir != 0 and jSc >= iMinScore and jStopPts >= iMinStop and jSto
 // (since the as-of time on live bars, since the session start on review
 // bars) + the open virtual trade's P&L.
 acctNow(bool live, float dVirt, float openPnl) =>
-    float dayPnl = (live ? iTodayPnl : 0.0) + dVirt + openPnl
-    float room = iBal + dayPnl - floorUsed
+    // Stale figures come from an earlier session: their realized P&L is part of the balance, not of today.
+    float typedToday = live and not stale ? iTodayPnl : 0.0
+    float dayPnl = typedToday + dVirt + openPnl
+    float room = iBal + (live ? iTodayPnl : 0.0) + dVirt + openPnl - floorUsed
     float dllRoom = na(planDll) ? float(na) : planDll + dayPnl
     bool dllHit = not na(planDll) and dayPnl <= -planDll
     bool selfHit = iSelfStop > 0 and dayPnl <= -iSelfStop
@@ -813,6 +823,7 @@ bool longNow = false
 bool shortNow = false
 bool blockedNow = false
 int blockedDir = 0
+int noSizeDir = 0
 bool longAlert = false
 bool shortAlert = false
 bool exitAlert = false
@@ -834,11 +845,11 @@ if barstate.isconfirmed
     if newDay
         if vt.dir != 0
             vt.leg("SESSION END", vt.qty, open)
-            float dpEnd = (vt.live ? iTodayPnl : 0.0) + dayVirt + vt.barPnl
+            float dpEnd = (vt.live and not stale ? iTodayPnl : 0.0) + dayVirt + vt.barPnl
             if showMark(vt.live)
                 exitMark(vt, labs)
                 exitMarkPx := vt.barPx
-            if vt.live
+            if vt.live and not muteAlerts
                 alertTxt := addLine(alertTxt, exitText(vt, dpEnd))
                 exitAlert := true
             vt.dir := 0
@@ -865,7 +876,7 @@ if barstate.isconfirmed
         if pDir != 0 and not pLive
             pDir := 0
         dayVirt := 0.0
-        dayTrades := iTradesToday
+        dayTrades := stale ? 0 : iTradesToday
         lossStreak := 0
 
     // C. A pending prompt fills at this bar's open + 1 tick, unless that is
@@ -881,7 +892,7 @@ if barstate.isconfirmed
             string pastWhat = pastStop ? "the stop" : "target 1"
             if showMark(pLive)
                 keepLabel(labs, label.new(bar_index, open, "cancelled: opened past " + pastWhat, style = label.style_label_left, color = color.new(color.gray, 30), textcolor = color.white, size = size.tiny))
-            if pLive and liveBar
+            if pLive and liveBar and not muteAlerts
                 alertTxt := addLine(alertTxt, syminfo.root + " CANCEL " + (pDir > 0 ? "LONG" : "SHORT") + " " + pName + ": the bar opened at " + fmtPx(open) + ", past " + pastWhat + " " + fmtPx(pastStop ? pStop : pT1) + " - do not enter | " + tagTxt)
                 exitAlert := true
         pDir := 0
@@ -893,11 +904,11 @@ if barstate.isconfirmed
             dayVirt += vt.barPnl
             if vt.closedNow
                 lossStreak := vt.net < 0 ? lossStreak + 1 : 0
-            float dpNow = (liveBar ? iTodayPnl : 0.0) + dayVirt
+            float dpNow = (liveBar and not stale ? iTodayPnl : 0.0) + dayVirt
             if showMark(vt.live)
                 exitMark(vt, labs)
                 exitMarkPx := vt.barPx
-            if vt.live and liveBar
+            if vt.live and liveBar and not muteAlerts
                 alertTxt := addLine(alertTxt, exitText(vt, dpNow))
                 exitAlert := true
             if vt.closedNow
@@ -906,7 +917,7 @@ if barstate.isconfirmed
     // E. Flat-by reminder, once per session, about 10 minutes before.
     if fbWarnBar and not fbWarned
         fbWarned := true
-        if liveBar
+        if liveBar and not muteAlerts
             fbWarnNow := true
             string openTxt = vt.dir != 0 ? " | virtual " + (vt.dir > 0 ? "LONG " : "SHORT ") + str.tostring(vt.qty, "#") + " still open, trade P&L " + fmtSigned(vt.net + vt.openPnl()) : ""
             string staleTxt = asOfFuture ? " | as-of time is in the future: fix it so sizes use today's figures" : stale ? " | account figures STALE: sizes use old figures until you type today's figures and as-of time and recreate the alert" : ""
@@ -920,11 +931,12 @@ if barstate.isconfirmed
         bool figWarn = liveBar and (stale or asOfFuture)
         // live = false skips the stale / future checks inside gateWhy: they are handled as a warning here
         string why = gateWhy(false, warm, rF, hD, hS, hL, dayTrades, lossStreak, vt.dir != 0 or pDir != 0, inWindow, nearFlatBy)
-        bool quietWhy = why == "warming up" or why == "virtual trade open" or why == "outside the entry window" or why == "within 20 min of flat-by"
+        // not drawn at all: warm-up, a signal still pending or open, outside the entry window, near the flat-by
+        bool quietWhy = not warm or vt.dir != 0 or pDir != 0 or not inWindow or nearFlatBy
         string side = jDir > 0 ? "LONG" : "SHORT"
         string scoreTxt = jName + " " + str.tostring(jSc, "#")
         string warnTxt = figWarn ? (asOfFuture ? "as-of time in the future" : "ACCOUNT FIGURES STALE") : ""
-        bool alertOk = liveBar and (not figWarn or iStaleMode == STALE_ALERT)
+        bool alertOk = liveBar and not muteAlerts
         if why != ""
             if curSess
                 nPaused += 1
@@ -941,10 +953,9 @@ if barstate.isconfirmed
                     nNoSize += 1
                     lastPauseWhy := scoreTxt + ": no size (" + bind + ")"
                 if showMark(liveBar)
-                    longNow := jDir > 0
-                    shortNow := jDir < 0
+                    noSizeDir := jDir
                     string hint = isMicro ? "lower the stop or raise risk per trade" : "chart the micro (MNQ) or raise risk per trade"
-                    string nsTxt = side + " @ " + fmtPx(jE) + "  SL " + fmtPx(jS) + "\nno size: " + bind + " " + fmtUsd0(budget) + " < " + fmtUsd2(perC) + "/contract (" + hint + ")\n" + scoreTxt + (liveBar ? "" : "  (past)")
+                    string nsTxt = side + " @ " + fmtPx(jE) + "  SL " + fmtPx(jS) + "\nno size: " + bind + " " + fmtUsd0(budget) + " < " + fmtUsd2(perC) + "/contract (" + hint + ")\n" + scoreTxt + (liveBar ? (figWarn ? "\n" + warnTxt : "") : "  (past)")
                     keepLabel(labs, label.new(bar_index, jDir > 0 ? low : high, nsTxt, yloc = jDir > 0 ? yloc.belowbar : yloc.abovebar, style = jDir > 0 ? label.style_label_up : label.style_label_down, color = color.new(jDir > 0 ? color.teal : color.red, 45), textcolor = color.white, size = lblSize))
             else
                 pDir := jDir
@@ -996,6 +1007,8 @@ if barstate.isconfirmed
 // ============================================================== MARKERS ======
 plotshape(longNow, "Long signal", shape.triangleup, location.belowbar, color.teal, size = size.small, text = "LONG", textcolor = color.teal)
 plotshape(shortNow, "Short signal", shape.triangledown, location.abovebar, color.red, size = size.small, text = "SHORT", textcolor = color.red)
+plotshape(noSizeDir > 0, "Long setup, no size", shape.triangleup, location.belowbar, color.new(color.teal, 60), size = size.tiny)
+plotshape(noSizeDir < 0, "Short setup, no size", shape.triangledown, location.abovebar, color.new(color.red, 60), size = size.tiny)
 plotshape(blockedNow and blockedDir > 0, "Long setup held back", shape.triangleup, location.belowbar, color.new(color.gray, 20), size = size.tiny)
 plotshape(blockedNow and blockedDir < 0, "Short setup held back", shape.triangledown, location.abovebar, color.new(color.gray, 20), size = size.tiny)
 plotshape(exitMarkPx, "Virtual exit", shape.xcross, location.absolute, color.new(color.gray, 0), size = size.tiny)
@@ -1015,14 +1028,14 @@ tcell(int r, string k, string v, color vc) =>
 if barstate.islast and iShowTable
     float tOpen = vt.openPnl()
     [tDay, tRoom, tDllRoom, tDllHit, tSelf, tLock] = acctNow(liveBar, dayVirt, tOpen)
-    string tWhy = asOfFuture ? "as-of time is in the future (signals drawn with a warning)" : stale ? "STALE figures: signals drawn with a warning; type today's dashboard figures and as-of time" : not curSess ? "waiting for the session (18:00 ET)" : not liveBar ? "no bar has closed after the as-of time yet" : gateWhy(true, warm, tRoom, tDllHit, tSelf, tLock, dayTrades, lossStreak, vt.dir != 0 or pDir != 0, inWindow, nearFlatBy)
+    string tFig = asOfFuture ? "as-of time in the future" : stale ? "STALE figures: sizes use old figures; type today's dashboard figures and as-of time" : ""
+    string tWhy = not curSess ? "waiting for the session (18:00 ET)" : not liveBar ? "no bar has closed after the as-of time yet" : gateWhy(false, warm, tRoom, tDllHit, tSelf, tLock, dayTrades, lossStreak, vt.dir != 0 or pDir != 0, inWindow, nearFlatBy)
     // A budget that cannot size 1 contract even at the minimum stop posts nothing.
     if tWhy == ""
         [mq, mPerC, mBudget, mBind] = sizeFor(iMinStop, tRoom, tDllRoom, tDay)
         if mq < 1
             tWhy := mBind + " " + fmtUsd2(mBudget) + " cannot size 1 " + syminfo.root + " even at a " + str.tostring(iMinStop) + "-pt stop (needs " + fmtUsd2(mPerC) + ")" + (mBind == "risk per trade" and not isMicro ? ": use the micro contract or raise the risk" : "")
-    bool figWarnT = stale or asOfFuture
-    string status = tWhy == "" ? "ARMED" : figWarnT ? "ARMED, " + tWhy : "PAUSED: " + tWhy
+    string status = (tWhy == "" ? (muteAlerts ? "DRAW ONLY (alerts muted)" : "ARMED") : "PAUSED: " + tWhy) + (tFig != "" ? " | " + tFig : "")
     color white = color.new(color.white, 0)
     color good = color.new(color.lime, 0)
     color warnC = color.new(color.orange, 0)
@@ -1038,7 +1051,7 @@ if barstate.islast and iShowTable
     tcell(7, "Today's P&L", liveBar ? fmtSigned(tDay) + " (typed " + fmtSigned(iTodayPnl) + " + virtual " + fmtSigned(dayVirt + tOpen) + ")" : "virtual " + fmtSigned(tDay) + " (not live)", tDay < 0 ? warnC : white)
     tcell(8, "Day limits", "risk " + fmtUsd0(iRisk) + " / " + str.tostring(iShare) + "% of room | stop " + (iSelfStop > 0 ? fmtUsd0(iSelfStop) : "off") + " | lock " + (na(lockVal) ? "off" : fmtUsd0(lockVal)), white)
     tcell(9, "Trades today", str.tostring(dayTrades) + " / " + str.tostring(iMaxTrades) + " | losses in a row " + str.tostring(lossStreak) + " / " + str.tostring(iMaxLosses), white)
-    tcell(10, "Status", status, tWhy == "" ? good : warnC)
+    tcell(10, "Status", status, tWhy == "" and tFig == "" ? good : warnC)
     tcell(11, "Setups this session", "posted " + str.tostring(nPosted) + ", paused " + str.tostring(nPaused) + ", no size " + str.tostring(nNoSize) + (lastPauseWhy != "" ? "\nlast held: " + lastPauseWhy : ""), white)
     tcell(12, "Last signal", lastSigTxt, white)
     table.cell(tb, 0, 13, "Unproven signals: prompts, not advice", text_color = color.new(color.silver, 0), text_size = size.small, text_halign = text.align_left)

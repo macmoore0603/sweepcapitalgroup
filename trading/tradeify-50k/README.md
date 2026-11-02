@@ -6,13 +6,13 @@ Tools for trading NQ and MNQ by hand on a **Tradeify 50K Sim Funded** account:
 - **The planner** estimates your odds of reaching payouts before the account breaches, for each size, from a TradingView trade list. It lives at `../apex-50k/planner/`. Run it with `--firm tradeify`.
 - **`rules.json`** holds every Tradeify 50K funded rule the tools use, with source links, verified 2026-11-02.
 
-The indicator places no orders and is not advice. Read "The record" below before trading its signals.
+The indicator places no orders and is not advice. The TradingView connector in Claude can read market data and create simple price alerts, but it cannot add a script to a chart or create an indicator alert. Pasting the script and creating its alert are done in TradingView. Read "The record" below before trading its signals.
 
 ## Why no signals were posting
 
 - **The old signals were turned off on purpose.** On October 29–30 the session that built the risk tools found that the AI-TPS v2.4 pullback strategy lost money on 14 years of real NQ data. It turned the watcher's signals off on your Mac (`"tradeSignals": false` in `~/signal-analysis/watcher-config.json`) and hid the "AI Trend Pullback Signals" study on your chart. To bring those back, set that value to `true` on your Mac and unhide the study in TradingView.
 - **The tools built since show no signals by design.** The Prop Firm Risk HUD and Risk Lines are risk displays only. The Eval Lab is a backtest with no alerts.
-- **This indicator is the new way to get signals.** It posts only when your inputs are current, so it shows STALE until you type today's dashboard figures.
+- **This indicator is the new way to get signals.** It draws every signal on the chart, today's and past ones, whether or not you have typed today's figures. Stale figures only add a warning to the label and the alert.
 
 ## Set up the indicator (about 5 minutes)
 
@@ -29,6 +29,16 @@ The indicator places no orders and is not advice. Read "The record" below before
 
 Use **MNQ**, not NQ. At the default $150 risk per trade, one NQ contract with the minimum 8-point stop costs about $171, so every NQ setup shows "no size". The table says so and names the limit that binds.
 
+### What you see on the chart
+
+- **Teal LONG / red SHORT arrow with a label** shows the size, entry, stop (SL), target 1, target 2, setup and score. Past signals look the same and are marked "(past)".
+- **Orange label:** a live signal sized from stale figures. It still alerts, marked ACCOUNT FIGURES STALE, unless you pick "Draw only, no alerts" under Display.
+- **Faded arrow with "no size":** the setup fired, but one contract risks more than your budget. On NQ, chart MNQ instead.
+- **Grey "setup held back":** an account limit blocked it, such as the floor, the daily loss limit, your daily stop, the profit lock, the trade count or the loss streak. No alert.
+- **Lines:** entry, stop and targets of the open signal, then its exits (T1, T2, stop, time, flat-by).
+
+**Expect about 3 to 4 signals a week on MNQ 5-minute,** almost all Trend Pullback. From October 5 to November 2, 2026, TradingView's MNQ1! data gave 11. Only one reached target 2, and seven were stopped out. A lower "Minimum setup score" shows more: on 49 sessions, 55 gave 34 signals, 45 gave 52 and 40 gave 61. None of those levels has shown an edge.
+
 ### What a signal looks like
 
 ```
@@ -37,16 +47,21 @@ MNQ LONG 3 @ 21534.25 | stop 21510.00 (24.25 pts, $147.00 risk) | T1 21570.50 | 
 
 The indicator then follows the trade as a virtual position. It posts the exit: T1 (half off, stop to breakeven), T2, stop, time stop or flat-by. A reminder arrives 10 minutes before the 4:45 PM ET flat time.
 
-### What blocks a signal
+### What hides or holds back a signal
 
-- inputs older than the last session close (STALE);
+Not drawn at all:
 - outside 9:35 AM–3:30 PM ET, or within 20 minutes of the 4:45 PM ET flat time;
+- while an earlier signal is still open, or during warm-up.
+
+Drawn grey, with no alert:
 - no room left to the drawdown floor;
 - the daily loss limit (soft) or your own daily stop is hit;
 - the profit lock is hit (Growth $1,000, Lightning $600 by default);
-- 3 trades already taken, or 2 losses in a row;
-- a virtual trade is still open;
-- the size works out below 1 contract.
+- 3 trades already taken, or 2 losses in a row.
+
+Drawn faded, with no alert: the size works out below 1 contract.
+
+Stale figures never hide a signal. They only add the warning.
 
 The profit lock keeps any one day under the consistency limit. Growth allows no single day above 35% of the profit since the last payout.
 
