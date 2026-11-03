@@ -66,6 +66,8 @@ Before any call, paper or live, send Claude the idea or a chart screenshot. Clau
 5. **Alerts:** TradingView price alerts at the stop and the target.
 6. **Call:** TAKE IT, WATCHLIST or SKIP, with the 3 biggest reasons it could fail.
 
+The default answer is SKIP until the entry, stop, target, size and news check are all present. A SKIP from the risk step cannot be overridden by anything else in the check. Every number is either taken from live data or marked missing.
+
 Every TAKE IT and every WATCHLIST is recorded with `add` the minute it is made. The journal then grades the check itself: whether TAKE IT calls beat the others. A confident-sounding check proves nothing until the journal shows it. Claude does not place orders.
 
 Not modelled: early-close days. Tradeify's flat-by is then 12:59 ET, but the journal still uses 16:45, so a trade exits at the market's last bar.
