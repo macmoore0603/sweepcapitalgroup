@@ -1,0 +1,4 @@
+id,time_et,symbol,side,entry,stop,target,size,mode,note
+1,2026-10-05 11:45,MNQ,long,31240.50,31198.50,31303.25,1,paper,"Trend Pullback 57, T1"
+2,2026-10-14 13:05,MNQ,short,30262.50,30320.50,30175.25,1,paper,"Trend Pullback 57, T1"
+3,2026-10-21 14:05,MNQ,long,30053.50,30033.50,30112.00,1,paper,"Trend Pullback 71, T2"
