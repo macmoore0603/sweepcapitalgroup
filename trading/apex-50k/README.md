@@ -141,15 +141,15 @@ Two notes on running it:
 node --test planner/test/
 ```
 
-There are 96 tests, covering:
+There are 118 tests, covering:
 - the ledger rules at their exact boundaries;
 - the trailing and threshold-stop behavior;
 - Performance Account tiers, the daily loss limit and payout gating;
 - Monte Carlo checks against closed-form results;
 - TradingView CSV variants;
 - risk scaling, leg merging and the shared calendar;
-- the Tradeify funded-account rules and payout policies;
-- a sync test that fails if the Pine rules block and `rules.json` disagree.
+- the Tradeify funded-account rules and payout policies, and starting from a funded account's current state;
+- sync tests that fail if either Pine rules block and its `rules.json` disagree.
 
 ## Files
 

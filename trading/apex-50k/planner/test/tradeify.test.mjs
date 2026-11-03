@@ -614,7 +614,7 @@ test('CLI: --firm tradeify options and validation', () => {
   assert.match(text, /Lightning 50K Funded/);
   assert.match(text, /Summary: /);
   assert.match(text, /flat by 16:45 ET \(12:59 ET on early-close days\)/);
-  assert.match(text, /not modelled: minimum activity \(at least 1 trade per week\); flat time and microscalping \(checked on --trades only\)/);
+  assert.match(text, /not modelled: minimum activity \(at least 1 trade per week, Monday through Friday, per account, or the account can be marked inactive\); flat time and microscalping \(checked on --trades only\)/);
   assert.doesNotMatch(text, /order conservative/);
   assert.equal(out.settings.order, undefined, '--order is not a Tradeify setting');
   assert.throws(() => run([...base, '--order', 'adverse-first']), /--order has no effect with --firm tradeify/);

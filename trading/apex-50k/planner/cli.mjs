@@ -40,6 +40,10 @@ import {
   replayFunded,
   flatTimeViolations,
   microscalpingCheck,
+  resolveStartState,
+  makeFundedLedger,
+  payoutCheck,
+  payoutBlockers,
 } from './tradeify.mjs';
 
 class UsageError extends Error {}
@@ -49,10 +53,13 @@ const VALUED = new Set([
   'win', 'rr', 'loss-r', 'risk', 'tpd', 'cost', 'mfe-losers', 'mae-winners', 'r-spread',
   'contracts', 'scale', 'unit', 'mode', 'feed', 'order', 'dll-fill', 'attempts', 'pa-runs', 'days', 'horizon', 'fee', 'seed', 'rules',
   'firm', 'plan', 'payout', 'runs', 'early-close', 'from', 'to',
+  'balance', 'floor', 'high-eod', 'cycle-start', 'qual-days', 'cycle-max-day', 'payouts-taken',
 ]);
 const FLAGS = new Set(['sweep', 'json', 'help', 'zero-edge', 'legacy', 'select-caps-before-2026-09-01', 'no-merge-legs']);
+/** Tradeify start-state options: start from the account held now instead of a fresh one. */
+export const START_OPTIONS = Object.freeze(['balance', 'floor', 'high-eod', 'cycle-start', 'qual-days', 'cycle-max-day', 'payouts-taken']);
 /** Options that only apply with --firm tradeify, and Apex evaluation / PA options that do not apply there. */
-const TRADEIFY_ONLY = ['plan', 'legacy', 'select-caps-before-2026-09-01', 'payout', 'runs', 'early-close'];
+const TRADEIFY_ONLY = ['plan', 'legacy', 'select-caps-before-2026-09-01', 'payout', 'runs', 'early-close', ...START_OPTIONS];
 const APEX_ONLY = ['feed', 'attempts', 'pa-runs', 'days', 'fee'];
 export const FIRMS = Object.freeze(['apex', 'tradeify']);
 /** CLI default for --r-spread: real stops vary in width, so a fixed size does not risk exactly 1R per trade. */
@@ -270,6 +277,26 @@ Firm:
                         risk multipliers with --scale risk
   The DLL is soft (the session pauses, --dll-fill applies); payouts are checked at each session close;
   the trader receives ${tradeify ? pct(tradeify.split, 0) : 'the split'} of each payout; --trades replays the actual trades too.
+
+Start from the account you hold (tradeify; read the numbers off the Tradeify dashboard at a session close;
+amounts may use commas, and a $ must be quoted: an unquoted $49,000 reaches the planner as 9,000):
+  --balance B           balance at the last close; with --floor, every simulated account (and the first
+                        replay account) starts here instead of at a fresh ${usd(tradeify?.startBalance ?? 50000)}
+  --floor F             current Trailing Max Drawdown floor (${usd(tradeify?.drawdown?.lockedFloor ?? 50100)} once locked; else the highest
+                        end-of-day balance - ${usd(tradeify?.drawdown?.amount ?? 2000)}, from ${usd((tradeify?.startBalance ?? 50000) - (tradeify?.drawdown?.amount ?? 2000))} up to below ${usd(tradeify?.drawdown?.lockedFloor ?? 50100)})
+  --high-eod H          highest end-of-day balance so far (default: before a payout the largest of B, ${usd(tradeify?.startBalance ?? 50000)}
+                        and F + ${usd(tradeify?.drawdown?.amount ?? 2000)}; after one the largest of B, S and the lowest close a payout needs)
+  --cycle-start S       balance at the start of this payout cycle: ${usd(tradeify?.startBalance ?? 50000)} before the first payout,
+                        otherwise the balance right after the last payout (default ${usd(tradeify?.startBalance ?? 50000)})
+  --qual-days N         qualifying days since the last payout (Growth: profit above ${usd(tradeify?.plans?.growth?.payout?.qualifyingDayProfitAbove ?? 150)}; Select Flex:
+                        winning days of at least ${usd(tradeify?.plans?.['select-flex']?.payout?.winningDayProfitAtLeast ?? 150)}; default 0, which a qualifying M contradicts)
+  --cycle-max-day M     largest profitable day since the last payout. Growth and Lightning (consistency rule)
+                        require it when B > S, when N > 0, or before the first payout when H > ${usd(tradeify?.startBalance ?? 50000)};
+                        Select Flex uses it only to check N; Select Daily ignores it
+  --payouts-taken K     payouts already taken on this account (default 0; the next payout uses tier K+1)
+  The run prints the start state, whether a payout could be requested now and what blocks it; payout
+  counts and amounts then count from now. A state that is already eligible requests its payout at once:
+  that payout is in the payout counts and amounts, and the next-payout columns count the payouts after it.
 `;
 }
 
@@ -693,6 +720,8 @@ function runTradeify(args) {
   const legacy = Boolean(args.legacy);
   const boughtBefore20260901 = Boolean(args['select-caps-before-2026-09-01']);
   const plan = asUsage(() => resolvePlan(rules, planKey, { legacy, boughtBefore20260901 }));
+  const startInput = parseStartArgs(args);
+  const start = startInput ? asUsage(() => resolveStartState(rules, plan, startInput)) : null;
   const { source, trades, info } = buildSource(args, rules, { defaultRollHour: sessionRollHour(rules) });
   const unit = asUsage(() => normalizeUnit(args.unit ?? 'mini'));
   const cap = planCap(rules, plan, unit);
@@ -716,7 +745,7 @@ function runTradeify(args) {
     horizonDays: number(args, 'horizon', { def: 120, min: 1, int: true }),
     seed: number(args, 'seed', { def: 1, min: 0, max: 4294967295, int: true }),
   }));
-  const simOpts = { ...settings, boughtBefore20260901 };
+  const simOpts = { ...settings, boughtBefore20260901, ...(start ? { startState: start } : {}) };
   const results = sizes.map((contracts) => simulateFunded(rules, plan.key, source, { ...simOpts, contracts }));
   const replay = trades
     ? sizes.map((contracts) => {
@@ -732,6 +761,7 @@ function runTradeify(args) {
     info.flatTimeTrades = late.map((t) => t.tradeNo);
     info.microscalping = microscalpingCheck(rules, trades, { scaling: source.scaling });
   }
+  const startState = start ? startSummary(rules, plan, start, settings, info) : null;
   const best = {
     received: argmaxBy(results, (r) => r.meanReceived),
     payoutChance: argmaxBy(results, (r) => r.pPayout),
@@ -754,6 +784,7 @@ function runTradeify(args) {
     },
     source: info,
     settings: { ...settings, scaling: source.scaling ?? 'contracts', sizes, cap },
+    ...(startState ? { startState } : {}),
     results,
     best: {
       received: best.received ? { contracts: best.received.contracts, meanReceived: best.received.meanReceived } : null,
@@ -764,6 +795,114 @@ function runTradeify(args) {
   out.summary = tradeifySummary(out);
   if (args.json) return { text: JSON.stringify(out, jsonReplacer, 2), data: out };
   return { text: renderTradeify(out, rules), data: out };
+}
+
+/** The start-state options as numbers (null when none is given); resolveStartState checks them against the rules. */
+export function parseStartArgs(args) {
+  const given = START_OPTIONS.filter((k) => args[k] != null);
+  if (given.length === 0) return null;
+  const missing = ['balance', 'floor'].filter((k) => args[k] == null);
+  if (missing.length) {
+    throw new UsageError(
+      `${missing.map((k) => `--${k}`).join(' and ')} ${missing.length > 1 ? 'are' : 'is'} required to start from your current account ` +
+        `(given: ${given.map((k) => `--${k}`).join(', ')}); read ${missing.length > 1 ? 'them' : 'it'} off the Tradeify dashboard at a session close`,
+    );
+  }
+  return {
+    balance: number(args, 'balance', { min: 0, gt: true }),
+    floor: number(args, 'floor', { min: 0, gt: true }),
+    highEod: number(args, 'high-eod', { min: 0, gt: true }),
+    cycleStart: number(args, 'cycle-start', { min: 0, gt: true }),
+    qualDays: number(args, 'qual-days', { def: 0, min: 0, int: true }),
+    cycleMaxDay: number(args, 'cycle-max-day', { min: 0 }),
+    payoutsTaken: number(args, 'payouts-taken', { def: 0, min: 0, int: true }),
+  };
+}
+
+/**
+ * The start state for output: the resolved state, the next payout, whether a payout could be requested now
+ * (and what blocks it), and the payout gates the ledger does not model (from fundedRules).
+ */
+function startSummary(rules, plan, start, settings, info) {
+  const L = makeFundedLedger(rules, plan.key, {
+    legacy: plan.legacy,
+    boughtBefore20260901: plan.boughtBefore20260901,
+    payout: settings.payout,
+    dllFill: settings.dllFill,
+    startState: start,
+  });
+  const c = payoutCheck(L);
+  const fr = rules.fundedRules ?? {};
+  const alsoNeeded = [];
+  const ms = info.microscalping;
+  // Rules the ledger does not model that block a payout now on the evidence given (the --trades list).
+  const blockedBy = fr.microscalping && ms && !ms.passes ? ['microscalping'] : [];
+  if (fr.microscalping) {
+    const status = ms ? (ms.passes ? 'the --trades list passes it' : 'the --trades list fails it') : 'not checked without --trades';
+    alsoNeeded.push({ rule: 'microscalping', text: fr.microscalping, status });
+  }
+  if (fr.kyc && start.payoutsTaken === 0) alsoNeeded.push({ rule: 'kyc', text: fr.kyc, status: null });
+  if (fr.payoutApproval) alsoNeeded.push({ rule: 'payoutApproval', text: fr.payoutApproval, status: null });
+  const { kind: _kind, planKey: _planKey, legacy: _legacy, ...state } = start;
+  return {
+    ...state,
+    nextPayout: c.n,
+    nextCap: c.cap ?? null,
+    payoutNow: {
+      eligible: c.eligible,
+      amount: c.eligible ? c.amount : 0,
+      maxAmount: c.maxAmount,
+      checks: c.checks,
+      blockers: payoutBlockers(L, c),
+      blockedBy, // the simulation and replay still request it, as if these rules were met
+      ...(blockedBy.length ? { minHoldSeconds: ms.minHoldSeconds } : {}),
+    },
+    alsoNeeded,
+  };
+}
+
+/** Text lines for the start state (under "Start  :"). */
+function startLines(st, rules, plan) {
+  const d = rules.drawdown;
+  const P = plan.payout;
+  const lock = st.locked
+    ? `locked at ${usd(d.lockedFloor)}: ${st.lockedBy === 'eod' ? `an end-of-day balance reached ${usd(d.lockTriggerEodBalance)}` : 'a payout was requested'}`
+    : `trails ${usd(d.amount)} below the highest end-of-day balance ${usd(st.highEod, 2)}; locks at ${usd(d.lockedFloor)} once a close reaches ` +
+      `${usd(d.lockTriggerEodBalance)}${d.lockOnPayoutRequest ? ' or a payout is requested' : ''}`;
+  const dll = st.dll == null ? `no DLL${st.dllRaised ? ' (removed)' : ''}` : `DLL ${usd(st.dll)}${st.dllRaised ? ' (raised)' : ''}`;
+  // The largest day matters only to a consistency rule (Growth, Lightning).
+  const largest = plan.consistency != null
+    ? `, largest day ${usd(st.cycleMaxDay, 2)}${st.cycleProfit > 0 && st.cycleMaxDay > 0 ? ` (${pct(st.cycleMaxDay / st.cycleProfit)} of the profit)` : ''}`
+    : '';
+  const dayCount = (n, need, kind) => `, ${n} ${kind} day${n === 1 ? '' : 's'} (${need} needed)`;
+  const days =
+    P.type === 'growth'
+      ? dayCount(st.qualDays, P.minQualifyingDays, 'qualifying')
+      : P.type === 'select-flex'
+        ? dayCount(st.qualDays, P.winningDays, 'winning')
+        : '';
+  const cap = st.nextCap != null ? `, cap ${usd(st.nextCap)}` : '';
+  const pn = st.payoutNow;
+  const lines = [
+    `Start  : your account now: balance ${usd(st.balance, 2)}, floor ${usd(st.floor, 2)} (${lock}), room to floor ${usd(st.roomToFloor, 2)}; ${dll}`,
+    `         since the last payout (cycle start ${usd(st.cycleStart, 2)}): profit ${usd(st.cycleProfit, 2)}${largest}${days}; ` +
+      `${st.payoutsTaken} payout${st.payoutsTaken === 1 ? '' : 's'} taken, next is payout ${st.nextPayout}${cap}`,
+  ];
+  const now = `${usd(pn.amount, 2)} (payout ${st.nextPayout})`;
+  const after = 'the next-payout columns below count the payouts after it';
+  if (!pn.eligible) lines.push(`         payout now: no - ${pn.blockers.map((b) => b.message).join('; ')}`);
+  else if (pn.blockedBy.includes('microscalping')) {
+    lines.push(
+      `         payout now: blocked by the ${pn.minHoldSeconds}-second rule, which the --trades list fails; the payout rules alone allow ${now}. ` +
+        `The run still requests it at once, as if the rule were met; ${after}`,
+    );
+  } else lines.push(`         payout now: yes, ${now}; the run requests it at once, before the first simulated session; ${after}`);
+  if (st.alsoNeeded.length) {
+    lines.push(`         also needed (not modelled): ${st.alsoNeeded.map((a) => (a.status ? `${a.text} (${a.status})` : a.text)).join('; ')}`);
+  }
+  for (const w of st.warnings) lines.push(`         WARNING: ${w}`);
+  for (const n of st.notes) lines.push(`         note: ${n}`);
+  return lines;
 }
 
 function argmaxBy(rows, f) {
@@ -871,9 +1010,23 @@ function renderTradeify(out, rules) {
     `Run    : ${int(s.runs)} funded accounts x ${s.horizonDays} trading sessions; DLL fill ${s.dllFill}; payout ${s.payout}; ` +
       `unit ${unitName}; seed ${s.seed}${unverified ? `; ${unverified} modelling assumptions listed under "unverified" in the rules file` : ''}`,
   );
+  const fromStart = Boolean(out.startState);
+  if (fromStart) lines.push(...startLines(out.startState, rules, plan));
   const bestRec = out.best.received?.contracts;
   const bestChance = out.best.payoutChance?.contracts;
-  lines.push('', `FUNDED ACCOUNT (${s.horizonDays} trading sessions per account; "To trader" = requested x ${pct(rules.split, 0)})`);
+  const now = out.results[0]?.payoutNow;
+  lines.push(
+    '',
+    fromStart
+      ? `FUNDED ACCOUNT from the start state above (${s.horizonDays} more trading sessions per account; payouts from now on; "To trader" = requested x ${pct(rules.split, 0)})`
+      : `FUNDED ACCOUNT (${s.horizonDays} trading sessions per account; "To trader" = requested x ${pct(rules.split, 0)})`,
+  );
+  if (now) {
+    lines.push(
+      `Payouts, Requested and To trader include the ${usd(now.amount, 2)} payout ${now.n} requested now (same in every run); ` +
+        'P(1+ more payout), P(breach<next pay) and Days to next pay count only the payouts after it',
+    );
+  }
   const rows = out.results.map((r) => {
     const tags = [];
     if (r.contracts === bestRec) tags.push('best $ to trader');
@@ -892,19 +1045,21 @@ function renderTradeify(out, rules) {
       tags.length ? `<- ${tags.join(', ')}` : '',
     ];
   });
+  const heads = fromStart
+    ? [sizeLabel, 'P(1+ more payout)', 'Payouts mean/med', 'Requested mean/med', 'To trader mean/med', 'P(breach<next pay)', 'P(breach)', 'Days to next pay', 'DLL days/run', 'Capped', '']
+    : [sizeLabel, 'P(1+ payout)', 'Payouts mean/med', 'Requested mean/med', 'To trader mean/med', 'P(breach<1st pay)', 'P(breach)', 'Days to 1st pay', 'DLL days/run', 'Capped', ''];
+  lines.push(table(heads, rows, new Set([10])));
   lines.push(
-    table(
-      [sizeLabel, 'P(1+ payout)', 'Payouts mean/med', 'Requested mean/med', 'To trader mean/med', 'P(breach<1st pay)', 'P(breach)', 'Days to 1st pay', 'DLL days/run', 'Capped', ''],
-      rows,
-      new Set([10]),
-    ),
+    fromStart
+      ? `Days to next pay = median trading sessions from now to the next payout${now ? ' after the one requested now' : ''} among accounts that got one; Capped = share of trades cut to the plan cap`
+      : 'Days to 1st pay = median trading sessions to the first payout among accounts that got one; Capped = share of trades cut to the plan cap',
   );
-  lines.push('Days to 1st pay = median trading sessions to the first payout among accounts that got one; Capped = share of trades cut to the plan cap');
   if (out.replay) {
     const r0 = out.replay[0];
     lines.push(
       '',
-      `HISTORICAL REPLAY (actual trade order, ${r0.firstDay}..${r0.lastDay}, ${r0.sessions} sessions; a breach ends the account and a fresh one starts at the next session)`,
+      `HISTORICAL REPLAY (actual trade order, ${r0.firstDay}..${r0.lastDay}, ${r0.sessions} sessions; ` +
+        `${fromStart ? 'the first account starts from the start state above, 1st payout "start" = the payout requested now; ' : ''}a breach ends the account and a fresh one starts at the next session)`,
     );
     const rows2 = out.replay.map((r) => [
       r.contracts,
@@ -936,26 +1091,33 @@ function tradeifySummary(out) {
   const label = (q) => (s.scaling === 'risk' ? `risk x${q}` : `${q} ${s.unit === 'micro' ? 'micro' : 'mini'}${q === 1 ? '' : 's'}`);
   const find = (q) => out.results.find((r) => r.contracts === q);
   const parts = [];
+  const st = out.startState;
+  const now = out.results[0]?.payoutNow;
+  const nowText = now ? ` after the ${usd(now.amount, 2)} payout ${now.n} requested now` : '';
+  const [one, first, within] = st ? [`one more payout${nowText}`, 'it', `the next ${s.horizonDays}`] : ['one payout', 'the first', `${s.horizonDays}`];
   if (out.best.received) {
     const r = find(out.best.received.contracts);
     parts.push(
-      `${label(r.contracts)} pays the trader the most (${usd(r.meanReceived)} on average within ${s.horizonDays} trading sessions; ` +
-        `${pct(r.pPayout)} reach at least one payout, ${pct(r.pBreachBeforeFirstPayout)} breach before the first)`,
+      `${label(r.contracts)} pays the trader the most (${usd(r.meanReceived)} on average within ${within} trading sessions${now ? ', including the payout now' : ''}; ` +
+        `${pct(r.pPayout)} reach at least ${one}, ${pct(r.pBreachBeforeFirstPayout)} breach before ${first})`,
     );
     if (out.best.payoutChance && out.best.payoutChance.contracts !== r.contracts) {
       const c = find(out.best.payoutChance.contracts);
       parts.push(`${label(c.contracts)} gives the best chance of a payout (${pct(c.pPayout)}, ${usd(c.meanReceived)} to the trader on average)`);
     }
-  } else parts.push(`no size reached a payout within ${s.horizonDays} trading sessions`);
+  } else parts.push(`no size reached a${st ? 'nother' : ''} payout${nowText} within ${within} trading sessions`);
   if (out.replay) {
-    const paid = out.replay.filter((r) => r.payouts > 0);
+    // A payout requested at the start state is not one the replayed trades earned.
+    const paid = out.replay.filter((r) => r.payouts - (r.startPayouts ?? 0) > 0);
+    const replayNow = out.replay.some((r) => r.startPayouts > 0) ? ' after the payout requested now' : '';
     parts.push(
       paid.length
-        ? `the historical replay paid out at ${paid.map((r) => label(r.contracts)).join(', ')}`
-        : 'the historical replay reached no payout at any size',
+        ? `the historical replay paid out${replayNow} at ${paid.map((r) => label(r.contracts)).join(', ')}`
+        : `the historical replay reached no payout${replayNow} at any size`,
     );
   }
-  let text = `Summary: ${name}: ${parts.join('; ')}.`;
+  const from = st ? ` from your account now (balance ${usd(st.balance, 2)}, floor ${usd(st.floor, 2)}, next payout ${st.nextPayout})` : '';
+  let text = `Summary: ${name}${from}: ${parts.join('; ')}.`;
   const ex = out.source.expectancyPerContract;
   if (Math.abs(ex) < 1e-9) text += ' Expectancy after costs is zero, so these odds come from variance alone.';
   else if (ex < 0) text += ` Expectancy after costs is negative (${usd(ex, 2)} per trade per contract): payouts here are luck, not edge.`;

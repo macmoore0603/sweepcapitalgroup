@@ -28,7 +28,8 @@ The indicator places no orders and is not advice. The TradingView connector in C
    - the Trailing Max Drawdown floor;
    - the highest end-of-day balance so far;
    - today's realized P&L and the trades already taken (both 0 if you read them between sessions);
-   - the date and time you read them.
+   - the date and time you read them;
+   - on Growth, the four **Payout progress** inputs (see below). The profit lock and the payout rows depend on them.
 4. Create the alert: **Alerts → Create alert**, Condition = "Tradeify 50K Signals", then **Any alert() function call**. Tick **Notify in app**, and allow TradingView notifications on your phone.
    - **This needs a paid TradingView plan.** An alert on an indicator counts as a "technical alert". The free Basic plan allows none: it gets only 3 price alerts. Essential allows 20 technical alerts, Plus 100 and Premium 400.
    - If a renewal failed and the account dropped to Basic, TradingView stops every active alert. They can only be restarted within the new plan's limits.
@@ -113,7 +114,7 @@ Not drawn at all:
 Drawn grey, with no alert:
 - no room left to the drawdown floor;
 - the daily loss limit (soft) or your own daily stop is hit;
-- the profit lock is hit (Growth $1,000, Lightning $600 by default);
+- the daily profit lock is hit (on Auto: Growth $990 before the first payout, then set by your payout cycle; Lightning $600);
 - 3 trades already taken, or 2 losses in a row.
 
 Drawn faded, with no alert: the size works out below 1 contract.
@@ -121,6 +122,45 @@ Drawn faded, with no alert: the size works out below 1 contract.
 Stale figures never hide a signal. They only add the warning.
 
 The profit lock keeps any one day under the consistency limit. Growth allows no single day above 35% of the profit since the last payout.
+
+On Auto, the Growth lock is worked out from your payout cycle:
+- Every Growth payout needs a balance of at least $53,000. So at any request, the profit since the last payout is at least $53,000 minus the cycle start.
+- The lock is 95% of 35% of that, rounded down to $10. A day up to the lock stays within 35% at any request.
+- It is $990 before the first payout, and $490 after a $1,500 payout from $53,000.
+- It never goes below $300. That floor applies once the cycle start is above about $52,080, and it is not a guarantee: losing days can still push such a day over 35% and delay the payout.
+- It reads **Balance at the start of this payout cycle** and **Payouts taken so far**. Update both after each payout. If they do not fit together, the lock uses the tightest value and the table says so.
+
+### Payout progress (Growth)
+
+Type these four inputs with the daily figures, as of the same time:
+- **Balance at the start of this payout cycle**: $50,000 before the first payout, then the balance just after the last payout left the account.
+- **Qualifying days since the last payout**: closed sessions with a day profit above $150.
+- **Largest profitable day since the last payout.**
+- **Payouts taken so far**: approved payouts only.
+
+A payout request locks the floor at $50,100 at once. The money only leaves on approval, which can take up to 72 hours. Until then, keep the balance at $53,000 or more, or the request is denied. Keep the inputs as they are until the payout is approved.
+
+The table then shows four rows, as if the day ended now:
+
+| Row | Shows |
+|---|---|
+| Payout days | qualifying days, n of 5, and whether today would qualify |
+| Payout balance | the balance against $53,000, and how much is missing or to spare |
+| Consistency 35% | the largest day as a share of the cycle profit, and the profit still needed if it is over 35% |
+| Next payout | the cap for the next payout ($1,500 / $2,000 / $2,500, then $3,000), the most you could request, what you receive at 90%, and the room left above the floor |
+
+A few things change how the rows read:
+- **Virtual trades are included.** The figures include the session's virtual trades, marked "incl. virtual". These are prompts you may not have taken.
+- **Thin room after a payout.** If the most you could request would leave less than one daily loss limit ($1,250) above the floor, the Next payout row turns orange. It then also shows the amount that keeps $1,250.
+- **Stale figures.** With stale or future figures, all four rows turn orange and say STALE.
+- **Inputs that cannot be true together.** These turn Consistency and Next payout red, with the reason:
+  - a cycle start other than $50,000 with no payouts;
+  - a cycle start at or below $50,100 after a payout;
+  - a cycle start above the highest end-of-day balance;
+  - qualifying days with a largest day of $150 or less;
+  - a balance above the cycle start with a largest day of 0.
+
+The rows request nothing. They do not check the 10-second rule, KYC or Rise.
 
 ## Tradeify 50K funded rules modelled
 
@@ -182,4 +222,36 @@ Options:
 - `--from`/`--to` put several trade lists on the same calendar.
 - `--help` lists everything else.
 
-Tests: `node --test planner/test/` (96 pass).
+### Start from your account now
+
+By default the planner simulates a fresh $50,000 account. To get odds for the funded account you hold, type its dashboard figures:
+
+```
+node planner/cli.mjs --firm tradeify --plan growth --trades list-of-trades.csv --unit micro --sweep \
+  --balance 51800 --floor 49800 --high-eod 51800 --qual-days 3 --cycle-max-day 700
+```
+
+| Flag | What to type | Default |
+|---|---|---|
+| `--balance` | balance at the last close | required |
+| `--floor` | the Trailing Max Drawdown floor | required |
+| `--high-eod` | the highest end-of-day balance so far | the larger of balance and $50,000 |
+| `--cycle-start` | $50,000 before the first payout, then the balance right after the last payout | $50,000 |
+| `--qual-days` | days above $150 since the last payout | 0 |
+| `--cycle-max-day` | largest profitable day since the last payout | required once the cycle is in profit |
+| `--payouts-taken` | approved payouts so far | 0 |
+
+Quote dollar values or leave out the `$`. In bash an unquoted `$49,000` arrives as `9,000`, and the planner rejects it.
+
+What the planner does with them:
+- **The Start line** shows your room to the floor and the progress on each payout condition. It says whether you could request now, and if not, what blocks it.
+- **The table** then counts only payouts made from now on.
+- **Impossible states are rejected with a reason.** For example: a floor that cannot exist, or qualifying days with a largest day of $150 or less.
+
+The example above runs the July setups' real trades from a $51,800 balance. The best size is 5 times the as-traded risk: 48% reach the next payout, but 51% breach first. The setups lose $12.58 per trade per micro, so the planner says it plainly: "payouts here are luck, not edge".
+
+Not modelled:
+- The planner pays out at the close of the request day. Tradeify pays on approval, which can take up to 72 hours. Until approval, the balance must hold $53,000 or the request is denied. So time between payouts is slightly optimistic, and a denial never happens in the simulation.
+- The most you can request, the cap or the balance minus $50,100, is read from Tradeify's worked example. The help pages give no formula for it.
+
+Tests: `node --test planner/test/` (118 pass). One of them checks that the rule constants in `TradeifySignals.pine` match `rules.json`.

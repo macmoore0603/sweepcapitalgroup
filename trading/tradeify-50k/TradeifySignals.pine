@@ -75,6 +75,41 @@
 //   today's realized P&L and trades taken are 0 (the balance at last close
 //   already includes them). Type them while flat: a virtual trade or prompt
 //   from before the as-of time is dropped when the live period starts.
+//   On Growth, also update the four Payout progress inputs (below).
+//
+// PAYOUT PROGRESS (Growth, the rows at the bottom of the table)
+//   Type, as of the same as-of time: the balance at the start of this payout
+//   cycle (just after the last payout left the account; 50,000 before the
+//   first), the qualifying days since the last payout (sessions with a day
+//   profit above 150), the largest profitable day since the last payout and
+//   the payouts taken so far. With today's P&L (typed realized + virtual,
+//   open P&L included) the table shows, as if the day ended now:
+//   - Payout days: n of 5, and whether today would qualify.
+//   - Payout balance: the balance against 53,000 and what is still missing.
+//   - Consistency: the largest day (the typed one, or today if bigger)
+//     against 35% of the cycle profit (balance - cycle start); if over, the
+//     profit still needed with no bigger day (largest day / 0.35 - cycle
+//     profit).
+//   - Next payout: the cap for payout K + 1 (1,500 / 2,000 / 2,500, then
+//     3,000), the most you could request, min(cap, balance - 50,100 -
+//     0.01), what you receive at 90%, or what still blocks it. When that
+//     amount leaves less than one daily loss limit (1,250) above the floor
+//     the row turns orange and shows the amount that keeps 1,250.
+//   The figures include the session's virtual trades (prompts you may not
+//   have taken), marked "incl. virtual". With stale or future figures all
+//   four rows turn orange and say STALE (or FUTURE AS-OF). Inputs that
+//   cannot be true together turn Consistency and Next payout red with the
+//   reason: a cycle start other than 50,000 with 0 payouts, a cycle start
+//   at or below 50,100 after a payout, a cycle start above the highest
+//   end-of-day balance, qualifying days with a largest day of 150 or less,
+//   or a balance at last close above the cycle start with a largest day 0.
+//   It requests nothing and does not check the 10-second rule, KYC or Rise.
+//   A request locks the floor at 50,100 at once, but the money leaves the
+//   balance only on approval (up to 72 h for a request at the 17:00 ET
+//   close). Until then keep the balance at 53,000 or more, or the request is
+//   denied; sessions traded while it is pending count toward the payout
+//   being paid, not the next one. Keep these inputs until it is approved,
+//   then type the new cycle start, 0 days, 0 largest day and one more payout.
 //
 // TRADEIFY 50K SIM FUNDED RULES MODELLED
 //   From trading/tradeify-50k/rules.json, verified 2026-11-02. Re-check the
@@ -100,13 +135,23 @@
 //     the "Early-close dates" input (keep that list current from the CME
 //     holiday calendar). The chart must be on Electronic trading hours.
 //   - Consistency (Growth 35%, Lightning 20-30%, Select none) is a payout
-//     rule. The daily profit lock input is a guard against one outsized day,
-//     not the rule itself. Its Auto values fit the first payout only; after
-//     a payout set it to Custom (see its tooltip).
-//   - Not modelled: payouts, microscalping (more than 50% of trades and of
-//     profit must come from trades held longer than 10 seconds), at least
-//     1 trade per week, no hedging (also across correlated products and
-//     accounts), algo rules. News trading is allowed.
+//     rule: it delays a payout, it never fails the account. The daily profit
+//     lock input is a guard against one outsized day, not the rule itself.
+//     Growth Auto follows the payout cycle typed under Payout progress (see
+//     THE GROWTH DAILY PROFIT LOCK); Lightning Auto fits the first payout
+//     only, so after a Lightning payout set it to Custom (see its tooltip).
+//   - Growth payouts (current plan): more than 150 on 5 trading days since
+//     the last payout, a balance of 53,000 or more for every payout, the
+//     largest day at or below 35% of the profit since the last payout (the
+//     window resets after each approved payout), caps 1,500 / 2,000 / 2,500,
+//     then 3,000 for payout 4 and later, at least 500, you receive 90%. The
+//     table reports progress only.
+//   - Not modelled: payout requests and approvals, microscalping (more than
+//     50% of trades and of profit must come from trades held longer than 10
+//     seconds, or no payout can be requested), at least 1 trade per week
+//     (Mon-Fri, per account), no hedging (also across correlated products and
+//     accounts), algo rules, KYC and Rise set-up before the first payout, a
+//     move to Live after a payout. News trading is allowed.
 //   Sources:
 //     https://help.tradeify.co/en/articles/10495897-rules-trailing-max-drawdowns
 //     https://help.tradeify.co/en/articles/10468321-rules-daily-loss-limit
@@ -116,11 +161,33 @@
 //     https://help.tradeify.co/en/articles/10495938-lightning-funded-accounts
 //     https://help.tradeify.co/en/articles/10495932-lightning-funded-account-payout-policy
 //     https://help.tradeify.co/en/articles/10468320-rules-consistency-rule
-//   Unverified (rules.json): whether the Growth consistency window resets per
-//   payout cycle; whether the 2,000 DLL reverts if the balance falls below
-//   53,000 (this indicator uses the balance at last close, the cautious
-//   reading); the DLL is modelled on realized plus open P&L for the session;
-//   Select scaling uses end-of-day profit (balance - 50,000).
+//     https://help.tradeify.co/en/articles/10468318-guidelines-for-traders
+//     https://help.tradeify.co/en/articles/12268494-common-faqs
+//   Unverified on 2026-11-02: whether the 2,000 DLL reverts if the balance
+//   falls below 53,000, for example after a payout (this indicator uses the
+//   balance at last close, the cautious reading), and whether reaching
+//   53,000 during a session is enough to raise it; whether the 35% test and
+//   the 150 day use P&L before or after commission (the table uses your net
+//   figures); the payout amount min(cap, balance - 50,100) is inferred from
+//   Tradeify's example, not stated. Modelling choices: the DLL is applied to
+//   realized plus open P&L for the session; Select scaling uses end-of-day
+//   profit (balance - 50,000).
+//
+// THE GROWTH DAILY PROFIT LOCK (Auto)
+//   Every request needs a balance of 53,000 or more (52,100 on legacy
+//   Growth), so the cycle profit at any request is at least T = max(0,
+//   53,000 - cycle start). A day X <= 0.35 T is then within 35% at any
+//   request, whatever the account does after that day. A floor of 0.35 /
+//   0.65 x 4 x 150 (about 323; a request still needs four other days above
+//   150) keeps the lock from reaching 0 when T is small (a cycle start above
+//   about 52,080). That floor is not a guarantee: losing days can still push
+//   such a day over 35% and delay the payout.
+//   lock = 0.95 x max(0.35 T, 0.35 / 0.65 x 600), rounded down to $10.
+//   Before the first payout (cycle start 50,000) it is 990; after a 1,500
+//   payout from 53,000 (cycle start 51,500) it is 490; never below 300.
+//   When the payout inputs do not fit together (see PAYOUT PROGRESS) it takes
+//   the highest end-of-day balance as the cycle start, the tightest value,
+//   and the table says so.
 //
 // HOW A PROMPT IS SIZED
 //   per-contract risk = (stop points + 2 ticks of modelled entry and stop
@@ -221,6 +288,17 @@ int FLAT_BY_CAP_MIN = 1005
 int EARLY_FLAT_BY_MIN = 779
 int SESSION_START_H = 18
 int SESSION_END_H = 17
+int GROWTH_QUAL_DAYS = 5
+float GROWTH_QUAL_DAY_ABOVE = 150
+float GROWTH_MIN_BAL = 53000
+float GROWTH_MIN_BAL_LEGACY = 52100
+float GROWTH_MIN_PAYOUT = 500
+float GROWTH_CAP_1 = 1500
+float GROWTH_CAP_2 = 2000
+float GROWTH_CAP_3 = 2500
+float GROWTH_CAP_LAST = 3000
+float GROWTH_CONSISTENCY = 0.35
+float PAYOUT_SPLIT = 0.9
 // <<RULES:END>>
 
 // Indicator rules (not Tradeify rules).
@@ -229,15 +307,16 @@ int FLATBY_NO_ENTRY_MIN = 20
 int FLATBY_WARN_MIN = 10
 int FLATBY_EXIT_MIN = 5
 float DLL_MARGIN = 100
-float LOCK_GROWTH = 1000
 float LOCK_LIGHTNING = 600
+float LOCK_MARGIN = 0.95
+float LOCK_STEP = 10
 int MAX_KEEP_LABELS = 490
 
 PLAN_GROWTH = "Growth"
 PLAN_FLEX = "Select Flex"
 PLAN_DAILY = "Select Daily"
 PLAN_LIGHT = "Lightning"
-LOCK_AUTO = "Auto, first payout (Growth 1000, Lightning 600, Select off)"
+LOCK_AUTO = "Auto (Growth from the 35% rule and your payout cycle, Lightning 600 for payout 1, Select off)"
 LOCK_CUSTOM = "Custom"
 LOCK_OFF = "Off"
 COMM_AUTO = "Auto (1.50 per mini, 0.50 per micro)"
@@ -260,12 +339,22 @@ iTradesToday = input.int(0, "Trades already taken today", minval = 0, group = gr
 iAsOf = input.time(timestamp("01 Jan 2026 00:00 -0500"), "Figures as of (date and time)", group = grpAcct,
      tooltip = "When you read the figures. STALE (signals still drawn and alerted with a warning, see Display) when this is before the previous session's 17:00 ET close (Friday's for the Sunday session). Virtual P&L is added from this time on. Type the figures while flat: a virtual trade from before this time is dropped.")
 
+grpPay = "Payout progress (Growth)"
+iCycleBal = input.float(50000, "Balance at the start of this payout cycle ($)", step = 50, group = grpPay,
+     tooltip = "The balance just after the last payout left the account (on approval), or 50,000 before the first payout. Cycle profit = balance - this. A request still pending is not taken yet: keep the figures for it until it is approved.")
+iQualDays = input.int(0, "Qualifying days since the last payout", minval = 0, group = grpPay,
+     tooltip = "Sessions closed since the last payout with a day profit above 150 (a 150.00 day does not count), up to the as-of time. Count them net of commission, the cautious reading. Resets to 0 after each payout.")
+iMaxDay = input.float(0, "Largest profitable day since the last payout ($)", minval = 0, step = 10, group = grpPay,
+     tooltip = "The biggest single-session profit since the last payout, up to the as-of time (0 if none). The 35% consistency rule compares it with the cycle profit. Today's P&L is used instead while it is bigger.")
+iPayouts = input.int(0, "Payouts taken so far", minval = 0, group = grpPay,
+     tooltip = "Approved payouts on this account. The next one is number this + 1: caps 1,500 / 2,000 / 2,500, then 3,000 for payout 4 and later.")
+
 grpRisk = "Risk"
 iRisk = input.float(150, "Risk per trade ($)", minval = 1, step = 10, group = grpRisk)
 iShare = input.float(10, "Max share of room to floor per trade (%)", minval = 0.5, maxval = 100, step = 0.5, group = grpRisk)
 iSelfStop = input.float(400, "Self-imposed daily loss stop ($, 0 = off)", minval = 0, step = 25, group = grpRisk)
 iLockMode = input.string(LOCK_AUTO, "Daily profit lock (consistency guard)", options = [LOCK_AUTO, LOCK_CUSTOM, LOCK_OFF], group = grpRisk,
-     tooltip = "No new prompts once the day's P&L reaches this, so one day does not dominate the profit for the consistency rule. Auto fits the first payout only (about 35% / 20% of 3,000). After a payout use Custom set to the consistency share of the profit needed for the next payout: Lightning 500 for payout 2 and 600 after (legacy Lightning 400); Growth 35% of (53,000 - balance after the last payout).")
+     tooltip = "No new prompts once the day's P&L reaches this, so one day does not dominate the profit for the consistency rule. Growth Auto uses the Payout progress inputs: 95% of 35% of (53,000 - cycle start), rounded down to $10 (990 before the first payout). Every request needs a balance of 53,000 or more (52,100 on legacy Growth), so a day up to this stays within 35% at any request. It is never below 300 (95% of 35/65 of 4 x 150); when that floor applies (cycle start above about 52,080) losing days can still push the day over 35% and delay the payout. Update the cycle start and payouts taken after each payout; if they do not fit together the lock uses the highest end-of-day balance as the cycle start (the tightest value). Lightning Auto fits the first payout only (20% of 3,000); after a Lightning payout use Custom: 500 for payout 2 and 600 after (legacy Lightning 400). Select: off.")
 iLockCustom = input.float(1000, "Custom daily profit lock ($)", minval = 1, step = 50, group = grpRisk)
 iMaxTrades = input.int(3, "Max trades per day", minval = 1, group = grpRisk)
 iMaxLosses = input.int(2, "Stop after N losses in a row", minval = 1, group = grpRisk)
@@ -324,7 +413,26 @@ float planDll = iPlan == PLAN_FLEX ? float(na) : iPlan == PLAN_DAILY ? DLL_SELEC
 float floorRule = math.min(hiEod - TMD, TMD_LOCKED_FLOOR)
 float floorUsed = math.max(iFloor, floorRule)
 bool floorTypedLow = iFloor < floorRule - 0.5
-float lockVal = iLockMode == LOCK_OFF ? float(na) : iLockMode == LOCK_CUSTOM ? iLockCustom : iPlan == PLAN_GROWTH ? LOCK_GROWTH : iPlan == PLAN_LIGHT ? LOCK_LIGHTNING : float(na)
+// Payout inputs that cannot be true together (the planner's resolveStartState
+// rejects the same states): cycWhy for the cycle start and payouts taken,
+// maxDayWhy for the largest day.
+string cycWhy = iPayouts == 0 and math.abs(iCycleBal - START_BAL) >= 0.005 ? "cycle start " + str.tostring(iCycleBal, "#,##0.00") + " must be " + str.tostring(START_BAL, "#,##0") + " with 0 payouts taken" : iPayouts > 0 and iCycleBal <= TMD_LOCKED_FLOOR ? "cycle start " + str.tostring(iCycleBal, "#,##0.00") + " must be above " + str.tostring(TMD_LOCKED_FLOOR, "#,##0") + " after a payout (the balance just after it)" : iCycleBal > hiEod + 0.005 ? "cycle start " + str.tostring(iCycleBal, "#,##0.00") + " is above the highest end-of-day balance " + str.tostring(hiEod, "#,##0.00") : ""
+string maxDayWhy = iQualDays > 0 and iMaxDay <= GROWTH_QUAL_DAY_ABOVE ? str.tostring(iQualDays) + " qualifying days need a largest day above " + str.tostring(GROWTH_QUAL_DAY_ABOVE, "#,##0") + ": type the largest day since the last payout" : iBal - iCycleBal > 0.005 and iMaxDay <= 0 ? "balance at last close is above the cycle start, so some day made a profit: type the largest day since the last payout" : ""
+bool cycBad = cycWhy != ""
+// Growth Auto lock (THE GROWTH DAILY PROFIT LOCK above): every request needs the
+// minimum balance, so its cycle profit is at least T and a day X <= 35% of T
+// stays within 35% at any request. The floor term (four other days above 150)
+// keeps the lock above 0 when T is small; it is not a guarantee. With
+// inconsistent inputs the cycle start is taken as the highest end-of-day
+// balance, the tightest lock any valid cycle start allows.
+float growthMinBal = legacyOn ? GROWTH_MIN_BAL_LEGACY : GROWTH_MIN_BAL
+float cycStart = cycBad ? hiEod : iCycleBal
+float cycT = math.max(0.0, growthMinBal - cycStart)
+float cycQ = (GROWTH_QUAL_DAYS - 1) * GROWTH_QUAL_DAY_ABOVE
+float consRatio = GROWTH_CONSISTENCY / (1.0 - GROWTH_CONSISTENCY)
+float lockGrowth = math.floor(LOCK_MARGIN * math.max(GROWTH_CONSISTENCY * cycT, consRatio * cycQ) / LOCK_STEP) * LOCK_STEP
+bool lockGrowthAuto = iLockMode == LOCK_AUTO and iPlan == PLAN_GROWTH
+float lockVal = iLockMode == LOCK_OFF ? float(na) : iLockMode == LOCK_CUSTOM ? iLockCustom : iPlan == PLAN_GROWTH ? lockGrowth : iPlan == PLAN_LIGHT ? LOCK_LIGHTNING : float(na)
 string planName = iPlan + (legacyOn ? " (legacy)" : "")
 string tagTxt = "Tradeify " + planName + " 50K"
 
@@ -354,6 +462,8 @@ fmtSigned(float v) =>
     na(v) ? "-" : (v < 0 ? "-$" : "+$") + str.tostring(math.abs(v), "#,##0.00")
 addLine(string a, string b) =>
     a == "" ? b : a + "\n" + b
+addItem(string a, string b) =>
+    a == "" ? b : a + ", " + b
 
 // ------------------------------------------------------------- clock -------
 bool newDay = bar_index == 0 or time_tradingday != time_tradingday[1]
@@ -1040,7 +1150,8 @@ alertcondition(exitAlert, "Exit", "Tradeify 50K Signals: virtual exit or cancel 
 alertcondition(fbWarnNow, "Flat-by in 10 minutes", "Tradeify 50K Signals: flat-by in 10 minutes on {{ticker}} ({{close}}). Be flat by the flat-by time.")
 
 // ================================================================ TABLE ======
-var table tb = table.new(position.top_right, 2, 14, bgcolor = color.new(color.black, 15), frame_color = color.new(color.gray, 50), frame_width = 1, border_color = color.new(color.gray, 75), border_width = 1)
+// Rows 0-12 account and status; 13-17 payout progress (one row off Growth); then the footer.
+var table tb = table.new(position.top_right, 2, 19, bgcolor = color.new(color.black, 15), frame_color = color.new(color.gray, 50), frame_width = 1, border_color = color.new(color.gray, 75), border_width = 1)
 
 tcell(int r, string k, string v, color vc) =>
     table.cell(tb, 0, r, k, text_color = color.new(color.silver, 0), text_size = size.small, text_halign = text.align_left)
@@ -1072,10 +1183,81 @@ if barstate.islast and iShowTable
     tcell(5, "DLL room", na(planDll) ? "no DLL on this plan" : fmtUsd0(tDllRoom) + " of " + fmtUsd0(planDll) + (tDllHit ? "  HIT" : ""), tDllHit ? bad : white)
     tcell(6, "Size cap", str.tostring(capQty) + " " + syminfo.root + (isMicro ? " (" + str.tostring(capMinis) + " minis)" : ""), white)
     tcell(7, "Today's P&L", liveBar ? fmtSigned(tDay) + " (typed " + fmtSigned(iTodayPnl) + " + virtual " + fmtSigned(dayVirt + tOpen) + ")" : "virtual " + fmtSigned(tDay) + " (not live)", tDay < 0 ? warnC : white)
-    tcell(8, "Day limits", "risk " + fmtUsd0(iRisk) + " / " + str.tostring(iShare) + "% of room | stop " + (iSelfStop > 0 ? fmtUsd0(iSelfStop) : "off") + " | lock " + (na(lockVal) ? "off" : fmtUsd0(lockVal)), white)
+    tcell(8, "Day limits", "risk " + fmtUsd0(iRisk) + " / " + str.tostring(iShare) + "% of room | stop " + (iSelfStop > 0 ? fmtUsd0(iSelfStop) : "off") + " | lock " + (na(lockVal) ? "off" : fmtUsd0(lockVal) + (lockGrowthAuto ? (cycBad ? " (auto, tightest: payout inputs do not fit, see below)" : " (auto, 35% rule)") : "")), lockGrowthAuto and cycBad ? warnC : white)
     tcell(9, "Trades today", str.tostring(dayTrades) + " / " + str.tostring(iMaxTrades) + " | losses in a row " + str.tostring(lossStreak) + " / " + str.tostring(iMaxLosses), white)
     tcell(10, "Status", status, tWhy == "" and tFig == "" ? good : warnC)
     tcell(11, "Setups this session", "posted " + str.tostring(nPosted) + ", paused " + str.tostring(nPaused) + ", no size " + str.tostring(nNoSize) + (lastPauseWhy != "" ? "\nlast held: " + lastPauseWhy : ""), white)
     tcell(12, "Last signal", lastSigTxt, white)
-    table.cell(tb, 0, 13, "Unproven signals: prompts, not advice", text_color = color.new(color.silver, 0), text_size = size.small, text_halign = text.align_left)
-    table.merge_cells(tb, 0, 13, 1, 13)
+    // Payout progress: rows 13-17 on current Growth, one row on other plans; the footer follows.
+    int rFoot = 14
+    if iPlan == PLAN_GROWTH and not legacyOn
+        // As if the day ended now: today's P&L and the balance include the virtual trades (closed
+        // and open) since the as-of time. With no live bar yet they are the figures at the last close.
+        float pToday = liveBar ? tDay : 0.0
+        float pVirt = liveBar ? dayVirt + tOpen : 0.0
+        string pVirtTxt = pVirt != 0 ? " (incl. virtual " + fmtSigned(pVirt) + ")" : ""
+        float pBal = math.round(iBal + (liveBar ? iTodayPnl + pVirt : 0.0), 2)
+        string pWhen = (liveBar ? "if the day ended now" : "at the last close") + pVirtTxt
+        string pPct = str.tostring(GROWTH_CONSISTENCY * 100, "#") + "%"
+        // Stale or future figures: every payout row is orange and says so.
+        bool pFigBad = stale or asOfFuture
+        string pTag = stale ? "STALE: " : asOfFuture ? "FUTURE AS-OF: " : ""
+        // Payout inputs that cannot be true together: Consistency and Next payout are red with the reason.
+        string pInWhy = addItem(cycWhy, maxDayWhy)
+        bool pInBad = pInWhy != ""
+        // Qualifying days: strictly above 150.
+        bool pTodayQual = liveBar and pToday > GROWTH_QUAL_DAY_ABOVE
+        int pDays = iQualDays + (pTodayQual ? 1 : 0)
+        bool pDaysOk = pDays >= GROWTH_QUAL_DAYS
+        string pDaysTxt = pTag + str.tostring(iQualDays) + " of " + str.tostring(GROWTH_QUAL_DAYS) + " above " + fmtUsd0(GROWTH_QUAL_DAY_ABOVE) + (not liveBar ? " | today not live" : pTodayQual ? " | today " + fmtSigned(pToday) + pVirtTxt + " would qualify: " + str.tostring(pDays) + " of " + str.tostring(GROWTH_QUAL_DAYS) + " at the close" : " | today " + fmtSigned(pToday) + pVirtTxt + ": needs more than " + fmtUsd0(GROWTH_QUAL_DAY_ABOVE) + " to qualify")
+        // Minimum balance, for every payout, held until approval.
+        float pNeed = GROWTH_MIN_BAL - pBal
+        bool pBalOk = pNeed <= 0
+        string pBalTxt = pTag + fmtUsd2(pBal) + pVirtTxt + " of " + fmtUsd0(GROWTH_MIN_BAL) + (pBalOk ? ": met, " + fmtUsd2(-pNeed) + " to spare; keep it at " + fmtUsd0(GROWTH_MIN_BAL) + " or more until the payout is approved" : ": needs " + fmtUsd2(pNeed) + " more")
+        // Consistency: largest day at or below 35% of the cycle profit.
+        float pCyc = pBal - iCycleBal
+        bool pMaxToday = liveBar and pToday > iMaxDay
+        float pMax = pMaxToday ? pToday : iMaxDay
+        bool pConsOk = pCyc > 0 and pMax <= GROWTH_CONSISTENCY * pCyc + 0.005
+        float pExtra = math.max(0.0, math.ceil((pMax / GROWTH_CONSISTENCY - pCyc) * 100) / 100.0)
+        float pRatio = 0.0
+        if pCyc > 0
+            pRatio := pMax / pCyc
+        string pMaxTxt = "largest day " + fmtUsd2(pMax) + (pMaxToday ? " (today)" : "")
+        string pConsTxt = pTag + (pInBad ? "check the payout inputs: " + pInWhy : pCyc <= 0 ? "no cycle profit yet (" + fmtSigned(pCyc) + ")" + (pMax > 0 ? ", " + pMaxTxt + ": needs " + fmtUsd2(pExtra) + " more profit with no bigger day" : "") : pMaxTxt + " = " + str.tostring(100 * pRatio, "0.0") + "% of cycle profit " + fmtUsd2(pCyc) + (pConsOk ? " (max " + pPct + "): met" : ": over " + pPct + ", needs " + fmtUsd2(pExtra) + " more profit with no bigger day"))
+        // Next payout: the cap for payout K + 1; a request locks the floor at 50,100, and the amount
+        // is taken as min(cap, balance - floor - 0.01) (inferred from Tradeify's example).
+        float pCap = iPayouts == 0 ? GROWTH_CAP_1 : iPayouts == 1 ? GROWTH_CAP_2 : iPayouts == 2 ? GROWTH_CAP_3 : GROWTH_CAP_LAST
+        float pReqFloor = math.max(floorUsed, TMD_LOCKED_FLOOR)
+        float pAmt = math.max(0.0, math.floor(math.min(pCap, pBal - pReqFloor - 0.01) * 100 + 1e-6) / 100.0)
+        string pBlock = ""
+        if not pDaysOk
+            int pDaysLeft = GROWTH_QUAL_DAYS - pDays
+            pBlock := addItem(pBlock, str.tostring(pDaysLeft) + " more qualifying day" + (pDaysLeft > 1 ? "s" : ""))
+        if not pBalOk
+            pBlock := addItem(pBlock, fmtUsd2(pNeed) + " more balance")
+        if not pConsOk
+            pBlock := addItem(pBlock, pCyc <= 0 ? "no cycle profit" : pPct + " consistency (" + fmtUsd2(pExtra) + " more profit)")
+        if pBalOk and pAmt < GROWTH_MIN_PAYOUT
+            pBlock := addItem(pBlock, "amount " + fmtUsd2(pAmt) + " below the " + fmtUsd0(GROWTH_MIN_PAYOUT) + " minimum")
+        // Room left above the floor once the payout leaves: less than one base daily loss limit is
+        // flagged, with the amount that keeps it (the maximum is allowed, but leaves little room).
+        float pLeft = pBal - pAmt - pReqFloor
+        float pKeep = DLL_BASE
+        bool pThin = pLeft < pKeep
+        float pSug = math.max(0.0, math.floor(math.min(pCap, pBal - pReqFloor - pKeep) * 100 + 1e-6) / 100.0)
+        string pThinTxt = not pThin ? "" : ": less than one daily loss limit (" + fmtUsd0(pKeep) + ")" + (pSug >= GROWTH_MIN_PAYOUT ? " | " + fmtUsd2(pSug) + " leaves " + fmtUsd0(pKeep) : " | no amount of " + fmtUsd0(GROWTH_MIN_PAYOUT) + " or more leaves " + fmtUsd0(pKeep))
+        string pPayTxt = pTag + "cap " + fmtUsd0(pCap) + " | " + (pInBad ? "check the payout inputs (see Consistency)" : pWhen + ": " + (pBlock == "" ? "request up to " + fmtUsd2(pAmt) + ", you receive " + fmtUsd2(pAmt * PAYOUT_SPLIT) + " (" + str.tostring(PAYOUT_SPLIT * 100, "#") + "%), leaves " + fmtUsd2(pLeft) + " above the floor" + pThinTxt : "blocked by " + pBlock))
+        tcell(13, "Payout days", pDaysTxt, pFigBad ? warnC : pDaysOk ? good : white)
+        tcell(14, "Payout balance", pBalTxt, pFigBad ? warnC : pBalOk ? good : white)
+        tcell(15, "Consistency " + pPct, pConsTxt, pInBad ? bad : pFigBad ? warnC : pConsOk ? good : pCyc > 0 ? warnC : white)
+        tcell(16, "Next payout #" + str.tostring(iPayouts + 1), pPayTxt, pInBad ? bad : pFigBad or (pBlock == "" and pThin) ? warnC : pBlock == "" ? good : white)
+        tcell(17, "Not checked", "10-second rule: over 50% of trades and of profit from holds over 10 s" + (iPayouts == 0 ? " | KYC and Rise before payout 1" : ""), color.new(color.silver, 0))
+        rFoot := 18
+    else
+        // Legacy Growth: no payout rows, but the Auto lock still reads the cycle start and payouts taken.
+        string pOther = iPlan != PLAN_GROWTH ? "Payout progress: Growth only" : "Payout progress: current Growth only (legacy rules differ)" + (lockGrowthAuto ? " | the Auto lock still uses the cycle start and payouts taken under Payout progress: update them after each payout" + (cycBad ? " | check them: " + cycWhy : "") : "")
+        table.cell(tb, 0, 13, pOther, text_color = lockGrowthAuto and cycBad ? warnC : color.new(color.silver, 0), text_size = size.small, text_halign = text.align_left)
+        table.merge_cells(tb, 0, 13, 1, 13)
+    table.cell(tb, 0, rFoot, "Unproven signals: prompts, not advice", text_color = color.new(color.silver, 0), text_size = size.small, text_halign = text.align_left)
+    table.merge_cells(tb, 0, rFoot, 1, rFoot)

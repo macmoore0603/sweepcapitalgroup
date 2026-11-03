@@ -4,9 +4,12 @@ import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import { loadRules } from '../ledger.mjs';
+import { loadTradeifyRules } from '../tradeify.mjs';
 
-// APEX_PINE_PATH overrides the location (used to check this test against a scratch copy).
+// APEX_PINE_PATH / TRADEIFY_PINE_PATH override the locations (used to check this test against a scratch copy).
 const PINE = process.env.APEX_PINE_PATH ?? resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', 'ApexEvalLab.pine');
+const TRADEIFY_PINE =
+  process.env.TRADEIFY_PINE_PATH ?? resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', 'tradeify-50k', 'TradeifySignals.pine');
 const BEGIN = '// <<RULES:BEGIN>>';
 const END = '// <<RULES:END>>';
 
@@ -44,6 +47,50 @@ export function expectedPineConstants(rules) {
   return out;
 }
 
+/** Expected TradeifySignals.pine RULES constants, each read from tradeify-50k/rules.json. */
+export function expectedTradeifyPineConstants(rules) {
+  const s = rules.session;
+  const g = rules.plans.growth;
+  const gp = g.payout;
+  const flex = rules.plans['select-flex'].scaling;
+  // The Pine holds one cap per payout 1-3 and one repeated cap after; one consistency figure.
+  assert.equal(gp.caps.length, 4, 'plans.growth.payout.caps: the Pine holds GROWTH_CAP_1..3 and GROWTH_CAP_LAST');
+  assert.equal(gp.capsRepeatLast, true, 'plans.growth.payout.capsRepeatLast: the Pine repeats GROWTH_CAP_LAST');
+  assert.equal(g.consistency.length, 1, 'plans.growth.consistency: the Pine holds one GROWTH_CONSISTENCY');
+  return {
+    START_BAL: rules.startBalance,
+    TMD: rules.drawdown.amount,
+    TMD_LOCKED_FLOOR: rules.drawdown.lockedFloor,
+    DLL_BASE: g.dailyLossLimit,
+    DLL_RAISE_AT: g.dllRaise.atBalance,
+    DLL_RAISED: g.dllRaise.to,
+    DLL_SELECT_DAILY: rules.plans['select-daily'].dailyLossLimit,
+    MAX_MINIS: g.maxContractsMini,
+    MAX_MINIS_LEGACY: g.legacy.maxContractsMini,
+    SEL_T2_PROFIT: flex[1].minProfit,
+    SEL_T3_PROFIT: flex[2].minProfit,
+    SEL_T1_MINIS: flex[0].maxContractsMini,
+    SEL_T2_MINIS: flex[1].maxContractsMini,
+    SEL_T3_MINIS: flex[2].maxContractsMini,
+    MICROS_PER_MINI: rules.microsPerMini,
+    FLAT_BY_CAP_MIN: etClockToMinutes(s.flatByEt),
+    EARLY_FLAT_BY_MIN: etClockToMinutes(s.earlyCloseFlatByEt),
+    SESSION_START_H: Math.floor(etClockToMinutes(s.startEt) / 60),
+    SESSION_END_H: Math.floor(etClockToMinutes(s.endEt) / 60),
+    GROWTH_QUAL_DAYS: gp.minQualifyingDays,
+    GROWTH_QUAL_DAY_ABOVE: gp.qualifyingDayProfitAbove,
+    GROWTH_MIN_BAL: gp.minBalance,
+    GROWTH_MIN_BAL_LEGACY: g.legacy.minBalance,
+    GROWTH_MIN_PAYOUT: gp.minPayout,
+    GROWTH_CAP_1: gp.caps[0],
+    GROWTH_CAP_2: gp.caps[1],
+    GROWTH_CAP_3: gp.caps[2],
+    GROWTH_CAP_LAST: gp.caps[3],
+    GROWTH_CONSISTENCY: g.consistency[0],
+    PAYOUT_SPLIT: rules.split,
+  };
+}
+
 /** Parse `float|int NAME = number|na` lines between the RULES markers (na -> null). */
 export function parsePineRulesBlock(src) {
   const b = src.indexOf(BEGIN);
@@ -75,6 +122,24 @@ test(
     }
   },
 );
+
+test('TradeifySignals.pine RULES block matches tradeify-50k/rules.json', () => {
+  const rules = loadTradeifyRules();
+  const got = parsePineRulesBlock(readFileSync(TRADEIFY_PINE, 'utf8'));
+  const want = expectedTradeifyPineConstants(rules);
+  // Every constant in the block must be tied to rules.json, and every expected one must be there.
+  assert.deepEqual(Object.keys(got).sort(), Object.keys(want).sort(), 'TradeifySignals.pine RULES block constants differ from the expected set');
+  for (const [k, v] of Object.entries(want)) {
+    assert.equal(got[k], v, `${k}: TradeifySignals.pine has ${got[k]}, rules.json has ${v}`);
+  }
+  // One Pine constant serves several plans, so those plans must agree in rules.json.
+  const p = rules.plans;
+  assert.equal(p.lightning.dailyLossLimit, p.growth.dailyLossLimit, 'DLL_BASE serves Growth and Lightning');
+  assert.deepEqual(p.lightning.dllRaise, p.growth.dllRaise, 'DLL_RAISE_AT / DLL_RAISED serve Growth and Lightning');
+  assert.equal(p.lightning.maxContractsMini, p.growth.maxContractsMini, 'MAX_MINIS serves Growth and Lightning');
+  assert.equal(p.lightning.legacy.maxContractsMini, p.growth.legacy.maxContractsMini, 'MAX_MINIS_LEGACY serves Growth and Lightning');
+  assert.deepEqual(p['select-daily'].scaling, p['select-flex'].scaling, 'SEL_* serve Select Flex and Select Daily');
+});
 
 test('Pine RULES block parser reads float/int constants', () => {
   const src = [

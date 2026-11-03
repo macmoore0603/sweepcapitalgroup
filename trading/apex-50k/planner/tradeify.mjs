@@ -27,6 +27,25 @@
 //     is flattened follows dllFill, as in the Apex PA ('extreme': at the adverse extreme, after the
 //     breach check; 'limit': exactly at the limit).
 //   Money is kept in whole cents; payout amounts are rounded down to the cent.
+//
+// START STATE (opts.startState; resolveStartState validates it): instead of a fresh account, the ledger starts
+//   at the last close of an account already held, as read off the Tradeify dashboard: balance B, floor F,
+//   highest end-of-day balance H, cycle start S (startBalance before the first payout, else the balance right
+//   after the last payout), qualifying days N and largest profitable day M since the last payout, and payouts
+//   taken K. Then realized = B - startBalance, floor = F, locked when H >= lockTriggerEodBalance or (K > 0 and
+//   lockOnPayoutRequest), maxEodProfit = H - startBalance, DLL raised when H >= dllRaise.atBalance (as in the
+//   ledger, where a close at that balance raises it for good; Tradeify does not say whether it reverts),
+//   qualDays = N, cycleProfit = B - S, cycleMaxDay = M, payouts = K (the next cap is caps[K]).
+//   H defaults to the largest of B, startBalance and, before any payout, F + drawdown (an unlocked floor
+//   trails H - drawdown), or, after one, S and the lowest close at which the plan pays at all.
+//   A state the account cannot be in is rejected: an unlocked F outside [startBalance - drawdown, lockedFloor),
+//   N = 0 with a qualifying M, M = 0 with B > S, a missing M where consistency needs it, and (Growth) an S
+//   below minBalance - cap of payout K.
+//   A start state that is already eligible requests its payout at once, before the first simulated session
+//   (the start is a session close). Payout counts and amounts reported by the simulation and the replay are
+//   the ones made after the start; the K payouts taken before it are not counted again. That payout is the
+//   same in every run (simulateFunded reports it as payoutNow); P(payout), P(breach before the first payout)
+//   and the days to the first payout count only the payouts after it.
 
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -60,6 +79,25 @@ const LEGACY_KEYS = Object.freeze({
 });
 /** Plans whose payout applies a consistency rule. */
 const CONSISTENCY_PLANS = new Set(['growth', 'lightning']);
+/** Plans whose payout counts qualifying / winning days (qualifies()). */
+const DAY_COUNT_PLANS = new Set(['growth', 'select-flex']);
+/**
+ * fundedRules entries the planner knows (validateTradeifyRules rejects any other); each must be a string.
+ * The CLI prints microscalping, kyc and payoutApproval in the start state's "also needed" list and
+ * minActivity under "not modelled"; algo, hedging and news are kept in the JSON output only.
+ */
+const FUNDED_RULE_TEXTS = Object.freeze(['microscalping', 'minActivity', 'algo', 'hedging', 'news', 'kyc', 'payoutApproval']);
+const START_KIND = 'TRADEIFY_START';
+/** Start-state field -> CLI flag, for error messages. */
+export const START_FLAGS = Object.freeze({
+  balance: '--balance',
+  floor: '--floor',
+  highEod: '--high-eod',
+  cycleStart: '--cycle-start',
+  qualDays: '--qual-days',
+  cycleMaxDay: '--cycle-max-day',
+  payoutsTaken: '--payouts-taken',
+});
 /** fundedRules.microscalping, e.g. "more than 50% of trades and of profit ... held longer than 10 seconds". */
 const MICROSCALPING_RE = /more than\s+(\d+(?:\.\d+)?)\s*%[^]*?longer than\s+(\d+(?:\.\d+)?)\s*s(?:ec(?:ond)?s?)?\b/i;
 
@@ -93,6 +131,13 @@ export function validateTradeifyRules(r) {
   const s = r.session;
   if (!s) fail('session missing');
   for (const k of ['startEt', 'endEt', 'flatByEt', 'earlyCloseFlatByEt']) if (parseHm(s[k]) == null) fail(`session.${k} must be "HH:MM"`);
+  if (r.fundedRules != null) {
+    if (typeof r.fundedRules !== 'object') fail('fundedRules must be an object');
+    for (const k of Object.keys(r.fundedRules)) {
+      if (!FUNDED_RULE_TEXTS.includes(k)) fail(`fundedRules.${k} is not a rule the planner knows (expected ${FUNDED_RULE_TEXTS.join(', ')})`);
+      if (typeof r.fundedRules[k] !== 'string') fail(`fundedRules.${k} must be a string`);
+    }
+  }
   const ms = r.fundedRules?.microscalping;
   if (ms != null && !MICROSCALPING_RE.test(String(ms))) {
     fail('fundedRules.microscalping must read "more than P% of trades and of profit ... held longer than S seconds" (the planner reads P and S from it)');
@@ -229,11 +274,234 @@ export function sessionRollHour(rules) {
   return Math.floor(parseHm(rules.session.startEt) / 60);
 }
 
+// ---------------------------------------------------------------------------------------------- start state
+
+/** "$52,340.00" (messages only). */
+function money(x) {
+  const s = Math.abs(x).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return `${x < 0 && Math.abs(x) >= 0.005 ? '-' : ''}$${s}`;
+}
+const pctText = (x, d = 0) => `${(100 * x).toFixed(d)}%`;
+/** Smallest whole-cent amount >= x. */
+const ceilCents = (x) => Math.ceil(x * 100 - 1e-6) / 100;
+
+/**
+ * Lowest end-of-day balance at which the plan can request any payout (payoutCheck): a highest end-of-day
+ * balance after a payout is at least this.
+ */
+function payoutMinBalance(rules, plan) {
+  const P = plan.payout;
+  const S0 = rules.startBalance;
+  if (P.type === 'growth') return P.minBalance;
+  if (P.type === 'lightning') return cents(S0 + P.profitGoals[0]);
+  if (P.type === 'select-daily') return cents(P.bufferBalance + P.minPayout);
+  if (P.type === 'select-flex') return ceilCents(S0 + P.minPayout / P.shareOfTotalProfit);
+  return S0;
+}
+
+/**
+ * Validate an account's current state (see START STATE in the header) for a plan and fill in the defaults.
+ * input: { balance, floor, highEod?, cycleStart?, qualDays?, cycleMaxDay?, payoutsTaken? } in $ and counts.
+ * Returns the resolved state ({ kind, balance, floor, highEod, cycleStart, qualDays, cycleMaxDay,
+ * payoutsTaken, cycleProfit, roomToFloor, locked, lockedBy, expectedFloor, maxEodProfit, capMini,
+ * dllRaised, dll, warnings, notes }); throws on a state the account cannot be in. An unlocked floor must be
+ * in [startBalance - drawdown, lockedFloor); one that differs from H - drawdown by more than $1 is used as
+ * typed, with a warning.
+ */
+export function resolveStartState(rules, planOrKey, input = {}) {
+  const plan = typeof planOrKey === 'string' ? resolvePlan(rules, planOrKey) : planOrKey;
+  // Already resolved for this plan: return it as is (resolving again would take its defaults for typed values).
+  if (input.kind === START_KIND && input.planKey === plan.key && input.legacy === plan.legacy) return input;
+  const fail = (msg) => {
+    throw new Error(`start state: ${msg}`);
+  };
+  const S0 = rules.startBalance;
+  const d = rules.drawdown;
+  const P = plan.payout;
+  const F = START_FLAGS;
+  const amount = (k, def) => {
+    const v = input[k];
+    if (v == null) {
+      if (def === undefined) fail(`${F[k]} is required`);
+      return def;
+    }
+    if (typeof v !== 'number' || !Number.isFinite(v)) fail(`${F[k]} must be a number, got ${JSON.stringify(v)}`);
+    return cents(v);
+  };
+  const count = (k) => {
+    const v = input[k] ?? 0;
+    if (!Number.isInteger(v) || v < 0) fail(`${F[k]} must be a whole number >= 0, got ${JSON.stringify(v)}`);
+    return v;
+  };
+  const warnings = [];
+  const notes = [];
+  const balance = amount('balance');
+  const floor = amount('floor');
+  if (balance <= floor) {
+    fail(`${F.balance} ${money(balance)} is not above ${F.floor} ${money(floor)}: the account has already breached (net liquidation at or below the floor fails it)`);
+  }
+  const payoutsTaken = count('payoutsTaken');
+  const qualDays = count('qualDays');
+  if (qualDays > 0 && !DAY_COUNT_PLANS.has(plan.key)) fail(`${F.qualDays} does not apply to ${plan.name}: its payout does not count qualifying days`);
+  const cycleStart = amount('cycleStart', S0);
+  if (payoutsTaken === 0 && cycleStart !== S0) {
+    fail(`${F.cycleStart} must be the ${money(S0)} start balance while no payout has been taken (${F.payoutsTaken} 0), got ${money(cycleStart)}`);
+  }
+  // H defaults to what the other numbers prove: before a payout an unlocked floor trails H - drawdown, so
+  // H = F + drawdown; after one, H is at least S and the lowest close at which the plan pays at all.
+  const minPayBal = payoutMinBalance(rules, plan);
+  const hTyped = input.highEod != null;
+  const hFrom = payoutsTaken > 0 ? Math.max(cycleStart, minPayBal) : floor + d.amount;
+  const highEod = amount('highEod', cents(Math.max(balance, S0, hFrom)));
+  const hSource =
+    payoutsTaken > 0
+      ? `the largest of ${F.balance}, ${F.cycleStart} and ${money(minPayBal)}, the lowest close at which a payout is possible`
+      : `the largest of ${F.balance}, the ${money(S0)} start balance and ${F.floor} + ${money(d.amount)}`;
+  const hLabel = `${F.highEod} ${money(highEod)}${hTyped ? '' : ` (not given: ${hSource})`}`;
+  if (highEod < balance) fail(`${F.highEod} ${money(highEod)} is below ${F.balance} ${money(balance)}: the last close is itself an end-of-day balance`);
+  if (highEod < S0) fail(`${F.highEod} ${money(highEod)} is below the ${money(S0)} start balance`);
+  const byEod = highEod >= d.lockTriggerEodBalance;
+  const byPayout = payoutsTaken > 0 && d.lockOnPayoutRequest;
+  const locked = byEod || byPayout;
+  const lowestFloor = cents(S0 - d.amount);
+  const expectedFloor = locked ? d.lockedFloor : cents(Math.max(lowestFloor, highEod - d.amount));
+  if (floor > d.lockedFloor + 0.005) {
+    fail(`${F.floor} ${money(floor)} is above ${money(d.lockedFloor)}: the floor never goes higher (it locks there once a close reaches ${money(d.lockTriggerEodBalance)}${d.lockOnPayoutRequest ? ' or a payout is requested' : ''})`);
+  }
+  if (locked && Math.abs(floor - d.lockedFloor) >= 0.005) {
+    // Give the reason that is certain: a payout taken, unless the lock comes from a typed --high-eod.
+    const why = byEod && (hTyped || !byPayout) ? `${hLabel} reached ${money(d.lockTriggerEodBalance)}` : `${F.payoutsTaken} ${payoutsTaken}: a payout was requested`;
+    fail(`${F.floor} must be the locked floor ${money(d.lockedFloor)} (${why}), got ${money(floor)}`);
+  }
+  if (!locked) {
+    if (floor < lowestFloor - 0.005) {
+      // An unquoted "$49,000" reaches the program as "9,000": the shell expands $4.
+      const shell = floor < S0 / 5 ? `; in a shell an unquoted $ amount loses its first digit ($49,000 arrives as 9,000): type 49000 or quote it` : '';
+      fail(`${F.floor} ${money(floor)} is below ${money(lowestFloor)}, the lowest floor (the ${money(S0)} start balance - the ${money(d.amount)} drawdown; it never moves down)${shell}`);
+    }
+    if (floor >= d.lockedFloor - 0.005) {
+      fail(
+        `${F.floor} ${money(floor)} with ${hLabel}: the floor locks at ${money(d.lockedFloor)} only once a close reaches ${money(d.lockTriggerEodBalance)}` +
+          `${d.lockOnPayoutRequest ? ' or a payout is requested' : ''}, so until then it is below ${money(d.lockedFloor)} (here ${money(expectedFloor)})`,
+      );
+    }
+    if (Math.abs(floor - expectedFloor) > 1 + 1e-9) {
+      warnings.push(
+        `${F.floor} ${money(floor)} differs by ${money(Math.abs(floor - expectedFloor))} from ${hLabel} - ${money(d.amount)} = ${money(expectedFloor)}; ` +
+          `the run uses the floor as typed (an unlocked floor is the highest end-of-day balance - ${money(d.amount)}, at least ${money(lowestFloor)}: check ${F.floor} and ${F.highEod})`,
+      );
+    }
+  }
+  if (payoutsTaken > 0 && cycleStart <= floor) {
+    fail(
+      `${F.cycleStart} ${money(cycleStart)} is not above the floor ${money(floor)}: after a payout the cycle starts at the balance right after the last payout, which stays above the floor`,
+    );
+  }
+  if (payoutsTaken > 0 && P.type === 'growth') {
+    // Payout K needed minBalance until approval and paid at most its cap, so S >= minBalance - cap.
+    const lastCap = growthCap(P, payoutsTaken - 1);
+    const minAfter = cents(P.minBalance - lastCap);
+    if (cycleStart < minAfter) {
+      fail(
+        `${F.cycleStart} ${money(cycleStart)} is below ${money(minAfter)}, the lowest balance right after payout ${payoutsTaken}: ` +
+          `a payout needs a ${money(P.minBalance)} balance until it is approved, and payout ${payoutsTaken} is at most ${money(lastCap)}`,
+      );
+    }
+  }
+  if (cycleStart > highEod) fail(`${F.cycleStart} ${money(cycleStart)} is above ${F.highEod} ${money(highEod)}: the balance after a payout is below the end-of-day balance it was paid from`);
+  const cycleProfit = cents(balance - cycleStart);
+  const usesConsistency = plan.consistency != null && CONSISTENCY_PLANS.has(plan.key);
+  // Before the first payout a close above the start balance means this cycle has had a profitable day.
+  const profitBefore = payoutsTaken === 0 && highEod > S0;
+  if (input.cycleMaxDay == null && usesConsistency && (cycleProfit > 0 || qualDays > 0 || profitBefore)) {
+    const why =
+      cycleProfit > 0
+        ? `${F.balance} is above ${F.cycleStart} (profit since the last payout ${money(cycleProfit)})`
+        : qualDays > 0
+          ? `${F.qualDays} is ${qualDays}`
+          : `${hLabel} is above the ${money(S0)} start balance (this cycle has had a profitable day)`;
+    fail(`${F.cycleMaxDay} is required when ${why}: the ${pctText(at(plan.consistency, payoutsTaken))} consistency rule depends on the largest day, and guessing it would change the result`);
+  }
+  const cycleMaxDay = amount('cycleMaxDay', 0);
+  if (cycleMaxDay < 0) fail(`${F.cycleMaxDay} must be >= 0 (the largest profitable day; losing days are not counted), got ${money(cycleMaxDay)}`);
+  if (input.cycleMaxDay != null && cycleMaxDay === 0 && cycleProfit > 0) {
+    fail(`${F.cycleMaxDay} is ${money(0)} but the profit since the last payout is ${money(cycleProfit)}: a positive profit needs at least one profitable day`);
+  }
+  if (DAY_COUNT_PLANS.has(plan.key) && input.cycleMaxDay != null) {
+    const growth = P.type === 'growth';
+    const min = growth ? P.qualifyingDayProfitAbove : P.winningDayProfitAtLeast;
+    const kind = growth ? 'qualifying' : 'winning';
+    const counts = growth ? cycleMaxDay > min : cycleMaxDay >= min;
+    if (qualDays > 0 && !counts) {
+      fail(`${F.qualDays} ${qualDays} needs ${F.cycleMaxDay} ${growth ? 'above' : 'of at least'} ${money(min)}: each ${kind} day made that much, so the largest day did too, got ${money(cycleMaxDay)}`);
+    }
+    if (qualDays === 0 && counts) {
+      fail(`${F.qualDays} is 0 but ${F.cycleMaxDay} ${money(cycleMaxDay)} is ${growth ? 'above' : 'at least'} ${money(min)}: that day was itself a ${kind} day, so give ${F.qualDays} (at least 1)`);
+    }
+  }
+  const raise = plan.dllRaise;
+  const dllRaised = Boolean(raise) && highEod >= raise.atBalance;
+  const dll = dllRaised ? raise.to : plan.dailyLossLimit;
+  if (dllRaised && balance < raise.atBalance) {
+    const what = raise.to == null ? 'DLL removed' : `DLL ${money(raise.to)}`;
+    notes.push(
+      `${what}: a close reached ${money(raise.atBalance)} by ${hLabel}, and the planner keeps that once reached, as it does for a simulated account ` +
+        '(Tradeify does not say whether it reverts once the balance drops)',
+    );
+  }
+  if (!hTyped && payoutsTaken > 0 && plan.scaling) {
+    notes.push(`${F.highEod} not given: assumed ${money(highEod)} (${hSource}); the Select contract limit comes from it, so give the real highest end-of-day balance`);
+  }
+  const maxEodProfit = cents(highEod - S0);
+  return {
+    kind: START_KIND,
+    planKey: plan.key,
+    legacy: plan.legacy,
+    balance,
+    floor,
+    highEod,
+    cycleStart,
+    qualDays,
+    cycleMaxDay,
+    payoutsTaken,
+    cycleProfit,
+    roomToFloor: cents(balance - floor),
+    locked,
+    lockedBy: byEod ? 'eod' : byPayout ? 'payout' : null,
+    expectedFloor,
+    maxEodProfit,
+    capMini: capMiniFor(plan, maxEodProfit),
+    dllRaised,
+    dll,
+    warnings,
+    notes,
+  };
+}
+
+/** Put a ledger at a start state (resolved for its plan unless it already is). */
+function applyStartState(L, rules, startState) {
+  const st = resolveStartState(rules, L.plan, startState);
+  L.start = st;
+  L.realized = cents(st.balance - L.startBal);
+  L.dayStartRealized = L.realized;
+  L.floor = st.floor;
+  L.locked = st.locked;
+  L.lockedBy = st.lockedBy;
+  L.maxEodProfit = st.maxEodProfit;
+  L.dllRaised = st.dllRaised;
+  L.dll = st.dll;
+  L.qualDays = st.qualDays;
+  L.cycleProfit = st.cycleProfit;
+  L.cycleMaxDay = st.cycleMaxDay;
+  L.payouts = st.payoutsTaken;
+  L.payoutsBefore = st.payoutsTaken;
+}
+
 // ---------------------------------------------------------------------------------------------- ledger
 
 /**
  * opts: { legacy, boughtBefore20260901, order: 'conservative'|'adverse-first', dllFill: 'extreme'|'limit',
- * payout: 'max'|'min', firstDay }
+ * payout: 'max'|'min', firstDay, startState } (startState: see START STATE in the header; null = fresh)
  */
 export function makeFundedLedger(rules, planKey, opts = {}) {
   const plan = resolvePlan(rules, planKey, opts);
@@ -274,13 +542,21 @@ export function makeFundedLedger(rules, planKey, opts = {}) {
     qualDays: 0, // Growth: days > qualifyingDayProfitAbove; Select Flex: days >= winningDayProfitAtLeast
     cycleProfit: 0, // net profit since the last payout (since the start before the first)
     cycleMaxDay: 0, // largest profitable day since the last payout
-    payouts: 0,
+    payouts: 0, // payout number reached (including payoutsBefore)
+    payoutsBefore: 0, // payouts taken before a start state; not counted again in results
+    start: null,
     requested: 0,
     received: 0,
     payoutHistory: [],
   };
+  if (opts.startState != null) applyStartState(L, rules, opts.startState);
   L.capMini = capMiniFor(plan, L.maxEodProfit);
   return L;
+}
+
+/** Payouts requested on this ledger (after its start state, if any). */
+export function payoutsMade(L) {
+  return L.payouts - L.payoutsBefore;
 }
 
 export function balance(L) {
@@ -382,6 +658,8 @@ function lock(L, by) {
 }
 
 const at = (arr, i) => arr[Math.min(i, arr.length - 1)];
+/** Growth cap of payout k + 1: caps[k], after the tiers capAfterTiers when set (legacy: $25,000), else the last tier. */
+const growthCap = (P, k) => (k < P.caps.length ? P.caps[k] : (P.capAfterTiers ?? at(P.caps, k)));
 /** Round a payout amount down to the cent (a request can never exceed the rule by a rounding cent). */
 const floorCents = (x) => Math.floor(x * 100 + 1e-6) / 100;
 
@@ -419,7 +697,7 @@ export function payoutCheck(L) {
   if (P.type === 'growth') {
     const share = at(plan.consistency, k);
     // capAfterTiers (legacy Growth: up to $25,000 per payout after the 6th) replaces the last tier's cap.
-    info.cap = k < P.caps.length ? P.caps[k] : (P.capAfterTiers ?? at(P.caps, k));
+    info.cap = growthCap(P, k);
     info.consistencyShare = share;
     checks.days = L.qualDays >= P.minQualifyingDays;
     checks.consistency = L.cycleProfit > 0 && L.cycleMaxDay <= share * L.cycleProfit + EPS;
@@ -544,11 +822,62 @@ export function endDay(L) {
   if (dayPnl > L.cycleMaxDay) L.cycleMaxDay = dayPnl;
   if (qualifies(plan.payout, dayPnl)) L.qualDays++;
   L.dayStartRealized = L.realized; // the session is closed
-  if (!payoutPossible(L)) return 0;
+  return requestIfEligible(L);
+}
+
+/**
+ * At a session close: request the payout (payout policy amount) when the account is eligible. Returns the
+ * amount requested (0 if none). endDay ends with it; a start state calls it once before the first session.
+ */
+export function requestIfEligible(L) {
+  if (L.status !== ACTIVE || !payoutPossible(L)) return 0;
   const c = payoutCheck(L);
   if (!c.eligible) return 0;
   requestPayout(L, c.amount);
   return c.amount;
+}
+
+/**
+ * Why no payout can be requested now: one { check, message } per failed payoutCheck check, in check
+ * order (empty when eligible). Messages give the amounts still missing, from the plan's rules.
+ */
+export function payoutBlockers(L, c = payoutCheck(L)) {
+  const P = L.plan.payout;
+  const cp = L.cycleProfit;
+  const M = L.cycleMaxDay;
+  const consistency = () => {
+    const share = c.consistencyShare;
+    const needProfit = ceilCents(M / share);
+    if (!(cp > 0)) {
+      const reach = M > 0 ? ` and reach ${money(needProfit)} for the largest day ${money(M)} to be within ${pctText(share)}` : '';
+      return `profit since the last payout is ${money(cp)}: the ${pctText(share)} consistency rule needs it positive${reach}`;
+    }
+    return (
+      `largest day ${money(M)} is ${pctText(M / cp, 1)} of the ${money(cp)} profit since the last payout (limit ${pctText(share)}): ` +
+      `${money(cents(needProfit - cp))} more profit without a larger day`
+    );
+  };
+  const text = {
+    days: () => {
+      const growth = P.type === 'growth';
+      const need = (growth ? P.minQualifyingDays : P.winningDays) - L.qualDays;
+      const kind = growth ? `qualifying day${need === 1 ? '' : 's'} (profit above ${money(P.qualifyingDayProfitAbove)})` : `winning day${need === 1 ? '' : 's'} (profit of at least ${money(P.winningDayProfitAtLeast)})`;
+      return `${need} more ${kind}: ${L.qualDays} of ${need + L.qualDays} since the last payout`;
+    },
+    consistency,
+    balance: () => `balance ${money(c.balance)} is below the ${money(P.minBalance)} minimum (${money(cents(P.minBalance - c.balance))} short)`,
+    count: () => `the plan has no payout ${c.n} (its cap list ends and does not repeat)`,
+    cycleProfit: () => `profit since the last payout ${money(cp)} must be positive (from payout ${P.positiveCycleProfitFromPayout} on)`,
+    goal: () => `profit since the last payout ${money(cp)} is below the ${money(c.goal)} goal for payout ${c.n} (${money(cents(c.goal - cp))} short)`,
+    minPayout: () => `the largest amount allowed now, ${money(c.maxAmount)}, is below the ${money(P.minPayout)} minimum`,
+    aboveFloor: () => `a ${money(c.amount)} request would leave ${money(cents(c.balance - c.amount))}, not above the ${money(c.requestFloor)} floor`,
+  };
+  const out = [];
+  if (L.status !== ACTIVE) out.push({ check: 'status', message: `the account is ${L.status}` });
+  for (const [check, ok] of Object.entries(c.checks)) {
+    if (!ok) out.push({ check, message: text[check] ? text[check]() : `${check} check fails` });
+  }
+  return out;
 }
 
 // ---------------------------------------------------------------------------------------------- simulation
@@ -571,6 +900,8 @@ function fundedOptions(rules, planKey, o = {}) {
       dllFill: normalizeDllFill(o.dllFill ?? 'extreme'),
       payout: normalizePayoutPolicy(o.payout ?? 'max'),
     },
+    // Resolved once here; every ledger of the run starts from it (replay: the first account only).
+    startState: o.startState != null ? resolveStartState(rules, plan, o.startState) : null,
   };
 }
 
@@ -584,10 +915,15 @@ function assertSize(q) {
  * `contracts`), capped every trade at the session's plan cap. Sources are the planner's trade sources
  * (sim.mjs: empirical bootstrap with 'contracts' or 'risk' scaling, or parametric). Path r of a seed sees
  * the same sessions at every size. A run stops at a breach; payouts never end a run.
+ * opts.startState: every account starts from that state instead of a fresh one; payouts and amounts then
+ * count from the start. An eligible state pays at once, before session 1, the same payout in every run
+ * (payoutNow: { n, amount, toTrader }, else null): it is in the payout counts and amounts, but pPayout,
+ * pBreachBeforeFirstPayout and the days to the first payout count only the payouts after it.
  */
 export function simulateFunded(rules, planKey, source, opts = {}) {
   const o = fundedOptions(rules, planKey, opts);
   assertSize(o.contracts);
+  const ledgerOpts = o.startState ? { ...o.ledgerOpts, startState: o.startState } : o.ledgerOpts;
   const risk = source.scaling === 'risk';
   const qty = source.qty;
   const cost = source.extraCost ?? 0;
@@ -604,10 +940,17 @@ export function simulateFunded(rules, planKey, source, opts = {}) {
   let trades = 0;
   let capped = 0;
   let endBalance = 0;
+  let payoutNow = null;
   for (let r = 0; r < R; r++) {
     const rng = mulberry32(pathSeed(o.seed, FUNDED_STREAM, r));
-    const L = makeFundedLedger(rules, o.plan.key, o.ledgerOpts);
-    let firstPayoutDay = 0;
+    const L = makeFundedLedger(rules, o.plan.key, ledgerOpts);
+    let firstPayoutDay = -1; // first payout after the payout now, if any
+    let paidNow = 0;
+    if (o.startState && requestIfEligible(L) > 0) {
+      paidNow = 1;
+      const p = L.payoutHistory[0];
+      payoutNow ??= { n: p.n, amount: p.amount, toTrader: p.toTrader };
+    }
     for (let d = 1; d <= o.horizonDays; d++) {
       startDay(L, d);
       const capU = contractCap(L, o.unit);
@@ -630,20 +973,22 @@ export function simulateFunded(rules, planKey, source, opts = {}) {
       sessionsUsed++;
       if (L.status !== ACTIVE) break;
       const p = endDay(L);
-      if (p > 0 && firstPayoutDay === 0) firstPayoutDay = d;
+      if (p > 0 && firstPayoutDay < 0) firstPayoutDay = d;
     }
+    const made = payoutsMade(L);
+    const later = made - paidNow;
     dllDays += L.dllDays;
-    payouts[r] = L.payouts;
+    payouts[r] = made;
     requested[r] = L.requested;
     received[r] = L.received;
     endBalance += finalBalance(L);
-    if (L.payouts > 0) {
+    if (later > 0) {
       withPayout++;
       firstPayoutDays.push(firstPayoutDay);
     }
     if (L.status === BREACHED) {
       breachedAny++;
-      if (L.payouts === 0) breachedBeforeFirst++;
+      if (later === 0) breachedBeforeFirst++;
     }
   }
   const sp = sortedCopy(payouts);
@@ -675,6 +1020,7 @@ export function simulateFunded(rules, planKey, source, opts = {}) {
     meanEndBalance: endBalance / R, // a breached account counts at its net liquidation at the breach
     cappedTradeShare: trades > 0 ? capped / trades : 0,
     tradesSimulated: trades,
+    ...(o.startState ? { fromStartState: true, payoutsBefore: o.startState.payoutsTaken, payoutNow } : {}),
   };
 }
 
@@ -689,7 +1035,9 @@ export function fundedSizes(rules, planKey, source, opts = {}) {
  * session by session from the first to the last traded day (sessionCalendar: Monday..Friday plus any day
  * with trades; sessions without trades still close a day). A breach ends the account; later trades of
  * that session belong to no account, and a fresh account starts at the next session. opts: { contracts,
- * scaling: 'contracts'|'risk', extraCost, unit, order, dllFill, payout, legacy, boughtBefore20260901 }.
+ * scaling: 'contracts'|'risk', extraCost, unit, order, dllFill, payout, legacy, boughtBefore20260901,
+ * startState }. With startState the first account starts from it (an eligible state pays at once:
+ * firstPayoutDay 'start', session 0) and its payouts count from the start; later accounts start fresh.
  */
 export function replayFunded(rules, planKey, trades, opts = {}) {
   const o = fundedOptions(rules, planKey, opts);
@@ -705,13 +1053,14 @@ export function replayFunded(rules, planKey, trades, opts = {}) {
   let skipped = 0;
   let capped = 0;
   let fed = 0;
+  let pendingStart = o.startState;
   const finish = (status) => {
     accounts.push({
       ...cur,
       status,
       trades: L.trades,
       dllSkippedTrades: L.dllSkippedTrades,
-      payouts: L.payouts,
+      payouts: payoutsMade(L),
       requested: L.requested,
       received: L.received,
       dllDays: L.dllDays,
@@ -728,8 +1077,17 @@ export function replayFunded(rules, planKey, trades, opts = {}) {
   };
   for (const key of sessions) {
     if (!L) {
-      L = makeFundedLedger(rules, o.plan.key, { ...o.ledgerOpts, firstDay: key });
+      L = makeFundedLedger(rules, o.plan.key, { ...o.ledgerOpts, firstDay: key, startState: pendingStart });
       cur = { startDay: key, endDay: key, sessions: 0, firstPayoutDay: null, firstPayoutSession: null };
+      if (pendingStart) {
+        cur.fromStartState = true;
+        cur.payoutsBefore = L.payoutsBefore;
+        pendingStart = null;
+        if (requestIfEligible(L) > 0) {
+          cur.firstPayoutDay = 'start';
+          cur.firstPayoutSession = 0;
+        }
+      }
     }
     startDay(L, key);
     cur.sessions++;
@@ -783,6 +1141,8 @@ export function replayFunded(rules, planKey, trades, opts = {}) {
     cappedTradeShare: fed > 0 ? capped / fed : 0,
     firstPayoutDay: firstWithPayout?.firstPayoutDay ?? null,
     firstPayoutSession: firstWithPayout?.firstPayoutSession ?? null,
+    // Payouts requested at the start state itself (0 or 1), included in payouts / requested / received.
+    ...(o.startState ? { fromStartState: true, startPayouts: accounts.filter((a) => a.firstPayoutDay === 'start').length } : {}),
     last: last && {
       status: last.status,
       balance: last.balance,
