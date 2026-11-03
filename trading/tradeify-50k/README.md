@@ -75,6 +75,8 @@ Tradovate's Risk Settings can: they act on every trade in the account without yo
    - **Daily Loss Limit**, for example $400. That is the indicator's daily stop, and with $1,479 of room it takes at least 4 such days to breach.
    - **Weekly Loss Limit**, for example $800.
 
+   On a Tradeify Growth Sim Funded account (checked 2026-11-03), only the Weekly Loss Limit could be set. The weekly limit is then your only hard cap, so make it small: $600 leaves $879 of room after a full losing week. Cap each day with a bracket stop on every order and at most 3 trades.
+
 What happens at a limit:
 - Tradovate closes all positions, cancels working orders, and blocks new trades until 5:00 PM Central the same day. For the weekly limit the block lasts until Sunday 5:00 PM Central.
 - P&L counts net of fees, from 5:00 PM to 3:45 PM Central.
