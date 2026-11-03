@@ -55,6 +55,19 @@ node journal.mjs score --calls calls.csv --bars mnq_1m.csv
 - **Fewer than 30 graded ideas is too few to judge.** Keep writing them down.
 - **Room check:** whether these calls, at these sizes, would have breached the account. If it says ACCOUNT BREACHED, the size is too big for the room you have, and the verdict says so too. It also lists calls that were open together, and a combined size above 40 MNQ / 4 NQ.
 
+## Pre-trade check with Claude
+
+Before any call, paper or live, send Claude the idea or a chart screenshot. Claude answers in six steps:
+
+1. **Market:** trend, key levels and any news due, from live MNQ1! data.
+2. **Setup:** what the idea is, and what would cancel it.
+3. **Plan:** entry, stop and target, on the 0.25 tick.
+4. **Risk:** size, the $ loss at the stop, and the typical adverse move for this kind of trade, compared with your room to the floor. If the stop or the typical move does not fit the room, the answer is SKIP.
+5. **Alerts:** TradingView price alerts at the stop and the target.
+6. **Call:** TAKE IT, WATCHLIST or SKIP, with the 3 biggest reasons it could fail.
+
+Every TAKE IT and every WATCHLIST is recorded with `add` the minute it is made. The journal then grades the check itself: whether TAKE IT calls beat the others. A confident-sounding check proves nothing until the journal shows it. Claude does not place orders.
+
 Not modelled: early-close days. Tradeify's flat-by is then 12:59 ET, but the journal still uses 16:45, so a trade exits at the market's last bar.
 
 Tests: `node --test test/`
