@@ -63,6 +63,30 @@ A Tradovate-based Tradeify account can be connected to TradingView's **Trading P
 
 On a free TradingView plan the panel updates about every 5 seconds.
 
+### Automatic loss protection in Tradovate
+
+Nothing in TradingView can see your positions. Pine scripts can't, and Claude's TradingView connector can't. So no TradingView alert can follow your own trades on its own.
+
+Tradovate's Risk Settings can: they act on every trade in the account without you doing anything. Tradeify's [guide](https://help.tradeify.co/en/articles/13196348-tradovate-risk-account-settings) gives the path:
+
+1. Log in at [trader.tradovate.com](https://trader.tradovate.com).
+2. Open **Application Settings** from the upper right.
+3. Open **Risk Settings** and set:
+   - **Daily Loss Limit**, for example $400. That is the indicator's daily stop, and with $1,479 of room it takes at least 4 such days to breach.
+   - **Weekly Loss Limit**, for example $800.
+
+What happens at a limit:
+- Tradovate closes all positions, cancels working orders, and blocks new trades until 5:00 PM Central the same day. For the weekly limit the block lasts until Sunday 5:00 PM Central.
+- P&L counts net of fees, from 5:00 PM to 3:45 PM Central.
+
+Things to know before relying on them:
+- **Never save a limit as $0.** That liquidates the account at once.
+- **Tradeify's own rules still apply.** The $50,100 floor and the $1,250 daily loss limit are separate from these settings.
+- **Fills can slip past any limit** in a fast market.
+- **They may not work on your account.** Tradovate's note on that page says Risk Settings don't apply to evaluation accounts, only to live and demo brokerage accounts. If the menu is missing or the settings do nothing, ask Tradeify support whether they work on a Sim Funded account.
+
+For a stop on each trade, save a bracket (stop and target) in Tradovate's order ticket and select it when you place the entry. Tradovate attaches a bracket only to orders placed with it selected.
+
 ### What you see on the chart
 
 - **Teal LONG / red SHORT arrow with a label** shows the size, entry, stop (SL), target 1, target 2, setup and score. Past signals look the same and are marked "(past)".
