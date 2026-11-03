@@ -38,6 +38,31 @@ The indicator places no orders and is not advice. The TradingView connector in C
 
 Use **MNQ**, not NQ. At the default $150 risk per trade, one NQ contract with the minimum 8-point stop costs about $171, so every NQ setup shows "no size". The table says so and names the limit that binds.
 
+### Where each input is on the Tradeify dashboard
+
+Log in at [app-f.tradeify.co](https://app-f.tradeify.co/auth/login) and open the account.
+
+| Indicator input | Dashboard |
+|---|---|
+| Balance at last close | **Summary → Balance**. If you read it during a session, subtract today's P&L. |
+| Trailing Max Drawdown floor | **Summary → Trailing Max Drawdown**, the "Do not go below" figure. It updates once a day. |
+| Highest end-of-day balance so far | Not shown. While the floor still trails, it is the floor plus $2,000. Once the floor reads $50,100 it is locked: use your best close, from the **Account Balance vs Drawdown** chart or the **P&L Calendar**. |
+| Today's realized P&L, trades already taken | today's cell in the **P&L Calendar** |
+| Balance at the start of this payout cycle | **Balance** minus **Total Profit Since Last Payout** |
+| Qualifying days since the last payout | **Payout Objectives → Days with $150 Profit** |
+| Largest profitable day since the last payout | **Payout Objectives → Highest Profit Day** |
+| Payouts taken so far | your payout history (0 before the first) |
+
+### Watch the account live in TradingView
+
+A Tradovate-based Tradeify account can be connected to TradingView's **Trading Panel**, which then shows its live balance and positions. The indicator can't read them: it still uses the figures you type. Tradeify's [setup guide](https://help.tradeify.co/en/articles/10468208-tradingview-via-tradovate-add-on-setup) gives these steps:
+
+1. Log in to Tradovate with the credentials at the top of your Tradeify dashboard, in **Demo** or **Simulation**.
+2. Go to **☰ → Application Settings → Add-On Tools** and activate the **TradingView Add-On**.
+3. In TradingView open **Trading Panel → Tradovate → Connect** and choose **Demo**, not Live. Use the same credentials.
+
+On a free TradingView plan the panel updates about every 5 seconds.
+
 ### What you see on the chart
 
 - **Teal LONG / red SHORT arrow with a label** shows the size, entry, stop (SL), target 1, target 2, setup and score. Past signals look the same and are marked "(past)".
