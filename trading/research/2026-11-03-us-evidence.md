@@ -34,3 +34,5 @@ All 20 key figures were re-read on their sources by an independent check, and al
 - **Documented intraday winners** provided liquidity; they did not predict direction.
 - **The base rates are about 1 in 3 to 1 in 2:** that is the share profitable in any one period, and fewer stay profitable.
 - **A prop payout is a contract claim** on a usually simulated account, not protected customer money.
+
+More: [US full study](2026-11-03-us-full-study.md) (every US futures prop firm's disclosures, enforcement, COT small-trader test, tax) and [Europe evidence](2026-11-03-europe-evidence.md).
