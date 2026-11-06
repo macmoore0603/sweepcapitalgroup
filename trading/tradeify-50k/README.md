@@ -13,11 +13,11 @@ The indicator places no orders and is not advice. The TradingView connector in C
 - **The old signals were turned off on purpose.** On October 29–30 the session that built the risk tools found that the AI-TPS v2.4 pullback strategy lost money on 14 years of real NQ data. It turned the watcher's signals off on your Mac (`"tradeSignals": false` in `~/signal-analysis/watcher-config.json`) and hid the "AI Trend Pullback Signals" study on your chart. To bring those back, set that value to `true` on your Mac and unhide the study in TradingView.
 - **The tools built since show no signals by design.** The Prop Firm Risk HUD and Risk Lines are risk displays only. The Eval Lab is a backtest with no alerts.
 - **This indicator is the new way to get signals.** It draws every signal on the chart, today's and past ones, whether or not you have typed today's figures. Stale figures only add a warning to the label and the alert.
-- **Your alerts, as of November 2.** These were read through the TradingView connector:
-  - The only active alert is on the old AI Trend Pullback strategy (MNQ1!, 5-minute). It was created October 20 and has never fired.
-  - The 15-minute v2.4 alert has stopped after a script error. TradingView does not restart such an alert by itself.
-  - No alert exists yet for this indicator.
-  - Phone notifications work: the October 16 test alert arrived.
+- **Your alerts, as of November 6.** These were read through the TradingView connector:
+  - No alert exists for this indicator, so none of its signals can reach your phone. Create one (step 4 below).
+  - Three alerts are on the old AI Trend Pullback strategy (MNQ1! 2-, 5- and 15-minute). None has ever fired, and the 15-minute one stopped after a script error. That strategy's code is on your Mac, not in this repository.
+  - Three LuxAlgo Smart Money Concepts alerts (5-minute) are set to "Only once", so each switches itself off after firing. They have been off since November 5.
+  - The LuxAlgo alerts fired November 3–5 with phone notifications switched on, so TradingView can reach your phone.
 
 ## Set up the indicator (about 5 minutes)
 
@@ -28,13 +28,13 @@ The indicator places no orders and is not advice. The TradingView connector in C
    - the Trailing Max Drawdown floor;
    - the highest end-of-day balance so far;
    - today's realized P&L and the trades already taken (both 0 if you read them between sessions);
-   - the date and time you read them;
+   - the date and time you read them, in the chart's time zone (shown at the bottom right of the chart; Chart settings → Symbol → Timezone). The table's "Figures as of" row shows it in ET: check that it matches. Setting the chart's time zone to New York keeps both in ET;
    - on Growth, the four **Payout progress** inputs (see below). The profit lock and the payout rows depend on them.
-4. Create the alert: **Alerts → Create alert**, Condition = "Tradeify 50K Signals", then **Any alert() function call**. Tick **Notify in app**, and allow TradingView notifications on your phone.
+4. Create the alert: **Alerts → Create alert**, Condition = "TradeifySignals" (this indicator; its input values follow the name), then **Any alert() function call**. Tick **Notify in app**, and allow TradingView notifications on your phone.
    - **This needs a paid TradingView plan.** An alert on an indicator counts as a "technical alert". The free Basic plan allows none: it gets only 3 price alerts. Essential allows 20 technical alerts, Plus 100 and Premium 400.
    - If a renewal failed and the account dropped to Basic, TradingView stops every active alert. They can only be restarted within the new plan's limits.
    - Basic alerts last up to 1 month, Essential and Plus up to 2 months.
-5. An alert keeps the inputs it was created with. Delete and re-create it after each daily update. An old alert stops posting prompts at the next session, and only its flat-by reminder still arrives, saying the inputs are STALE.
+5. An alert keeps the inputs it was created with. Delete and re-create it after each daily update. From the first 18:00 ET session after a 17:00 ET close later than its as-of time, an old alert keeps sending prompts, sized from the old figures and marked ACCOUNT FIGURES STALE. Its exits and cancels still arrive too, and so does the flat-by reminder, which says the figures are STALE. If you chose **Draw only, no alerts** under Display, it sends nothing at all, not even the flat-by reminder.
 
 Use **MNQ**, not NQ. At the default $150 risk per trade, one NQ contract with the minimum 8-point stop costs about $171, so every NQ setup shows "no size". The table says so and names the limit that binds.
 
@@ -149,7 +149,7 @@ Each day the history window moves forward one trading day, so on Basic the Oct 1
 ### What a signal looks like
 
 ```
-MNQ LONG 3 @ 21534.25 | stop 21510.00 (24.25 pts, $147.00 risk) | T1 21570.50 | T2 21606.75 | Trend Pullback 72 | floor room $2,000 | DLL room $1,250 | Tradeify Growth 50K
+MNQ LONG 3 @ 21534.25 | stop 21510.00 (24.25 pts, $150.00 risk) | T1 21570.50 | T2 21606.75 | Trend Pullback 72 | floor room $2,000 | DLL room $1,250 | Tradeify Growth 50K
 ```
 
 The indicator then follows the trade as a virtual position. It posts the exit: T1 (half off, stop to breakeven; a single contract exits whole at T1), T2, stop, time stop or flat-by. A reminder arrives 10 minutes before the 4:45 PM ET flat time.
@@ -171,6 +171,8 @@ Drawn grey, with no alert:
 Drawn faded, with no alert: the size works out below 1 contract.
 
 Stale figures never hide a signal. They only add the warning.
+
+On the first session after MNQ1! switches to the next contract, Failed Breakout Reversal is off: the new contract has no prior-day high or low yet, as in the July replay. This applies while **B-ADJ** (Adjust for contract changes) is off, which is TradingView's default.
 
 The profit lock keeps any one day under the consistency limit. Growth allows no single day above 35% of the profit since the last payout.
 

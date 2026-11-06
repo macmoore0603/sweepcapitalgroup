@@ -52,9 +52,10 @@
 //   2. Install the TradingView app on the phone, log in to the same account
 //      and allow its notifications.
 //   3. On the chart: Alerts > Create alert. Condition: this indicator
-//      ("Tradeify 50K Signals"), then "Any alert() function call". These
-//      messages are sent once per bar close. Under Notifications tick
-//      "Notify in app" so they reach the phone. Create it.
+//      (listed as "TradeifySignals" followed by its input values), then
+//      "Any alert() function call". These messages are sent once per bar
+//      close. Under Notifications tick "Notify in app" so they reach the
+//      phone. Create it.
 //      (Optional: the alertcondition alerts "Long signal", "Short signal",
 //      "Exit" and "Flat-by in 10 minutes" carry short static messages; pick
 //      "Once per bar close" for them.)
@@ -67,11 +68,13 @@
 // DAILY INPUTS (type them from the Tradeify dashboard before trading, flat)
 //   Balance at last close, Trailing Max Drawdown floor (the dashboard
 //   figure), highest end-of-day balance so far, today's realized P&L, trades
-//   already taken today, and the date and time you read them ("as of"). The
+//   already taken today, and the date and time you read them ("as of",
+//   typed in the chart's time zone; the table shows it in ET). The
 //   figures are STALE when the as-of time is before the close of the
-//   previous session (17:00 ET on the day the current session starts at
-//   18:00 ET; Friday 17:00 ET for the Sunday session), so figures read
-//   between sessions stay valid for the next one. Read between sessions,
+//   previous session (17:00 ET on the last day the market traded before
+//   the current session's 18:00 ET start: Friday for the Sunday session,
+//   Thursday when that Friday is a holiday), so figures read between
+//   sessions stay valid for the next one. Read between sessions,
 //   today's realized P&L and trades taken are 0 (the balance at last close
 //   already includes them). Type them while flat: a virtual trade or prompt
 //   from before the as-of time is dropped when the live period starts.
@@ -244,6 +247,10 @@
 //     them off under Display ("Show signals on past bars").
 //   - The entry window is judged on the signal bar's close time; overnight
 //     windows (start after end) are not supported.
+//   - On a continuous chart without back-adjustment (MNQ1! by default), the
+//     first session after the switch to the next contract has no prior-day
+//     high or low, so Failed Breakout Reversal is off for that session, as in
+//     the July replay, which splits the bars at each roll.
 //   - Setups, gates and indicators are copied from the compiled July port
 //     (Apex 50K Eval Lab): EMA 9/21/50, Wilder ATR/RSI/ADX, session VWAP and
 //     bands, ATR percentile, 3/3 pivots, prior-day high/low built on the
@@ -337,7 +344,7 @@ iTodayPnl = input.float(0, "Today's realized P&L ($)", step = 10, group = grpAcc
 iTradesToday = input.int(0, "Trades already taken today", minval = 0, group = grpAcct, confirm = true,
      tooltip = "Trades taken in the current session (since 18:00 ET). Type 0 if you read the figures between sessions.")
 iAsOf = input.time(timestamp("01 Jan 2026 00:00 -0500"), "Figures as of (date and time)", group = grpAcct,
-     tooltip = "When you read the figures. STALE (signals still drawn and alerted with a warning, see Display) when this is before the previous session's 17:00 ET close (Friday's for the Sunday session). Virtual P&L is added from this time on. Type the figures while flat: a virtual trade from before this time is dropped.")
+     tooltip = "When you read the figures. STALE (signals still drawn and alerted with a warning, see Display) when this is before the previous session's close: 17:00 ET on the last day the market traded before the current session (Friday for the Sunday session, Thursday when that Friday is a holiday). Virtual P&L is added from this time on. Type the figures while flat: a virtual trade from before this time is dropped. Type it in the chart's time zone (Chart settings > Symbol > Timezone, shown at the bottom right of the chart). The table's 'Figures as of' row shows it in ET: check that it matches when you read it.")
 
 grpPay = "Payout progress (Growth)"
 iCycleBal = input.float(50000, "Balance at the start of this payout cycle ($)", step = 50, group = grpPay,
@@ -495,9 +502,13 @@ bool sessPower = etMin >= 900 and etMin < 950
 
 // Current session start: 18:00 ET of the previous day, or of today after
 // 18:00 ET. The typed figures are STALE when their as-of time is before the
-// previous session's 17:00 ET close (the same day as that start; Friday for
-// a Sunday start or over the weekend): figures read after that close, with
-// no trading since, are still valid.
+// previous session's 17:00 ET close, on the day the last bar before that
+// start closed (Thursday when a Friday holiday comes before the Sunday
+// start): figures read after that close, with no trading since, are still
+// valid. Each bar's own 18:00 ET start is tracked, so this holds when the
+// session rolls while the chart or an alert runs; with no earlier bar on the
+// chart the weekday rule (closeRef: that day, Friday for a Sunday start or
+// over the weekend) is used.
 // Bars from that start on are the current session; once a bar closes after
 // the as-of time it is live (gated by the typed figures, alerts on).
 int nowNoon = timestamp(TZ, year(timenow, TZ), month(timenow, TZ), dayofmonth(timenow, TZ), 12, 0)
@@ -505,7 +516,15 @@ int sessRef = hour(timenow, TZ) >= SESSION_START_H ? nowNoon : nowNoon - DAY_MS
 int sessStartNow = timestamp(TZ, year(sessRef, TZ), month(sessRef, TZ), dayofmonth(sessRef, TZ), SESSION_START_H, 0)
 int sessDow = dayofweek(sessStartNow, TZ)
 int closeRef = sessDow == dayofweek.sunday ? sessStartNow - 2 * DAY_MS : sessDow == dayofweek.saturday ? sessStartNow - DAY_MS : sessStartNow
-int prevClose = timestamp(TZ, year(closeRef, TZ), month(closeRef, TZ), dayofmonth(closeRef, TZ), SESSION_END_H, 0)
+int barNoon = timestamp(TZ, year(time, TZ), month(time, TZ), dayofmonth(time, TZ), 12, 0)
+int barSessRef = hour(time, TZ) >= SESSION_START_H ? barNoon : barNoon - DAY_MS
+int barSessStart = timestamp(TZ, year(barSessRef, TZ), month(barSessRef, TZ), dayofmonth(barSessRef, TZ), SESSION_START_H, 0)
+var int spanPrevClose = na
+if bar_index > 0 and barSessStart != barSessStart[1]
+    spanPrevClose := time_close[1]
+int lastPreClose = barSessStart >= sessStartNow ? spanPrevClose : time_close
+int closeDay = na(lastPreClose) ? closeRef : lastPreClose
+int prevClose = timestamp(TZ, year(closeDay, TZ), month(closeDay, TZ), dayofmonth(closeDay, TZ), SESSION_END_H, 0)
 bool stale = iAsOf < prevClose
 bool asOfFuture = iAsOf > timenow
 bool curSess = time >= sessStartNow
@@ -552,13 +571,24 @@ htfBiasCalc() =>
 int htfBiasRaw = request.security(syminfo.tickerid, "15", htfBiasCalc()[1], lookahead = barmerge.lookahead_on)
 int htfBias = nz(htfBiasRaw, 0)
 
-// Prior trading day's high/low, computed on the chart (no request.security).
+// Prior trading day's high/low, computed on the chart.
 var float dayHi = na
 var float dayLo = na
 var float pdHigh = na
 var float pdLow = na
+// Contract switch on an unadjusted continuous chart (MNQ1! by default): the
+// back-adjusted close minus the chart's close is constant within a contract
+// and steps on the first bar of the next one (an 18:00 ET session start on
+// MNQ1!). The old contract's day is then not a prior-day level for the new
+// one, so none is kept that session (the July replay splits bars at each
+// roll). With back-adjustment on, the gap is always 0.
+float adjGap = request.security(ticker.modify(syminfo.tickerid, backadjustment = backadjustment.on), timeframe.period, close) - close
+bool rolled = not na(adjGap) and not na(adjGap[1]) and math.abs(adjGap - adjGap[1]) >= syminfo.mintick
 if newDay
-    if not na(dayHi)
+    if rolled
+        pdHigh := na
+        pdLow := na
+    else if not na(dayHi)
         pdHigh := dayHi
         pdLow := dayLo
     dayHi := high
@@ -1182,7 +1212,7 @@ if barstate.islast and iShowTable
     tcell(4, "Room to floor", fmtUsd0(tRoom) + (liveBar ? "" : " (not live)"), tRoom <= 0 ? bad : tRoom < 500 ? warnC : white)
     tcell(5, "DLL room", na(planDll) ? "no DLL on this plan" : fmtUsd0(tDllRoom) + " of " + fmtUsd0(planDll) + (tDllHit ? "  HIT" : ""), tDllHit ? bad : white)
     tcell(6, "Size cap", str.tostring(capQty) + " " + syminfo.root + (isMicro ? " (" + str.tostring(capMinis) + " minis)" : ""), white)
-    tcell(7, "Today's P&L", liveBar ? fmtSigned(tDay) + " (typed " + fmtSigned(iTodayPnl) + " + virtual " + fmtSigned(dayVirt + tOpen) + ")" : "virtual " + fmtSigned(tDay) + " (not live)", tDay < 0 ? warnC : white)
+    tcell(7, "Today's P&L", liveBar ? fmtSigned(tDay) + (stale ? " (virtual " + fmtSigned(dayVirt + tOpen) + "; typed " + fmtSigned(iTodayPnl) + " is from an earlier session, not counted)" : " (typed " + fmtSigned(iTodayPnl) + " + virtual " + fmtSigned(dayVirt + tOpen) + ")") : "virtual " + fmtSigned(tDay) + " (not live)", tDay < 0 ? warnC : white)
     tcell(8, "Day limits", "risk " + fmtUsd0(iRisk) + " / " + str.tostring(iShare) + "% of room | stop " + (iSelfStop > 0 ? fmtUsd0(iSelfStop) : "off") + " | lock " + (na(lockVal) ? "off" : fmtUsd0(lockVal) + (lockGrowthAuto ? (cycBad ? " (auto, tightest: payout inputs do not fit, see below)" : " (auto, 35% rule)") : "")), lockGrowthAuto and cycBad ? warnC : white)
     tcell(9, "Trades today", str.tostring(dayTrades) + " / " + str.tostring(iMaxTrades) + " | losses in a row " + str.tostring(lossStreak) + " / " + str.tostring(iMaxLosses), white)
     tcell(10, "Status", status, tWhy == "" and tFig == "" ? good : warnC)
