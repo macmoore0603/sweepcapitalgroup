@@ -1,0 +1,6 @@
+{
+  "private": true,
+  "type": "module",
+  "description": "Lets `node --test planner/test/` (a directory) run every *.test.mjs here: Node 22 treats the directory as one entry point and resolves it through this main.",
+  "main": "../run-tests.mjs"
+}

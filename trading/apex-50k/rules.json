@@ -1,0 +1,56 @@
+{
+  "firm": "Apex Trader Funding",
+  "plan": "50K Intraday Trailing Drawdown",
+  "verifiedOn": "2026-11-01",
+  "sources": {
+    "evaluation": "https://apextraderfunding.com/help-center/evaluation-accounts-ea/intraday-trailing-drawdown-evaluations/",
+    "drawdown": "https://apextraderfunding.com/help-center/intraday-trailing-drawdown-accounts/intraday-trailing-drawdown-explained/",
+    "evalSizing": "https://apextraderfunding.com/help-center/additional-helpful-items/position-sizing-evaluation",
+    "pa": "https://apextraderfunding.com/help-center/intraday-trailing-drawdown-accounts/intraday-trailing-drawdown-performance-accounts-pa/",
+    "paScaling": "https://apextraderfunding.com/help-center/additional-helpful-items/scaling-levels-pa-explained/",
+    "payouts": "https://apextraderfunding.com/help-center/intraday-trailing-drawdown-accounts/intraday-trailing-drawdown-payouts/"
+  },
+  "startBalance": 50000,
+  "microsPerMini": 10,
+  "evaluation": {
+    "profitTarget": 3000,
+    "maxDrawdown": 2000,
+    "drawdownType": "intraday-trailing: threshold = peak balance including unrealized P&L minus maxDrawdown; never moves down; breach when balance touches or falls below it",
+    "thresholdStopRithmic": 53000,
+    "thresholdStopTradovate": null,
+    "dailyLossLimit": null,
+    "maxContractsMini": 6,
+    "accessDays": 30,
+    "minTradingDays": 0,
+    "consistency": null
+  },
+  "performanceAccount": {
+    "maxDrawdown": 2000,
+    "thresholdStop": 50100,
+    "dailyLossLimitEffect": "pauses trading for the rest of the session; account stays open",
+    "tiersNote": "tier set from the prior session's closing balance (4:59:59 PM ET); profit = closing balance - 50000; never below Level 1",
+    "tiers": [
+      { "level": 1, "minProfit": 0, "maxContractsMini": 2, "dailyLossLimit": 1000 },
+      { "level": 2, "minProfit": 1500, "maxContractsMini": 3, "dailyLossLimit": 1000 },
+      { "level": 3, "minProfit": 3000, "maxContractsMini": 4, "dailyLossLimit": 2000 },
+      { "level": 4, "minProfit": 6000, "maxContractsMini": 4, "dailyLossLimit": 3000 }
+    ],
+    "payout": {
+      "minQualifyingDays": 5,
+      "minDailyProfit": 200,
+      "consistencyMaxDayShare": 0.5,
+      "consistencyNote": "no single profitable day may be 50% or more of total profit since the last approved payout",
+      "safetyNet": 52100,
+      "minBalanceToRequest": 52600,
+      "minPayout": 500,
+      "maxPayouts": 6,
+      "maxPerRequest": [1500, 2000, 2500, 2500, 3000, 3000]
+    },
+    "inactivity": "at least two $50 net-profit days within 30 consecutive days"
+  },
+  "flatByEt": "16:59",
+  "unverified": [
+    "Tier boundary between Level 3 and 4 is printed as '$3,000 - $5,999' and '$5,999 & Up'; this file uses 6000 for Level 4.",
+    "Payout table columns are unlabeled on the page; 52100 is read as the safety net and 52600 as the minimum balance to request (safety net + $500 minimum payout)."
+  ]
+}
