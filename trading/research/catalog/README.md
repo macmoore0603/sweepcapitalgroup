@@ -8,4 +8,4 @@ Working files of the full NQ strategy test. Results are not in yet; this folder 
 - `DATA_NOTES.md`: the 16 years of 1-minute bars and their limits. Rebuild them with `../code/fetch_histdata.py` and `../code/build_data.py`.
 - `../engine/`: the shared backtest engine (`engine.py`, guide in `ENGINE.md`) with its 113 unit tests and the 49 tests of an independent review. The review found and fixed two defects (a lookahead check that missed one-bar leaks, and bar times for bar lengths that do not divide a day); fills, costs, session rules and statistics held up.
 
-The engine files expect the data under the session scratchpad path they were written with; change `DATA_DIR` in `engine.py` after rebuilding the data elsewhere.
+The bar files are not committed (about 65 MB). The engine looks for them in a `data` folder beside its own folder (`trading/research/data/` here); rebuild them there with the two data scripts.
