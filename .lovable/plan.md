@@ -1,90 +1,33 @@
-# Sierra — your personal AI assistant
+# Restore customer payments with your Stripe account
 
-A phone number you can text and call. Sierra is locked to your verified number, runs on Lovable AI (Gemini 3 Flash + GPT-5 for hard reasoning), and can actually *do things* on your behalf by reusing this project's existing tools.
+## Current status
+- Your own Stripe account is connected using a live restricted key.
+- The account already contains The Edge at $1,000 and Managed Trading at $1,000.
+- The existing Full Send price is $3,000, not the website’s $2,000; Apprenticeship is missing.
+- Website checkout still points at the disconnected built-in integration, so connecting the account alone has not restored payments.
 
-## What you get
+## What to deliver
+1. Keep the four website tiers and one-time USD prices: The Edge $1,000; Apprenticeship $1,500; Managed Trading $1,000; Full Send $2,000.
+2. Reuse matching products and prices. Add the missing Apprenticeship and a new $2,000 Full Send price without deleting the old price or unrelated products.
+3. Connect the website’s existing checkout and order-status page directly to your Stripe account, preserving guest checkout.
+4. Restore verified payment notifications so purchase-confirmation emails and existing recovery automations work with the new account.
+5. Verify each tier opens checkout at the correct amount and test payment confirmation without making a real charge.
 
-- **Text Sierra** at a Twilio number → conversational replies in seconds, with full memory.
-- **Call Sierra** → she answers, listens (Twilio speech recognition), replies with natural TTS (Twilio Polly Neural / ElevenLabs if a key is set). Each turn streams through the same tool-using agent.
-- **Locked to your phone number** — any other caller hears a polite "this line is private" and gets dropped. Allowlist editable in `/sierra`.
-- **Tools she can use mid-conversation**:
-  1. `schedule_social_post` — drafts & schedules to Instagram (and future X/LinkedIn) via the existing `scheduled_posts` pipeline. Runs the same guardrails.
-  2. `create_reminder` — "remind me to call Marcus at 4pm" → row in `sierra_reminders`, cron texts you at the time.
-  3. `web_search` — live lookup via Lovable AI grounding for prices, news, facts.
-  4. `send_email` — drafts and sends via your existing email infra (Resend) to any address.
-  5. `get_calendar_today` — reads `sierra_reminders` for the next 24h so she can answer "what's on today?".
+## Tax and eligibility
+- Managed trading requires Stripe approval; the provider recommendation does not establish Stripe eligibility. Confirm approval before collecting payments for that service or its bundle.
+- Full compliance handling is not a suitable default for this human-involved financial-services catalog. Use Stripe tax calculation and collection (+0.5%); the business remains responsible for registration, filing, and remittance. Verify product tax codes and Stripe Tax configuration before enabling it.
 
-## Dashboard at `/sierra`
+## What you may need to provide
+- A matching Stripe publishable key, entered securely, for the embedded checkout.
+- Adequate restricted-key permissions for products, prices, Checkout Sessions, payment-status reads, and webhook configuration. The current key cannot read account details; this alone does not prove checkout permissions are missing.
+- A test key and matching test publishable key for a no-real-money payment test.
+- The new webhook signing secret, entered securely after the callback is configured.
 
-- Header: connection status (Twilio number, allowed callers, last message).
-- Live conversation feed (SMS + transcribed calls in one timeline).
-- Allowlist editor — add/remove phone numbers.
-- Reminder list with cancel.
-- System-prompt editor (default: institutional concierge voice matching LNC brand).
+## Technical details
+- Replace the disconnected gateway client with the existing Stripe SDK’s fetch-based direct client using the securely stored account key.
+- Preserve the existing server functions, embedded checkout interface, return route, and signed public webhook; do not introduce a second payment flow.
+- Keep test/live account keys and webhook secrets isolated, and map only the four allowed tier identifiers to account prices.
+- Add focused tests for the four price amounts and tier mapping; verify the customer checkout flow and signed notification handling.
 
-## Technical layout
-
-```text
-src/routes/
-  sierra.tsx                              ← in-app dashboard
-  api/public/sierra/
-    sms.ts                                ← Twilio inbound SMS webhook
-    voice.ts                              ← Twilio inbound voice (returns TwiML)
-    voice/gather.ts                       ← per-turn speech result → TTS reply
-    voice/status.ts                       ← call lifecycle logging
-    reminders/tick.ts                     ← pg_cron every minute → send due reminders
-src/lib/sierra/
-  agent.ts                                ← streamText + tools, brand system prompt
-  tools.ts                                ← all 5 tools (Zod schemas, executors)
-  twilio.ts                               ← signed REST calls via Twilio connector gateway
-  twiml.ts                                ← TwiML builders (<Say>, <Gather>, <Hangup>)
-  auth.ts                                 ← verify X-Twilio-Signature + allowlist check
-```
-
-### Database (one migration)
-
-- `sierra_owners (user_id, phone_e164, label, is_admin)` — allowlist; RLS to owner.
-- `sierra_conversations (id, phone_e164, channel sms|voice, created_at)` — one per phone.
-- `sierra_messages (id, conversation_id, role user|assistant|tool, parts jsonb, twilio_sid, created_at)` — full UIMessage log for memory across SMS + voice in one thread per number.
-- `sierra_reminders (id, owner_user_id, phone_e164, body, due_at, status pending|sent|cancelled)`.
-- Realtime enabled on `sierra_messages` so `/sierra` updates live.
-
-### Security
-
-- Every Twilio webhook verifies `X-Twilio-Signature` with `TWILIO_AUTH_TOKEN` before touching anything.
-- `From` number must exist in `sierra_owners` or the call/text is rejected (voice: "this line is private"; SMS: silent drop).
-- Twilio creds come from the Twilio standard connector (already supported). No raw secrets in code.
-- `LOVABLE_API_KEY` already provisioned.
-
-### Voice loop
-
-1. Twilio dials in → `POST /api/public/sierra/voice` → TwiML: `<Say>Hi, it's Sierra.</Say><Gather input="speech" action="/api/public/sierra/voice/gather" speechTimeout="auto"/>`
-2. Caller speaks → Twilio transcribes → POSTs `SpeechResult` to `/gather` → we append to the conversation, call `streamText` with full history + tools, take the assistant text, return TwiML: `<Say voice="Polly.Joanna-Neural">{reply}</Say><Gather .../>`
-3. Repeats until silence or hangup. Status webhook logs duration.
-
-This is **not** OpenAI Realtime (which needs raw WebSocket bridging Twilio Media Streams ↔ OpenAI — workable on Cloudflare Workers but adds a week of work). The Gather-loop is ~600ms turn latency, sounds natural with Neural voices, and reuses the exact same tool agent as SMS. We can upgrade to Realtime later as a drop-in replacement.
-
-### SMS loop
-
-`POST /api/public/sierra/sms` → verify → append user message → `streamText` with tools → reply via Twilio Messages API → log assistant message. Multi-step tool calls (`stepCountIs(50)`) so she can chain: search → draft → schedule in one turn.
-
-### Reminders cron
-
-`pg_cron` every minute → `POST /api/public/sierra/reminders/tick` → claim due rows, send SMS via Twilio, mark `sent`.
-
-## What you'll need to provide
-
-1. **Connect the Twilio connector** (one-click) — gives Sierra Account SID + an API key.
-2. **A Twilio phone number** with SMS + Voice capability. Tell me the E.164 number and I'll wire the webhooks.
-3. **Your iPhone's E.164 number** (e.g. +13105551234) — gets inserted as the first allowed owner.
-4. Confirm `TWILIO_AUTH_TOKEN` so we can validate webhook signatures (separate from the API key — used only for HMAC verification).
-
-## Out of scope for v1 (say the word and I'll add)
-
-- OpenAI Realtime / ElevenLabs Conversational AI for sub-200ms voice.
-- WhatsApp channel.
-- Outbound calls (Sierra calling *you*).
-- Calendar sync to Google/Apple (we use a local reminder table instead).
-- Paid social posting — only organic, per existing brand guardrails.
-
-Approve and I'll start with the migration + Twilio connector, then build the SMS path end-to-end before voice.
+## Completion criteria
+All four correct prices are reachable through the website, order status reads back correctly, and a verified test payment produces its confirmation email. Any account approval, key permissions, or paused Cloud services that prevent verification will be reported explicitly. Publishing follows verification.
