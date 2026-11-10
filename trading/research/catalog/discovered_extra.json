@@ -1,0 +1,15 @@
+[
+{
+"id": "R0980",
+"name": "IV Walls (implied-volatility expected-move levels) fade",
+"family": "mean reversion / options-implied levels",
+"rules": "Source is a marketing reel that shows only a headline ('90% Winrate Quant Strategy', a P&L screenshot on MES) and the caption 'Can't beat the IV Walls'; the rules are not published (viewers comment 'IV Walls' to receive them). Standard public meaning of the term, to be tested as such and labelled as the standard form, not the creator's own rules: each day compute the options-implied one-standard-deviation daily move = reference price x (implied volatility index / 100) / sqrt(252), using the Nasdaq-100 volatility index VXN (prior day's close) for NQ; the upper and lower 'IV walls' are the reference price (prior regular-session close) plus and minus that move. Price reaching a wall during the regular session is faded with a limit order at the wall (short at the upper wall, long at the lower wall), stop a fixed fraction of the expected move beyond the wall, target back toward the reference price (commonly half way), flat by the end of the day. Variants in public use: reference = today's 09:30 open instead of the prior close; walls at 1.0 expected move (most common) or 0.5.",
+"claimed_evidence": "Instagram reel by @atraintrades, 2026-09-15: screenshot claiming a 90% win rate and +$76,119.25; no rules, no trade list, no period, no audit.",
+"evidence_grade": "D",
+"testable_precisely": false,
+"tradeify_compatible": true,
+"source_urls": [
+"https://www.instagram.com/reel/DdTNtTLNSLU/"
+]
+}
+]

@@ -1,0 +1,1634 @@
+[
+{
+"id": "R0854",
+"key": "X_DATA",
+"name": "Mark D. Cook Cumulative TICK (Stock Market Wizards)",
+"reason": "Needs NYSE $TICK market internals, not in price bars; formula proprietary and positions held for days."
+},
+{
+"id": "R0046",
+"key": "X_DISCRETION",
+"name": "20-min ORB + 38.2-50% Fib pullback + MACD confirmation, exit 11:30",
+"reason": "MACD settings and condition unstated; Fib leg only 'presumably' the breakout leg; stop and target unstated, so trigger is not defined."
+},
+{
+"id": "R0765",
+"key": "X_DISCRETION",
+"name": "Alexander Gerchik 'level trading' with ATR rules (breakout-retest / false-breakout / bounce, 3:1, skip when most of daily ATR is used)",
+"reason": "Levels, BSU/BPU confirmation and selection are discretionary; no coded form. Only the ATR travel filter and 3:1 geometry are mechanical."
+},
+{
+"id": "R0707",
+"key": "X_NOT_A_STRATEGY",
+"name": "Alpha Algo Trading Research NQ 30-minute 'close + k x ATR' buy-stop day trade (algotr Substack)",
+"reason": "k, m, channel type/length and time cutoff are vague and the parameters and code are paywalled; a test would invent the rule."
+},
+{
+"id": "R0533",
+"key": "X_DISCRETION",
+"name": "Elev8+ Hybrid Trader (paid NQ/MNQ automation)",
+"reason": "Trigger, stops, targets undisclosed; paid product with hypothetical backtest only."
+},
+{
+"id": "R0054",
+"key": "X_TICK",
+"name": "Fabio Valentini 'IVB' long-only 08:30-09:00 opening range breakout with bar-delta filter (Medium write-up with EasyLanguage code) [ORB family, pre-cash window]",
+"reason": "Bar delta needs tick up/down data, not in OHLC bars; the delta gate is core to the entry."
+},
+{
+"id": "R0699",
+"key": "X_DISCRETION",
+"name": "Kevin Haggerty 'Slim Jim' narrow-consolidation breakout (TradingMarkets, S&P futures/SPY)",
+"reason": "Narrowness threshold, stop and target are vague ('symmetric', 'tight'); no standard coded form. Exit time unknown."
+},
+{
+"id": "R0370",
+"key": "X_TICK",
+"name": "LatigoBreak: 30-second opening-candle breakout with whipsaw filter (jalv92) - failed [tested_before=related to ORB generic]",
+"reason": "Rule is built on a 30-second candle; no 1m-or-slower form given. No flat time stated."
+},
+{
+"id": "R0146",
+"key": "X_DISCRETION",
+"name": "MambaFx 1-min support-BOS breakout (0.6 ATR trigger, 2 ATR stop, 5R)",
+"reason": "Level identification is subjective (the author calls it so). 0.6 ATR trigger, 2 ATR stop and 5R are numeric but the setup is not. Exit time unstated."
+},
+{
+"id": "R0077",
+"key": "X_TICK",
+"name": "Nasdaq 30-second opening range breakout (Forex Factory journal) [tested_before: ORB generic, 30 s window]",
+"reason": "30-second range needs sub-minute data and no 1m form is given; stop and target unspecified."
+},
+{
+"id": "R0073",
+"key": "X_TICK",
+"name": "NQ range-bar Keltner channel breakout, 09:30-11:30 (futures.io)",
+"reason": "Range bars and 6-tick stops cannot be built or resolved from 1m OHLC."
+},
+{
+"id": "R0588",
+"key": "X_DISCRETION",
+"name": "Pivot Boss Central Pivot Range (Frank Ochoa): CPR width and relation to the prior day [tested_before=false as a standalone; CPR was only a filter in a listed ORB variant]",
+"reason": "Narrow/wide thresholds, entries and stops are not quantified; bias-only reading."
+},
+{
+"id": "R0681",
+"key": "X_DISCRETION",
+"name": "PivotBoss CPR narrow-width 'Breakaway Play' and two-day pivot relationship bias (Frank Ochoa, 'Secrets of a Pivot Boss')",
+"reason": "Width bands vary by source and entry/exit are vague."
+},
+{
+"id": "R0287",
+"key": "X_NOT_A_STRATEGY",
+"name": "Session-Window ATR Breakout Framework (Better System Trader ep. 43, Tomas Nesnidal)",
+"reason": "Podcast description of a rule universe; NQ parameters are vague."
+},
+{
+"id": "R0546",
+"key": "X_NOT_A_STRATEGY",
+"name": "SixSigmaTraders OR-BOT NQ (paid morning-breakout signal bot) \u2014 ORB family (tested_before=true for generic ORB)",
+"reason": "Black-box vendor bot; no rules published."
+},
+{
+"id": "R0947",
+"key": "X_DISCRETION",
+"name": "Tori Trades top-down trendline break (swing), with an independent coded retest",
+"reason": "Steepest valid trendlines are drawn by eye top-down (monthly to 4H); the independent Python code is unpublished. No coded line definition exists."
+},
+{
+"id": "R0819",
+"key": "X_NOT_A_STRATEGY",
+"name": "Northtape 'Open Strike': opening-range break with a short-only reversal filter (ES/NQ 5-min)",
+"reason": "Range length, filter definition, stop and target are closed-source; only a vendor performance certificate is given."
+},
+{
+"id": "R0601",
+"key": "X_NOT_A_STRATEGY",
+"name": "LORMT Apex MNQ / NAS100 (Olaika1): one-per-day early-session 15-min candle breakout with weekday direction filters",
+"reason": "Reference candle time, entry window, weekday rules and R multiple are all undisclosed; only a vendor backtest is given."
+},
+{
+"id": "R0614",
+"key": "X_DISCRETION",
+"name": "Regime-scaled first-5-minute ORB (bot-seller rebuild, 'What Works in Trading' Substack)",
+"reason": "Regime width thresholds, the tighter stop for normal opens and the quick target for violent opens are not given; only quiet opens are specified (5R)."
+},
+{
+"id": "R0670",
+"key": "X_DISCRETION",
+"name": "Regime-adaptive first-5-minute ORB: stop and target set by opening-range width relative to the normal daily range (bot seller's rules, rebuilt by 'What Works in Trading') [ORB family; the exits are materially different]",
+"reason": "Same as R0614: width thresholds, the tighter stop and the quick target are vague; only quiet opens (other-side stop, 5R) are specified."
+},
+{
+"id": "R0604",
+"key": "X_VOLUME",
+"name": "NAS100 3-Min Breakout + Reverse After SL (SwapyBhoirGoldking): lowest-volume pre-market candle range, 09:15 breakout, one stop-and-reverse",
+"reason": "Range is chosen by lowest volume (not a side filter); bars have no volume. Rest is mechanical: 09:15 close break, swing stop, 2R, one reverse after a stop. CFD tick volume differs."
+},
+{
+"id": "R0660",
+"key": "X_NOT_A_STRATEGY",
+"name": "NQ 30-minute volatility-channel-gated breakout: buy stop at yesterday's close + k x ATR, ATR stop, one trade per day, flat EOD (algotr 'Robust NQ strategy tested since 2001') [related to the Larry Williams volatility breakout]",
+"reason": "Paywalled: channel type/length, ATR multiples, stop multiple and cutoff are all unpublished, so no mechanical rule exists."
+},
+{
+"id": "R0341",
+"key": "X_DISCRETION",
+"name": "NQ ORB retrace to opening-range volume-profile level (dws-data) [tested_before=related to ORB generic; materially different entry]",
+"reason": "Breakout threshold, targets, cutoffs and the in-sample filter set are not published; also relies on volume-profile levels. No defined trigger."
+},
+{
+"id": "R0957",
+"key": "X_DATA",
+"name": "Dividend-reinvestment price pressure: long on high aggregate dividend-payment days (Hartzmark & Solomon, 'Market-Wide Predictable Price Pressure', American Economic Review)",
+"reason": "Needs aggregate dividend-payment yield across US stocks (dividend dates and amounts); not in price bars. Cut-offs beyond quintiles also vague."
+},
+{
+"id": "R0264",
+"key": "X_NOT_A_STRATEGY",
+"name": "Expiration-Day Open-to-Close Short (QuantifiedStrategies 'Rare Short-Side Day Trade')",
+"reason": "The exact day and filters are members-only; only a rationale is given. Cannot define the day without inventing a rule."
+},
+{
+"id": "R0959",
+"key": "X_DATA",
+"name": "Famous-firm post-close earnings-cluster days (Chen, Cohen & Wang, 'Famous Firms, Earnings Clusters, and the Stock Market')",
+"reason": "Ranking needs Dow Jones earnings-news counts or a mega-cap earnings calendar; neither is in the price data."
+},
+{
+"id": "R0741",
+"key": "X_DISCRETION",
+"name": "John Carter '3:52 play' (late-day index futures trade, exit at exactly 4:13 pm)",
+"reason": "Direction trigger is vague; the clearer fade version of the same trade is R0663. Exit 16:13 and stop 20 YM / 2 ES pts only."
+},
+{
+"id": "R0908",
+"key": "X_DISCRETION",
+"name": "Monday fixed-time long plus initial-balance breakouts with a static bracket ('stupid simple' MNQ algo, r/algotrading) [tested_before=partly: the IB breakout part]",
+"reason": "Entry time, reward-to-risk and IB definition are not disclosed; only an equity-curve screenshot exists."
+},
+{
+"id": "R0014",
+"key": "X_NOT_A_STRATEGY",
+"name": "Noon Curve (AM/PM extreme split, Q2 break of Q1)",
+"reason": "No entry/stop/target; headline stats use opposite-side sessions known only at the close (look-ahead). The implied noon long would be an invented rule."
+},
+{
+"id": "R0285",
+"key": "X_DATA",
+"name": "Overnight Anomaly with Trend/VIX/Sentiment Filters (Quantpedia)",
+"reason": "Needs VIX series and the proprietary Brain Market Sentiment feed; the VIX MA length is also unstated."
+},
+{
+"id": "R0015",
+"key": "X_NOT_A_STRATEGY",
+"name": "RTH gap vs prior RTH range + midnight-open confirmation ('RTH Breaks')",
+"reason": "Indicator description only. The implied trade (gap side to the close) is not stated; the gap-side bias is closest to F25 follow but would be an invented rule."
+},
+{
+"id": "R0970",
+"key": "X_DATA",
+"name": "Speculative-mood weekday spread: long NQ / short ES on Friday, reverse on Monday (adapted from Birru, JFE 2018)",
+"reason": "Needs ES intraday bars as the paired leg; hedge ratio vague; author's own adaptation of a stock-anomaly result."
+},
+{
+"id": "R0659",
+"key": "X_NOT_A_STRATEGY",
+"name": "Turnaround Tuesday as a day trade on ES: daily weakness condition, 15-min stop entry above a reference level, ATR stop, flat by 15:00 (algotr 'From the Lab')",
+"reason": "Weakness condition, intraday reference level and ATR multiplier are all paywalled; no testable entry rule is published."
+},
+{
+"id": "R0878",
+"key": "X_NOT_A_STRATEGY",
+"name": "Futures Truth-tracked S&P/Nasdaq day-trade systems (D-Master I by Rich Creal; VC Daytrader; Stafford S&P Daytrade; FT S&P Daytrade; Impetus SP)",
+"reason": "Black-box commercial systems; all entry and exit logic is undisclosed."
+},
+{
+"id": "R0964",
+"key": "X_DATA",
+"name": "Crypto-weekend spillover: short Monday after a negative Bitcoin/Ether weekend (Mourey, Shahrour & \u015eoiman, Finance Research Letters 2025)",
+"reason": "Needs crypto price series (BTC/ETH weekend return); threshold vague and the paper has no trading rule."
+},
+{
+"id": "R0877",
+"key": "X_NOT_A_STRATEGY",
+"name": "Intraday-only E-mini S&P CTA programs (black boxes): Theta Capital QPAF, Ira Bershatsky Intraday Alpha Generator, Blake Capital SRD Short Equities, R Best Private Client Institutional, Bald Eagle S&P day-trading module, County Cork Fusion Equities, Capstone Quant Algo DT",
+"reason": "CTA track records and black-box programs; no mechanical rule is published."
+},
+{
+"id": "R0312",
+"key": "X_DISCRETION",
+"name": "Taylor buy day / 3-day cycle (Street Smarts simplification)",
+"reason": "Cycle count is discretionary; 'afternoon holds' and entry price are undefined. Multi-day. Source's own test found no edge from the low test."
+},
+{
+"id": "R0818",
+"key": "X_DISCRETION",
+"name": "David Trull\u00e1s MACD-divergence + Fibonacci 23.6% entry on NQ (World Cup quarterly day-trading champion; third-party reconstruction)",
+"reason": "Zones are hand-marked, MACD line vs histogram unspecified, RSI/volume confirmation, 30s bars primary; hidden-divergence handling discretionary."
+},
+{
+"id": "R0154",
+"key": "X_DISCRETION",
+"name": "Jooviers Gems Hybrid Superscalp (1-min Heikin Ashi, 100 EMA, HV doji)",
+"reason": "'Structural low' and 'high volume' are undefined; the entry hinges on a volume doji; the target is loosely measured; no evidence offered."
+},
+{
+"id": "R0362",
+"key": "X_NOT_A_STRATEGY",
+"name": "12-model MNQ funded-account ensemble (s-k-28 nq-es-trader-5k-payout) [tested_before=partly (includes VWAP reversion and trend models)]",
+"reason": "Wrapper of 12 models; only pm_mom (Kalman slope, unpublished filter settings) is partly described; the other models' entry rules are not in the record."
+},
+{
+"id": "R0836",
+"key": "X_DISCRETION",
+"name": "Murray Ruggiero report-day overreaction fade (Better System Trader ep. 42)",
+"reason": "Report surprise classification needs consensus/actual data and the record gives no rules; claim is only a 63% win rate anecdote."
+},
+{
+"id": "R0299",
+"key": "X_DISCRETION",
+"name": "Larry Williams Specialist Trap",
+"reason": "Daily multi-day pattern, no numeric box, trend or target rule; no backtest."
+},
+{
+"id": "R0597",
+"key": "X_DISCRETION",
+"name": "'Liquidity-driven framework for MNQ' (Parekh et al. 2026, ICT confluence model in Pine) [tested_before=partly (ICT sweep/FVG/iFVG/OB family)]",
+"reason": "Abstract only; only claim is a win-rate uplift versus the authors' manual trading. No mechanical rule."
+},
+{
+"id": "R0009",
+"key": "X_DATA",
+"name": "10am/2pm SMT-divergence reversal (ES vs NQ)",
+"reason": "Requires another market's intraday bars (ES/YM) for the divergence signal; definitions are vague."
+},
+{
+"id": "R0530",
+"key": "X_NOT_A_STRATEGY",
+"name": "AutoProp \u2014 MNQ Prop Account Strategy [Beta] (invite-only TradingView, lyon188)",
+"reason": "Paywalled black box; vendor admits filters were chosen to remove historically weaker setups."
+},
+{
+"id": "R0112",
+"key": "X_TICK",
+"name": "Cameron's ICT scalping model (draw on liquidity, 5M stop raid, 30s FVG)",
+"reason": "Needs 30-second bars (built from ticks); 12-pt/1:1 base and capped-RR variants both rely on that entry."
+},
+{
+"id": "R0602",
+"key": "X_NOT_A_STRATEGY",
+"name": "EdgeSweep MNQ (lyon188): 60-min liquidity-pool sweep with 5-min FVG/MSS confirmation and weekday/time-gated sources",
+"reason": "Protected script with source/weekday-gated rules and heavy in-sample tuning admitted by the author; thresholds vague."
+},
+{
+"id": "R0419",
+"key": "X_DISCRETION",
+"name": "Funded-trader-interview ICT/SMC model: 1-h bias, 15-min order block, 5-min FVG entry (Tradeify / FundedNext funded trader)",
+"reason": "Record states all variants are discretionary; no statistics."
+},
+{
+"id": "R0744",
+"key": "X_DISCRETION",
+"name": "futures_lab H17v2 'Morning Sweep Fade' (sweep of the pre-market range against daily bias, 09:30-11:00)",
+"reason": "Direction comes from an undisclosed daily bias job; no code or trade list."
+},
+{
+"id": "R0745",
+"key": "X_DISCRETION",
+"name": "futures_lab H37 'NQ Dealing Range CE counter-trend' (H1 dealing-range 50% touch)",
+"reason": "H37v2 volume-event sibling would be X_VOLUME; neither has a published rule or code."
+},
+{
+"id": "R0586",
+"key": "X_DISCRETION",
+"name": "Goldbach / Power-of-3 dealing-range levels (Hopiplaka) and the 'PO3 x ICT Sweep' strategy [tested_before=false]",
+"reason": "Ranges of 729/2187 pts imply multi-day holds; range anchoring differs by implementation; offshoot values are behind a login."
+},
+{
+"id": "R0351",
+"key": "X_TICK",
+"name": "ICT 'Cameron' scalping model: 1H draw on liquidity, 5-min stop raid, 30-sec FVG entry (hindsight-finance) [tested_before=false]",
+"reason": "Duplicate of R0112 (hindsight-finance). Needs 30s bars built from ticks; results of 0.81 PF OOS were on tick-built bars."
+},
+{
+"id": "R0928",
+"key": "X_DISCRETION",
+"name": "ICT Charter Price Action Model 12: 20-pip scalp (order block retest, then expansion-swing FVG)",
+"reason": "Daily expansion direction, OB retest and 'expansion swing' undefined; FX pip distances (20/15) have no NQ translation."
+},
+{
+"id": "R0927",
+"key": "X_DISCRETION",
+"name": "ICT Institutional Order Flow Entry Drill (IOFED): shallow entry at the near edge of a post-MSS fair value gap",
+"reason": "Context (bias, HTF PD array, discount/premium) and targets are vague; three source versions differ on entry and stop. Core MSS + FVG limit has no sweep, so F18 does not fit."
+},
+{
+"id": "R0090",
+"key": "X_DATA",
+"name": "ICT liquidity purge + order block + ES/NQ SMT divergence (Twitter thread write-up)",
+"reason": "SMT divergence between ES and NQ requires another market's intraday bars; order-block entry also loosely defined."
+},
+{
+"id": "R0791",
+"key": "X_DISCRETION",
+"name": "ICT Market Maker Buy/Sell Model (MMXM: original consolidation, smart-money reversal, staged delivery back to the consolidation), MMXM+ mechanization",
+"reason": "Original consolidation, key-TF levels and stage entry undefined; MMXM+ only marks stages. No mechanical entry rule."
+},
+{
+"id": "R0889",
+"key": "X_DISCRETION",
+"name": "ICT Market Maker Buy/Sell Model (MMXM: original consolidation, stair-step run to an HTF level, smart-money reversal, return to the origin) [tested_before=false]",
+"reason": "OC, 1H points of interest and supply/demand block entry undefined; targets pre-marked. No published results or fixed rules."
+},
+{
+"id": "R0888",
+"key": "X_DISCRETION",
+"name": "ICT New Day / New Week Opening Gap (NDOG/NWOG) consequent-encroachment levels as PM-session reaction points [tested_before=false]",
+"reason": "Gap levels are computable but entry confirmation, stop and target are unspecified and PM expectation is a bias read."
+},
+{
+"id": "R0930",
+"key": "X_DISCRETION",
+"name": "ICT TGIF (Thank God It's Friday): Friday 20-30% retracement of the weekly range",
+"reason": "Qualification (trend week, weekly draw reached, final push, news calendar) is judgment; no coded form. Monday carryover also breaks one-day limit."
+},
+{
+"id": "R0005",
+"key": "X_DISCRETION",
+"name": "ICT Unicorn model (breaker block + FVG overlap)",
+"reason": "Breaker formation (high-low-higher high-lower low failure) and FVG overlap lack a coded definition; target 2-3R or 'draw on liquidity' is vague."
+},
+{
+"id": "R0890",
+"key": "X_DISCRETION",
+"name": "ICT weekly profiles: Classic Tuesday low/high of the week, and the Wednesday sweep of the Monday-Tuesday range [tested_before=false]",
+"reason": "Classic Tuesday low and Wednesday sweep + MSS entries are multi-day holds (exit Friday noon), not intraday; bias use is judgment."
+},
+{
+"id": "R0792",
+"key": "X_DISCRETION",
+"name": "ICT weekly-profile continuation day trades (classic expansion: once the Monday/Tuesday weekly extreme is in, trade with the week Wed-Fri)",
+"reason": "Weekly extreme confirmation (daily candle 2, hourly state of delivery) is judgment; entry/stop/target vague."
+},
+{
+"id": "R0613",
+"key": "X_DISCRETION",
+"name": "INDEX DIGGA PRO 'Regular' lane (PINEDIGGA): limit order at a 'mature' 15m/1h order block that price returns to",
+"reason": "Indicator only. 'Mature' block rule, stop, targets, session hours and exit time are not stated; closed code, no configurable rule."
+},
+{
+"id": "R0008",
+"key": "X_DISCRETION",
+"name": "TJR model (HTF liquidity sweep + BOS + FVG/iFVG, first 2h of NY)",
+"reason": "Confluence, HTF levels and exits are discretionary; SMT with ES is optional and needs ES bars. No fixed mechanical rule."
+},
+{
+"id": "R0153",
+"key": "X_DISCRETION",
+"name": "Toto Capital SBL Reversal (15-min EMA 50/100/200 alignment + killzone sweep, 2R)",
+"reason": "Alignment, killzone hours and sweep levels are undefined; trigger not defined. Only stop at the sweep and 2R target are stated."
+},
+{
+"id": "R0116",
+"key": "X_DATA",
+"name": "Trader Kane 'Lab Model' (10am 4H candle sweep, SMT + iFVG)",
+"reason": "Needs intraday ES bars for SMT divergence. Bias and target are also discretionary."
+},
+{
+"id": "R0434",
+"key": "X_NOT_A_STRATEGY",
+"name": "IB extension retest continuation (TradingStats)",
+"reason": "Statistic study only (continuation/reversal reach rates after retest); no trade rule defined."
+},
+{
+"id": "R0804",
+"key": "X_DATA",
+"name": "NQ cash-index vs futures discrepancy day trade (Jonathan Kinlay)",
+"reason": "Needs NDX cash intraday bars; discrepancy measure, entry, stop and exit not disclosed."
+},
+{
+"id": "R0872",
+"key": "X_DATA",
+"name": "ES prior-day-low break confirmed or rejected by NQ relative strength and VIX (TradeZella 'VIX Futures Strategy'), with the '1% rule'",
+"reason": "Needs intraday ES and VIX alongside NQ; stop, target and window also unstated."
+},
+{
+"id": "R0873",
+"key": "X_DATA",
+"name": "Cash-index vs futures divergence reclaim (cash SPX/NDX lower low while ES/NQ holds its Globex low)",
+"reason": "Needs cash-index intraday bars (and optional VIX/IV/gamma); pulse bar and reclaim zone undefined."
+},
+{
+"id": "R0616",
+"key": "X_DISCRETION",
+"name": "futures_lab H17v2 'Morning Sweep Fade': fade a sweep of the 08:00-09:30 range against the daily bias in the 09:30-11:00 kill zone",
+"reason": "D1 bias method, stop and target undisclosed; GEX sizing needs options data. Dropping the bias would change the rule."
+},
+{
+"id": "R0965",
+"key": "X_DATA",
+"name": "Fed policy-slope signal from fed funds futures, weekly bias (Neuhierl & Weber, Journal of Monetary Economics 2019)",
+"reason": "Needs 1m and 3m fed funds futures series; no threshold or stop given."
+},
+{
+"id": "R0807",
+"key": "X_DATA",
+"name": "LEI stale-news front-run and reversal in S&P futures (Gilbert, Kogan, Lochstoer & Ozyildirim 2012, Management Science)",
+"reason": "Needs LEI actual/forecast and release dates; both legs hold across sessions."
+},
+{
+"id": "R0876",
+"key": "X_DATA",
+"name": "Statera (ROE Capital) breadth-driven day-trade momentum model plus momentum-failure reversal (MES/ES CTA)",
+"reason": "Needs breadth (A/D) data; thresholds, entry time and exits undisclosed; CTA program."
+},
+{
+"id": "R0461",
+"key": "X_DISCRETION",
+"name": "Market Profile day-type continuation / trend-day prediction",
+"reason": "Day-type read with no single mechanical rule ('exact trade rules vary'); evidence is a negative statistics study."
+},
+{
+"id": "R0431",
+"key": "X_DISCRETION",
+"name": "Poor high / poor low repair",
+"reason": "Validity filters are subjective; no mechanical entry or stop given."
+},
+{
+"id": "R0430",
+"key": "X_NOT_A_STRATEGY",
+"name": "Single prints fill (Market Profile)",
+"reason": "Statistics only; source states it is not a trading system."
+},
+{
+"id": "R0159",
+"key": "X_DISCRETION",
+"name": "IRONCLAD 'market structure only' HTF trend/MSS setup (prop pass-rate claim)",
+"reason": "Timeframes, entry, stop and target undisclosed; only a prop pass-rate claim."
+},
+{
+"id": "R0742",
+"key": "X_DISCRETION",
+"name": "Adam Mancini 'Failed Breakdown' (bear-trap reclaim) on ES levels",
+"reason": "Levels are discretionary newsletter picks; 'acceptance' undefined."
+},
+{
+"id": "R0422",
+"key": "X_DISCRETION",
+"name": "Daily-ATR exhaustion fade (NinjaTrader statistics)",
+"reason": "Thresholds, ATR length, entry trigger and stop all unspecified; vendor statistic on YM only."
+},
+{
+"id": "R0968",
+"key": "X_TICK",
+"name": "Drift-burst reversion: buy after negative high-volume drift bursts ('flash-crash' detector; Christensen, Oomen & Ren\u00f2, 'The Drift Burst Hypothesis') [related to the listed no-news jump fade]",
+"reason": "Needs tick or 1-second data for the drift-burst t-statistic; also uses volume; no holding rule."
+},
+{
+"id": "R0036",
+"key": "X_DISCRETION",
+"name": "Extreme-reversal RSI scalper (MNQ 1-min, trailing stop)",
+"reason": "All thresholds undisclosed; average hold under 2 minutes with tick-based trail."
+},
+{
+"id": "R0832",
+"key": "X_DISCRETION",
+"name": "George Angell LSS 3-Day Cycle buy/sell envelopes (Taylor 'book method' quantified) [tested_before=related to Taylor buy day / 3-day cycle]",
+"reason": "Day labels use the day's own high/low order (look-ahead); order placement, stops and cycle re-phasing are vague; envelope levels alone give no entry."
+},
+{
+"id": "R0037",
+"key": "X_DISCRETION",
+"name": "Intraday capitulation dip-buy, ES+NQ, 15-min, 0.30% stop / 0.75% target",
+"reason": "Only exits are published (0.30% stop, 0.75% target, flat at EOD); entry conditions undisclosed."
+},
+{
+"id": "R0281",
+"key": "X_DATA",
+"name": "Intraday Mean-Reversion Pairs (QuantStart SPY/IWM; NQ/ES adaptation)",
+"reason": "Needs ES intraday bars (another market); rolling 100-bar OLS beta, enter z<=-2/>=2, exit |z|<=1; end-of-day flat not stated."
+},
+{
+"id": "R0395",
+"key": "X_DISCRETION",
+"name": "JJ Simon 'Fair Pricing Theory' (as profiled by PropFirmElite; reported $1.2M in prop payouts)",
+"reason": "Bias determination vague; A+/A grading rests on discretionary HTF/LTF bias. Only the 25/38 pt bracket and 90-minute window are mechanical."
+},
+{
+"id": "R0050",
+"key": "X_DISCRETION",
+"name": "Midday low-ADX range bot (10:30-14:30, ADX < 23, Renko trailing)",
+"reason": "Entry trigger undisclosed; Renko box trailing stops and volume cannot be reproduced; ADX period unstated; author admits backtest is inaccurate."
+},
+{
+"id": "R0903",
+"key": "X_VOLUME",
+"name": "Money Flow Index 80/20 divergence scalp, 2-min (Reddit r/FuturesTrading) [tested_before=related to the 15-min oscillator fades tested earlier, which included MFI 20/80; this one is materially different]",
+"reason": "MFI is volume-based and is the core signal; the divergence entry signal is undefined; scale-out stops are partly vague."
+},
+{
+"id": "R0213",
+"key": "X_DATA",
+"name": "Nasdaq Liquidity Fade Engine (NLFE) and Global Index Spread RSI (daily swing; not intraday)",
+"reason": "Spread RSI(2) < 35 buy / > 78 exit uses URTH (not in the downloadable daily set); NLFE is protected. Both daily, overnight."
+},
+{
+"id": "R0251",
+"key": "X_NOT_A_STRATEGY",
+"name": "NQ intraday momentum vs reversal by prior-day and overnight sign (Yu, Rentzler & Wolf 2005, JOIM)",
+"reason": "Academic regression, period boundaries and trade rule vague; no entry or exit."
+},
+{
+"id": "R0529",
+"key": "X_TICK",
+"name": "NQ/MNQ CT (counter-trend) Scalper [BACKTEST] (Crispigino, open source)",
+"reason": "Needs bid/ask delta and order flow; OHLC 1m bars cannot supply it. 6 entry paths, Hurst/ADF filters."
+},
+{
+"id": "R0173",
+"key": "X_VOLUME",
+"name": "OBS Volume Spike Reaction Fade [NQ]",
+"reason": "Volume spike (>=3x SMA20 vol) reaction bar is the core trigger; no volume in 16y bars"
+},
+{
+"id": "R0803",
+"key": "X_NOT_A_STRATEGY",
+"name": "QQQ 'Collapse' open-to-close strategy #13 (QuantifiedStrategies paid product)",
+"reason": "Two entry criteria paywalled; no testable rule"
+},
+{
+"id": "R0785",
+"key": "X_NOT_A_STRATEGY",
+"name": "QuantifiedStrategies QQQ VWAP Rebound day trade (long a small rebound below session VWAP after a weak prior day) [tested_before=related: generic VWAP mean reversion was tested; prior-day-weakness condition differs]",
+"reason": "Weak-prior-day and rebound thresholds paywalled; QQQ volume VWAP"
+},
+{
+"id": "R0496",
+"key": "X_NOT_A_STRATEGY",
+"name": "Serafini 2017 champion: intraday E-mini S&P reversal with time windows",
+"reason": "Disclosed portfolio/champion track record; entry, stop, target undefined"
+},
+{
+"id": "R0747",
+"key": "X_NOT_A_STRATEGY",
+"name": "Zion Trading Algos 'ES60ValueHigh' intraday mean reversion (ES)",
+"reason": "Vendor black box: RSI+MA 'value high', no parameters or entry condition"
+},
+{
+"id": "R0910",
+"key": "X_DISCRETION",
+"name": "algotr 'From The Lab' NQ daily dip model: Bollinger pullback + 3-bar V fractal, 2-day maximum hold [tested_before=false]",
+"reason": "Trend definition, MAE stop and 'meter 3.7' exit are undefined; no mechanical rule."
+},
+{
+"id": "R0961",
+"key": "X_VOLUME",
+"name": "Volume-conditioned daily reversal: buy after a high-volume down day (Campbell, Grossman & Wang, QJE 1993)",
+"reason": "Core signal is detrended daily volume; x_sub=vol_conditioned_daily_reversal; no threshold published."
+},
+{
+"id": "R0802",
+"key": "X_NOT_A_STRATEGY",
+"name": "QQQ VWAP Rebound day trade (QuantifiedStrategies, Oct 2026) [related to VWAP mean reversion (tested); conditioned on a weak prior day; exact thresholds paywalled]",
+"reason": "Weak-day, rebound and target thresholds paywalled; also volume-weighted VWAP."
+},
+{
+"id": "R0808",
+"key": "X_DATA",
+"name": "Fade 'no-news' 15-minute price jumps for 60 minutes (Xiao, Yin & Zhao, Journal of Financial Research)",
+"reason": "News label needs RavenPack macro news feed; entry/stop left to user."
+},
+{
+"id": "R0633",
+"key": "X_DISCRETION",
+"name": "Overnight hourly opens and midpoints as RTH magnets (NQ Hourly Retracement Levels, lucymatos)",
+"reason": "Entry, stop and session pattern definitions vague; hit-rate gating undefined."
+},
+{
+"id": "R0556",
+"key": "X_DISCRETION",
+"name": "Key-level rejection (PDH / overnight high / overnight low / OR high) \u2014 danielnik06 NQ framework",
+"reason": "Rejection definition, stop and target not given in README."
+},
+{
+"id": "R0531",
+"key": "X_DISCRETION",
+"name": "NQ Pivot Pulse ETH scalper (AutomatedTrader101, open-source TradingView)",
+"reason": "Thresholds and timeframe not given; VIX regime filter."
+},
+{
+"id": "R0382",
+"key": "X_DISCRETION",
+"name": "NQ opening-range 'magnet' retest of the 09:30 candle extreme with VWAP confluence (biagDev nq-magnet-framework) [tested_before=false]",
+"reason": "Entry mechanics, candle size and stops/tiers live only in Pine files, not in the record."
+},
+{
+"id": "R0632",
+"key": "X_DISCRETION",
+"name": "NQ 'Magic Hour' (07:00-08:00 ET) range extension-sweep reversion (NQ Magic Hour Pro)",
+"reason": "Fade target and stop vague; entry reference undefined."
+},
+{
+"id": "R0674",
+"key": "X_NOT_A_STRATEGY",
+"name": "Weekly-open magnet: after a Sunday gap away from the weekly open, trade a return to it, mostly on Tuesday (TradingStats NQ statistic)",
+"reason": "Statistic only; no entry, stop or target published."
+},
+{
+"id": "R0672",
+"key": "X_ML",
+"name": "10:00 ET walk-forward LightGBM regime/direction model for QQQ, trade to the close (a-drain-on-life 'qqq-regime-engine') [ML; QQQ signal applied to NQ]",
+"reason": "Fitted ML model with 173 features; thresholds only in code."
+},
+{
+"id": "R0811",
+"key": "X_ML",
+"name": "Hidden Markov Model intraday momentum on E-mini S&P with side information (Christensen, Godsill & Turner 2020)",
+"reason": "Latent-state model fitted via Baum-Welch/MCMC; thresholds unspecified."
+},
+{
+"id": "R0896",
+"key": "X_ML",
+"name": "Lorentzian Classification ML strategy (jdehorty kNN + 200 EMA + Supertrend exits) [tested_before=false]",
+"reason": "kNN classifier trained on features; no fixed closed-form rule from price bars."
+},
+{
+"id": "R0249",
+"key": "X_ML",
+"name": "MNQ 'RTH Confluence' and 'London Session Signal B' regime signals (Mesfin 2026)",
+"reason": "GMM features and fit undisclosed; also needs volume z-score."
+},
+{
+"id": "R0512",
+"key": "X_ML",
+"name": "NQ Quant Trader '5K Payout' 12-model MNQ ensemble (s-k-28 GitHub)",
+"reason": "Ensemble of fitted models with priority resolver; full rules only in code, not in record."
+},
+{
+"id": "R0502",
+"key": "X_NOT_A_STRATEGY",
+"name": "Red Ivy 'Elixir' (ES intraday using S&P-component signals, CTA)",
+"reason": "Black-box CTA; signal logic undisclosed, uses S&P component data."
+},
+{
+"id": "R0463",
+"key": "X_ML",
+"name": "RTH Confluence Signal (GMM regime + volume z-score pullback, MNQ)",
+"reason": "GMM fit and features not specified; needs volume z-score."
+},
+{
+"id": "R0547",
+"key": "X_NOT_A_STRATEGY",
+"name": "TradeDisciple AI futures signals (ESORB, MSB, etc.)",
+"reason": "Paid signal service with undisclosed AI setups."
+},
+{
+"id": "R0521",
+"key": "X_ML",
+"name": "Volatility-Volume-Gap (VVG) day-classifier reversal on MNQ (Mesfin 2026, arXiv 2605.11423) \u2014 negative result",
+"reason": "Thresholds, entry, stop undefined; uses volume and OLS filter; negative-result study."
+},
+{
+"id": "R0560",
+"key": "X_ML",
+"name": "DeepScalper \u2014 risk-aware deep RL intraday futures trading (Sun et al., CIKM 2022)",
+"reason": "Learned policy on tick/LOB data; no fixed rules."
+},
+{
+"id": "R0561",
+"key": "X_ML",
+"name": "DRL with positional context for intraday trading (Golu\u017ea et al., Evolving Systems 2024)",
+"reason": "Learned policy, no explicit rules."
+},
+{
+"id": "R0373",
+"key": "X_ML",
+"name": "NQ-ASIM ATLAS long / PEAK short KNN engines, built for Tradeify $50k EOD (asalvador-ASIM) [tested_before=false]",
+"reason": "KNN vote with RVOL, VIX and FRED/news macro features; not a fixed rule."
+},
+{
+"id": "R0562",
+"key": "X_ML",
+"name": "Tickeron 'AI Trading Agents' on Nasdaq-100 ETFs (QLD / ONEQ, 15-min and 60-min)",
+"reason": "Proprietary FLM models; multi-day holds."
+},
+{
+"id": "R0559",
+"key": "X_DATA",
+"name": "Intraday market return prediction from the high-frequency 'factor zoo' (Aleti et al., Management Science 2025)",
+"reason": "Needs cross-sectional factor portfolio data and ML; not NQ OHLC."
+},
+{
+"id": "R0520",
+"key": "X_ML",
+"name": "LSTM / gradient-boosting 10:30-open-to-close direction model on MNQ (Mesfin 2026, arXiv 2605.17724) \u2014 negative result",
+"reason": "Model architecture, thresholds undefined; OHLCV features."
+},
+{
+"id": "R0518",
+"key": "X_ML",
+"name": "London Session Signal B \u2014 GMM regime-transition long (Mesfin 2026, arXiv 2605.04004)",
+"reason": "GMM with volume feature and vague regime mapping; fitted walk-forward."
+},
+{
+"id": "R0519",
+"key": "X_ML",
+"name": "RTH Confluence Signal \u2014 GMM 'Active Flow' + Markov + volume gate (Mesfin 2026)",
+"reason": "GMM fitted on 2022 data, uses volume z-score; regime ordering fitted."
+},
+{
+"id": "R0576",
+"key": "X_DISCRETION",
+"name": "Barkworth 'Diagonal Entry Model' (M5 EMA9 failed-breakdown into M2 entry) and hourly-breakout sequence [tested_before=related to EMA pullback family, but materially different (failed-breakdown trigger)]",
+"reason": "Pre-planned discretionary levels and undefined EMA9 'push' triggers."
+},
+{
+"id": "R0704",
+"key": "X_DISCRETION",
+"name": "Barkworth17 'Hourly Breakout Sequence': first M1 EMA9 push after an hourly breakout (Substack newsletter)",
+"reason": "Discretionary 'push' definitions; stop and target vague."
+},
+{
+"id": "R0210",
+"key": "X_VOLUME",
+"name": "ChopFlow ATR Scalp (Choppiness < 60 + OBV > EMA)",
+"reason": "OBV vs EMA10(OBV) is the core signal; no volume in 16-year bars; timeframe unspecified, ATR bracket has a ticks bug"
+},
+{
+"id": "R0542",
+"key": "X_DISCRETION",
+"name": "Collective2 'NQ Quickie' \u2014 short-term NQ momentum",
+"reason": "Collective2 'NQ Quickie': vague momentum with no entry/exit rule, holds overnight (avg 12.5h)"
+},
+{
+"id": "R0067",
+"key": "X_DISCRETION",
+"name": "Day pyramiding: 4 time-spaced entries in the daily bias direction (Elite Trader)",
+"reason": "Session direction from 'your favorite predictor' is undefined; only the entry schedule and stops are mechanical"
+},
+{
+"id": "R0771",
+"key": "X_ML",
+"name": "Dennis Meyers least-squares velocity (linear-regression slope threshold) on ES 1-minute and 5-minute, walk-forward",
+"reason": "Least-squares velocity thresholds are walk-forward re-optimised (N, vup, vdn) with proprietary selection filters"
+},
+{
+"id": "R0770",
+"key": "X_ML",
+"name": "Dennis Meyers nth-order fixed-memory polynomial velocity, NQ 1-minute, weekly walk-forward re-optimization",
+"reason": "Legendre polynomial velocity; degree, N, vup, vdn re-optimised weekly with proprietary filters"
+},
+{
+"id": "R0789",
+"key": "X_DISCRETION",
+"name": "Elder Triple Screen, day-trading version (60-minute tide, 10-minute wave, 2-minute entry)",
+"reason": "Elder triple screen day mapping: oscillator choice either/or, stops and exits vague, 2m trailing buy stop on a third-party reading"
+},
+{
+"id": "R0051",
+"key": "X_DISCRETION",
+"name": "First pullback at NY open only after an overnight-range sweep",
+"reason": "Only a filter (open sweeps overnight range) is given; pullback entry, stop and target are vague"
+},
+{
+"id": "R0042",
+"key": "X_DISCRETION",
+"name": "Gap-up reversal bearish trend day (RealDayTrading)",
+"reason": "Gap-up reversal: candle size/overlap, 'heavy volume', re-short bounces, stops and targets all vague"
+},
+{
+"id": "R0497",
+"key": "X_NOT_A_STRATEGY",
+"name": "Grimsley 2013 champion: indicator trend-riding on E-mini Dow/S&P/Russell",
+"reason": "Grimsley champion system: disclosed only as a vague indicator trend-follower, no parameters or rules"
+},
+{
+"id": "R0283",
+"key": "X_DATA",
+"name": "Intraday Market-Wide Ups/Downs Continuation (Zhang, Lin & Zhang)",
+"reason": "Needs constituent breadth (stocks up minus down) each minute; thresholds and exit vague"
+},
+{
+"id": "R0902",
+"key": "X_DISCRETION",
+"name": "Jea Yu 'mini pup' and 'Perfect Storm' multi-timeframe stochastic breakout (NQ 'noodles') [tested_before=false]",
+"reason": "Multi-timeframe stochastic 'pup'/'Perfect Storm': stochastic lengths unstated, 7 timeframes, discretionary reads"
+},
+{
+"id": "R0075",
+"key": "X_TICK",
+"name": "jwdixon Renko/Donchian first-pullback scalp (futures.io/NexusFi 'My ES Scalping Strategy, 2+ pts/day')",
+"reason": "2-tick Renko and 350-tick entry chart with tick-level scale-outs; 'space' and trend change are discretionary"
+},
+{
+"id": "R0764",
+"key": "X_DISCRETION",
+"name": "Larry Pesavento 'Opening Price Principle': trade only in the direction away from the RTH open; retests of the open after the morning range [tested_before=related to listed OHL/first-minutes direction long-to-close; this adds open-retest entries]",
+"reason": "Opening Price Principle gives bias only; entry timing, stop and target are 'risk-based' and undefined"
+},
+{
+"id": "R0753",
+"key": "X_DISCRETION",
+"name": "MEERKAT: VWAP vs EMA-150 trend + range-filter pullback (NAS100)",
+"reason": "Range Filter settings, targets and divergence/structure confluence not defined; trigger not fully mechanical."
+},
+{
+"id": "R0248",
+"key": "X_ML",
+"name": "MNQ gap-continuation short with Kalman velocity filter (Mesfin 2026, arXiv 2605.04004)",
+"reason": "Kalman filter specification and exit horizon unpublished."
+},
+{
+"id": "R0969",
+"key": "X_ML",
+"name": "Multi-hour trend-strength cubic signal: follow weak trends, fade strong ones (Safari & Schmidhuber 2025, 'Trends and Reversion ... Minutes to Decades')",
+"reason": "Coefficients only in figures, weight function unpublished; no trading rule."
+},
+{
+"id": "R0206",
+"key": "X_DISCRETION",
+"name": "NQ NY Session Trend-Follower (EMA14/50 slope + VWAP, 1m)",
+"reason": "Slope threshold and EMA14 trigger undefined (vague)."
+},
+{
+"id": "R0209",
+"key": "X_DISCRETION",
+"name": "NQ/MNQ Super Scalper [BACKTEST] (8-factor confluence engine)",
+"reason": "Rules live in 190 KB of code; text gives no definable entry. Uses volume, Hurst, ADF; not codable from the record."
+},
+{
+"id": "R0904",
+"key": "X_DISCRETION",
+"name": "Oliver Velez 20/200 SMA 'narrow state' elephant-bar / tail-bar momentum play (Reddit r/FuturesTrading) [tested_before=false]",
+"reason": "'Narrow state' not quantified; stop, target and timeframe unspecified."
+},
+{
+"id": "R0769",
+"key": "X_DISCRETION",
+"name": "Oliver Velez narrow-state Elephant Bar ignition (20/200 SMA squeeze, clearing elephant bar)",
+"reason": "'Narrow state' not quantified; stop and target vague."
+},
+{
+"id": "R0074",
+"key": "X_DISCRETION",
+"name": "Pre-open trend continuation after a counter-trend open (futures.io 'Fading the Open, backtesting')",
+"reason": "Trend definition, stop and target undefined; manual backtest only."
+},
+{
+"id": "R0500",
+"key": "X_NOT_A_STRATEGY",
+"name": "QTS Tail Reaper: intraday ES trend-following on large moves (CTA program)",
+"reason": "Entry reference, threshold, exits and ML gate undisclosed; track record only."
+},
+{
+"id": "R0766",
+"key": "X_DATA",
+"name": "Quantifiable Edges 'strong early TICK' trend day: no negative NYSE TICK reading in the first 30 minutes -> long at 10:00, exit at the close",
+"reason": "Needs $TICK market internals bars."
+},
+{
+"id": "R0935",
+"key": "X_DISCRETION",
+"name": "Raghee Horner 34-EMA Wave with GRaB candles",
+"reason": "Wave angle, 'respected' and pullback trigger are discretionary; stop and target vague."
+},
+{
+"id": "R0909",
+"key": "X_DATA",
+"name": "RealDayTrading market-first ES/SPY trades on the OptionStalker 1OP cycle (Moo's short checklist) [tested_before=false; the RealDayTrading gap-up reversal cataloged earlier is a different setup]",
+"reason": "Proprietary 1OP/1OS/1OM, UVXY, $TICK needed; exits vague."
+},
+{
+"id": "R0262",
+"key": "X_NOT_A_STRATEGY",
+"name": "SPY 13:15 Intraday Momentum Long (QuantifiedStrategies '28 Years of History')",
+"reason": "Thresholds paywalled; three conditions undefined."
+},
+{
+"id": "R0748",
+"key": "X_NOT_A_STRATEGY",
+"name": "STS Futures five-model NQ portfolio (Trend Short, Trend NQ, ORB Long, Overnight Trend, Universal Trend)",
+"reason": "Subscription vendor product; entry and exit rules not disclosed."
+},
+{
+"id": "R0093",
+"key": "X_DISCRETION",
+"name": "TTM Scalper / TTM Trend / Squeeze breakout on NQ CFD (NexusFi 'Trading Process Journal from Poland')",
+"reason": "Discretionary stops, divergences and filters; journal only."
+},
+{
+"id": "R0755",
+"key": "X_DISCRETION",
+"name": "VWAP standard-deviation band (0.25\u03c3 / 1.25\u03c3 / 2.0\u03c3) break-and-retest trend follow",
+"reason": "Break definition and retest trigger vague; needs volume-weighted sigma bands."
+},
+{
+"id": "R0566",
+"key": "X_DISCRETION",
+"name": "Woodies CCI Club patterns: Zero-Line Reject, Trend Line Break, Ghost, Vegas, Famir, Hook From Extreme [tested_before=false]",
+"reason": "Patterns (TLB trendline, ghost, vegas) discretionary; stops/exits vague; range/tick bars originally."
+},
+{
+"id": "R0383a",
+"key": "X_ML",
+"name": "Kalman-velocity gap-continuation short and ORB-long variants (Mesfin 2026, arXiv 2605.04004 MNQ falsification study) [tested_before=partly (ORB)]",
+"reason": "Kalman velocity settings unpublished; exit/stop vague; positive controls use GMM regimes."
+},
+{
+"id": "R0282",
+"key": "X_NOT_A_STRATEGY",
+"name": "Fast-Alpha Execution Overlay on Intraday Trend (Concretum QuanTip)",
+"reason": "Overlay with unpublished streak and timing parameters; baseline is the noise-area record (F24)."
+},
+{
+"id": "R0857",
+"key": "X_DISCRETION",
+"name": "David Trull\u00e1s MACD-divergence reversal with RSI/volume confluence and Fibonacci 23.6% break entry (NQ 1-min / 30-s); 5 consecutive Robbins quarterly futures day-trading titles",
+"reason": "Divergence pivots, S/R context, 'larger move' anchor and sizing by confluence are not defined; 30s execution."
+},
+{
+"id": "R0234",
+"key": "X_NOT_A_STRATEGY",
+"name": "Strike pinning on serial S&P futures-option expirations (Golez & Jackwerth 2012, JFE)",
+"reason": "Study of strike pinning on option expirations; no trading rule, needs strike data"
+},
+{
+"id": "R0235",
+"key": "X_DATA",
+"name": "0DTE / dealer-gamma-conditioned intraday reversal vs momentum (Dim, Eraker & Vilkov; Adams, Fontaine & Ornthanalai; Barbon & Buraschi)",
+"reason": "Needs dealer gamma / 0DTE option inventory data; rule vague"
+},
+{
+"id": "R0966",
+"key": "X_DATA",
+"name": "Weekly index put order imbalance from ISE customer flow (Chordia, Kurov, Muravyev & Subrahmanyam, Management Science 2021)",
+"reason": "Needs paid ISE customer put order-imbalance data; weekly horizon, no threshold"
+},
+{
+"id": "R0689",
+"key": "X_TICK",
+"name": "ATAS 'Setup 1': M15 stopping candle + trend candle, entered on M1 footprint",
+"reason": "Footprint/POC volume-wick pattern on 15m; needs order-flow data, vague definitions"
+},
+{
+"id": "R0858",
+"key": "X_TICK",
+"name": "Chris Creamer value-area premium/discount absorption reversal with GEX regime filter (MNQ, first 90 min of NY); Robbins monthly micro day-trading champion",
+"reason": "Footprint delta absorption plus GEX regime and value-area reads; discretionary thresholds"
+},
+{
+"id": "R0552",
+"key": "X_NOT_A_STRATEGY",
+"name": "Discord/Whop NQ alert services (Mike Poarch futures alerts; Chart District 'Liquidity Wave Engine'; Whop 'NQ Signals')",
+"reason": "Paid third-party alert services with undisclosed algorithms; marketing only"
+},
+{
+"id": "R0690",
+"key": "X_TICK",
+"name": "DOM pulling/stacking + aggression follow (Sierra Chart Market Depth Pulling/Stacking studies)",
+"reason": "Needs market-by-price DOM depth data; rule vague"
+},
+{
+"id": "R0456",
+"key": "X_TICK",
+"name": "Fabio Valentini Direction-Location-Aggression (AMT + order flow) NQ scalping",
+"reason": "Needs tick footprint/CVD and discretionary reads; OHLC Pine proxy has no published test"
+},
+{
+"id": "R0158",
+"key": "X_TICK",
+"name": "Fabio Valentini order-flow / auction-market trend model (coded by DeltaTrend)",
+"reason": "Needs footprint/delta data and an unpublished key parameter"
+},
+{
+"id": "R0907",
+"key": "X_VOLUME",
+"name": "futures_lab H37v2 'Sweep Volume Exhaustion Reversal' (MES/MNQ) [tested_before=false; different from the H17v2 and H37 entries cataloged earlier]",
+"reason": "Volume-extreme levels and sweep on contrasting volume; stop, target and thresholds undisclosed"
+},
+{
+"id": "R0384",
+"key": "X_TICK",
+"name": "FVG retracement with CVD order-flow confirmation (jalv92 FVGFlow) [tested_before=false]",
+"reason": "Cumulative volume delta from aggressor ticks required for entry confirmation"
+},
+{
+"id": "R0469",
+"key": "X_DATA",
+"name": "GEX + volume profile + CVD + ORB confluence",
+"reason": "Needs options GEX history plus tick delta and volume profile; parameters undisclosed"
+},
+{
+"id": "R0859",
+"key": "X_NOT_A_STRATEGY",
+"name": "Nazri Khan (DDNK) footprint 'power hour' contrarian scalping; swept all four 2024 Robbins quarterly futures day-trading titles",
+"reason": "Contest track record and discretionary footprint scalping; no defined entry, stop or target"
+},
+{
+"id": "R0591",
+"key": "X_TICK",
+"name": "NQ Delta-Inertia (Profit Notion Daily, order-flow) [tested_before=false]",
+"reason": "Needs MBP-1 tick bid/ask data and an unpublished 'inertia' formula with CVD windows"
+},
+{
+"id": "R0070",
+"key": "X_DATA",
+"name": "NYSE $TICK Z-score trend-follow (Elite Trader 'Building a Winning $TICK System')",
+"reason": "Needs NYSE $TICK series as second data; always-in reversal system"
+},
+{
+"id": "R0214",
+"key": "X_DATA",
+"name": "NYSE TICK scalper / Top-40 High-Low breadth (SPY 1m) [PtGambler]",
+"reason": "Needs NYSE TICK or top-40 component breadth data; thresholds in code"
+},
+{
+"id": "R0703",
+"key": "X_DATA",
+"name": "NYSE VOLD/ADD/TICK confluence trend-day filter with 'freight train' no-fade rule (VOLD Confluence Table [MMT])",
+"reason": "Needs NYSE VOLD/ADD/TICK breadth feeds; thresholds and entries vague"
+},
+{
+"id": "R0250",
+"key": "X_NOT_A_STRATEGY",
+"name": "Pre-announcement informed drift into macro releases (Kurov, Sancetta, Strasser & Wolfe 2019, JFQA)",
+"reason": "Academic study of pre-announcement drift; no trading rule, second-by-second data"
+},
+{
+"id": "R0078",
+"key": "X_VOLUME",
+"name": "PVSRA volume-climax reversal scalp in the first 15 min of NY open (Forex Factory)",
+"reason": "PVSRA volume-climax colouring is the core signal; needs volume"
+},
+{
+"id": "R0767",
+"key": "X_DATA",
+"name": "Steenbarger TICK-regime long: 60-minute average NYSE TICK <= -100 (washout) or >= +500 (momentum) -> long ES for the next two hours",
+"reason": "Needs NYSE $TICK 1-min series; rule otherwise clear (60m avg TICK <= -100 or >= 500, long 2h)"
+},
+{
+"id": "R0420",
+"key": "X_DATA",
+"name": "Tradeify options flow + Champion Trend + Inventory Retracement Bar (WealthCharts)",
+"reason": "Needs options-flow data (sweeps, put/call) plus vendor indicator Champion Trend"
+},
+{
+"id": "R0686",
+"key": "X_TICK",
+"name": "Valtos 'Delta Bulge' (outsized opposing delta at a bar extreme)",
+"reason": "Needs delta footprint data; thresholds vague"
+},
+{
+"id": "R0684",
+"key": "X_TICK",
+"name": "Valtos 'Delta Flip' footprint reversal (Orderflows)",
+"reason": "Needs intrabar min/max delta from ticks; context vague"
+},
+{
+"id": "R0685",
+"key": "X_TICK",
+"name": "Valtos 'Delta Transition' (supply-to-demand handoff at swing extremes)",
+"reason": "Needs tick delta footprint; thresholds vague"
+},
+{
+"id": "R0687",
+"key": "X_TICK",
+"name": "Valtos 'Imbalance Reload' and Inverse-Imbalance zones (Orderflows Trader 7)",
+"reason": "Needs footprint bid/ask imbalance data; rule vague"
+},
+{
+"id": "R0688",
+"key": "X_TICK",
+"name": "Valtos 'Value Area EVA' bar (per-bar value-area expansion through the prior bar's value)",
+"reason": "Needs per-bar volume-at-price from ticks; entry vague"
+},
+{
+"id": "R0955",
+"key": "X_DATA",
+"name": "VIX ETP end-of-day rebalancing hedge flow, ES/NQ 16:05-16:15 ET (Bangsgaard & Kokholm 2025, Journal of Banking & Finance)",
+"reason": "Needs VIX ETP AUM and leverage data plus VIX futures; 16:05-16:15 window"
+},
+{
+"id": "R0683",
+"key": "X_VOLUME",
+"name": "VPIN order-flow-toxicity regime filter (Easley, Lopez de Prado & O'Hara), computed from bars via bulk volume classification",
+"reason": "VPIN filter built from bar volume (bulk volume classification); not a stand-alone strategy"
+},
+{
+"id": "R0449",
+"key": "X_VOLUME",
+"name": "Absorption fade (Jigsaw / Bookmap / Axia), incl. OHLCV proxy",
+"reason": "Absorption proxy uses bar volume > 2x average with small range; exits unspecified"
+},
+{
+"id": "R0468",
+"key": "X_DATA",
+"name": "NYSE $TICK extreme fade",
+"reason": "Needs NYSE $TICK series for fade at +/-1000; exits unspecified"
+},
+{
+"id": "R0464",
+"key": "X_DATA",
+"name": "MOC imbalance-following into the cash close (J.P. Morgan)",
+"reason": "Needs NYSE MOC imbalance feed plus VIX; 15:51-16:00"
+},
+{
+"id": "R0445",
+"key": "X_TICK",
+"name": "Cumulative delta (CVD) divergence reversal",
+"reason": "Needs cumulative delta from tick aggressor data; lookbacks unspecified"
+},
+{
+"id": "R0446",
+"key": "X_TICK",
+"name": "Follow/fade delta and CVD momentum (incl. opening delta -> rest of day, flow persistence)",
+"reason": "Needs tick aggressor-side delta/CVD"
+},
+{
+"id": "R0447",
+"key": "X_TICK",
+"name": "Orderflows Delta Surge (Michael Valtos)",
+"reason": "Needs per-bar bid/ask delta; entry/stop/target also unspecified"
+},
+{
+"id": "R0466",
+"key": "X_TICK",
+"name": "Post-FOMC order-imbalance / abnormal-volume reversal",
+"reason": "Needs signed volume from ticks; horizon spans weeks"
+},
+{
+"id": "R0465",
+"key": "X_TICK",
+"name": "FOMC news-embargo order imbalance (Bernile, Hu & Tang)",
+"reason": "Needs signed trade data around 14:00 ET"
+},
+{
+"id": "R0472",
+"key": "X_TICK",
+"name": "CVD/order-flow confirmation gate on working strategies",
+"reason": "Needs tick delta; gate on other rules"
+},
+{
+"id": "R0451",
+"key": "X_TICK",
+"name": "Stacked imbalances retracement (Valtos / Trader Dale)",
+"reason": "Needs tick footprint bid/ask imbalances"
+},
+{
+"id": "R0452",
+"key": "X_TICK",
+"name": "Trapped Traders Imbalance (Michael Valtos)",
+"reason": "Needs tick footprint imbalances; exits discretionary"
+},
+{
+"id": "R0450",
+"key": "X_TICK",
+"name": "Footprint exhaustion print fade / exhaustion-level retest",
+"reason": "Needs tick prints with aggressor side"
+},
+{
+"id": "R0454",
+"key": "X_TICK",
+"name": "Order-flow book setups: Multiple Nodes and Unfinished Business magnet",
+"reason": "Needs tick bid/ask footprint"
+},
+{
+"id": "R0470",
+"key": "X_TICK",
+"name": "Order-book imbalance / microprice / order-flow imbalance (OFI) short-horizon signals",
+"reason": "Needs L1/L2 book data; 1-60 s horizon"
+},
+{
+"id": "R0457",
+"key": "X_TICK",
+"name": "Bookmap liquidity heatmap / iceberg trades",
+"reason": "Needs MBO/L2 depth; also discretionary"
+},
+{
+"id": "R0448",
+"key": "X_TICK",
+"name": "Large-print / big-trade and tape-speed following (ATAS/Bookmap 'big trades', Trader Dale 'trades filter')",
+"reason": "Needs tick prints with aggressor side"
+},
+{
+"id": "R0471",
+"key": "X_TICK",
+"name": "Tape-following order-flow scalping (trailing 20-trade signed volume)",
+"reason": "Needs tick prints with aggressor side"
+},
+{
+"id": "R0442",
+"key": "X_TICK",
+"name": "VWAP band fade with cumulative-delta confirmation",
+"reason": "Needs aggressor-side ticks for CVD; plain band fade is F39 but the gate is the record's rule"
+},
+{
+"id": "R0455",
+"key": "X_TICK",
+"name": "Serge Hoffmann order-book edge scalping (fade value edges to HVN magnet)",
+"reason": "Needs tick prints plus depth"
+},
+{
+"id": "R0092",
+"key": "X_TICK",
+"name": "NQ 10-range-bar 'scalper' signal, 40-tick target / 8-tick stop (futures.io/NexusFi journal 'Honesty to my system')",
+"reason": "Range bars, tick-scale bracket, undefined signal indicator"
+},
+{
+"id": "R0458",
+"key": "X_DISCRETION",
+"name": "Axia Futures playbook (IB break into poor structure, block reversal, VPOC break)",
+"reason": "Discretionary ladder reading; triggers need DOM/footprint"
+},
+{
+"id": "R0091",
+"key": "X_DISCRETION",
+"name": "80/20 Nasdaq price-level reaction (Medium)",
+"reason": "Pattern, stop, target unspecified (paywalled)"
+},
+{
+"id": "R0423",
+"key": "X_DISCRETION",
+"name": "News-event playbook (Tradeify): NFP stand-aside then second leg; CPI spike-reclaim; FOMC retest breakout",
+"reason": "Levels, stops, targets unspecified; second-leg reads discretionary"
+},
+{
+"id": "R0205",
+"key": "X_DISCRETION",
+"name": "NQ Pre-Open Bias [Nitz] (pre-RTH scoring, entry 09:29)",
+"reason": "Scoring formula vague and uses volume delta"
+},
+{
+"id": "R0424",
+"key": "X_DISCRETION",
+"name": "Trades by Matt 'base hits' range/acceptance scalping (20 copied Apex accounts)",
+"reason": "Entries vague, discretionary"
+},
+{
+"id": "R0211",
+"key": "X_VOLUME",
+"name": "Daytrading ES Wick Length (long-only)",
+"reason": "VWMA needs volume; x_sub=vwma. Timeframe and session unspecified. ES offset needs rescale"
+},
+{
+"id": "R0702",
+"key": "X_DATA",
+"name": "Gary Hart (TrendFinder CTA) internals-filtered intraday index systems (Better System Trader ep. 85)",
+"reason": "Needs A/D, up/down volume, put/call, VIX; rules proprietary"
+},
+{
+"id": "R0503",
+"key": "X_NOT_A_STRATEGY",
+"name": "Broker-tracked auto-traded NQ/MNQ systems on Striker (black boxes)",
+"reason": "Rules undisclosed"
+},
+{
+"id": "R0544",
+"key": "X_NOT_A_STRATEGY",
+"name": "Collective2 'MNQ Trades' \u2014 MNQ day trading",
+"reason": "Vague; no rule"
+},
+{
+"id": "R0783",
+"key": "X_NOT_A_STRATEGY",
+"name": "futures.io 'Coin Toss Experiment': random direction at a fixed morning time with a bar-by-bar trailing stop",
+"reason": "Null benchmark (coin toss) by taxonomy; random direction has no mechanical rule"
+},
+{
+"id": "R0504",
+"key": "X_NOT_A_STRATEGY",
+"name": "Hougaard add-to-winners pyramiding (overlay)",
+"reason": "Position-management overlay, entries discretionary"
+},
+{
+"id": "R0550",
+"key": "X_NOT_A_STRATEGY",
+"name": "JackShares '2M Model' / 'Lunar Trades Model' NQ alerts (Discord, LaunchPass)",
+"reason": "Proprietary, rules unpublished"
+},
+{
+"id": "R0596",
+"key": "X_NOT_A_STRATEGY",
+"name": "Late-morning 5-min range double-break (edgeful, 11:39-11:44 ET) [tested_before=false]",
+"reason": "Statistic only; trade not specified by source"
+},
+{
+"id": "R0592",
+"key": "X_NOT_A_STRATEGY",
+"name": "MNQ monthly regime switch between an ORB/trend module and a momentum module (r/FuturesTrading, frozen algo) [tested_before=partly (ORB generic); the monthly selection layer is new]",
+"reason": "Thresholds, times, exits private"
+},
+{
+"id": "R0501",
+"key": "X_NOT_A_STRATEGY",
+"name": "Monterosso Short-Term Managed Futures Program (ES intraday-only CTA)",
+"reason": "Signals undisclosed"
+},
+{
+"id": "R0574",
+"key": "X_NOT_A_STRATEGY",
+"name": "NQStats 'ALN Sessions' (Asia/London pattern then NY break of London high/low) [tested_before=false; related to listed Asia-range items but a distinct classifier]",
+"reason": "Study of break probabilities; trade not specified"
+},
+{
+"id": "R0506",
+"key": "X_NOT_A_STRATEGY",
+"name": "Risk overlay from verified-trader research: no extra afternoon risk after a losing morning, fast exits, daily loss cap",
+"reason": "Risk overlay, not an entry rule"
+},
+{
+"id": "R0548",
+"key": "X_NOT_A_STRATEGY",
+"name": "TradeGreater 'NQ Ultra' (NinjaTrader auto / TradingView alerts)",
+"reason": "Undisclosed paid signal service"
+},
+{
+"id": "R0691",
+"key": "X_NOT_A_STRATEGY",
+"name": "Two-candle PDH/PDL sweep-regime bias (tradingstats.net, NQ)",
+"reason": "Hit-rate statistics; entry, stop, exit unpublished"
+},
+{
+"id": "R0553",
+"key": "X_NOT_A_STRATEGY",
+"name": "NinjaTrader marketplace NQ bots (QuantStack UltimateORB and others; Venzitech AutoEntry 'DASIG'; Savants Elite; Traadence NQ Trend Entry)",
+"reason": "Mostly undisclosed commercial bots"
+},
+{
+"id": "R0543",
+"key": "X_NOT_A_STRATEGY",
+"name": "Collective2 'Mischmasch' \u2014 multi-subsystem NQ/MNQ",
+"reason": "Subsystems undisclosed"
+},
+{
+"id": "R0242",
+"key": "X_NOT_A_STRATEGY",
+"name": "30-minute-bar technical models on S&P futures, contrarian beats trend (Schulmeister 2009, RFE)",
+"reason": "Survey of a whole rule universe; best-model parameters not published; positions held across days."
+},
+{
+"id": "R0545",
+"key": "X_NOT_A_STRATEGY",
+"name": "TradingBrain / TradingMind NQ signals (paid alerts)",
+"reason": "Paid signal service, logic undisclosed."
+},
+{
+"id": "R0551",
+"key": "X_NOT_A_STRATEGY",
+"name": "Falcon AI RAPTOR / TITAN / N-TALON MNQ bots (subscription)",
+"reason": "Black box subscription bots; no rule published."
+},
+{
+"id": "R0625",
+"key": "X_NOT_A_STRATEGY",
+"name": "Kukki V2 / V3 (KukkiTrades): intraday NQ long/short system, flat before close",
+"reason": "Black box; only flat-before-close and fixed size are stated."
+},
+{
+"id": "R0967",
+"key": "X_ML",
+"name": "Conditional EU-open long: trade 23:30-03:30 ET only when predicted strong (Bondarenko & Muravyev, JFQA 2023) [related to the listed EU-open window long and the overnight drift being tested separately; the conditioning filter is new]",
+"reason": "Fitted predictive regression with unpublished window, vol measure and threshold; also needs VIX daily change."
+},
+{
+"id": "R0736",
+"key": "X_DISCRETION",
+"name": "Al Brooks final-flag reversal",
+"reason": "Final-flag definition not published; no standard coded form."
+},
+{
+"id": "R0701",
+"key": "X_TICK",
+"name": "Bob Volman 20-EMA with-trend scalping setups (Double Doji Break, First/Second Break, Block Break, Range Break, Advanced Range Break)",
+"reason": "70-tick EURUSD chart and vague 'favourable conditions'; NQ parameters not published."
+},
+{
+"id": "R0936",
+"key": "X_DISCRETION",
+"name": "Carolyn Boroden Fibonacci price cluster / symmetry setup with 8-34 EMA crossover trigger",
+"reason": "Swing selection for clusters is discretionary; tick-based trigger timeframes."
+},
+{
+"id": "R0532",
+"key": "X_NOT_A_STRATEGY",
+"name": "Live Prop Firm Trading \u2014 Trading Bot 1 NQ (TradingView)",
+"reason": "Black box on 1-second bars; stop and target vague."
+},
+{
+"id": "R0931",
+"key": "X_DISCRETION",
+"name": "Mack's PATs (Price Action Trading System): 21-EMA second entries, failed breakouts and triple tests on ES",
+"reason": "Hand-drawn trend and channel lines, discretionary key levels, 2000-tick chart."
+},
+{
+"id": "R0528",
+"key": "X_NOT_A_STRATEGY",
+"name": "NQ/MNQ Super Scalper [BACKTEST] (Crispigino, TradingView)",
+"reason": "Black box: dynamic unpublished parameters, flow and volume inputs, ADF/Hurst scoring."
+},
+{
+"id": "R0587",
+"key": "X_DISCRETION",
+"name": "Stacey Burke signal days: First Red Day / First Green Day / 3-day longs-shorts / inside day [tested_before=related to the listed Taylor 3-day cycle; signals and intraday execution differ]",
+"reason": "Daily signals defined but entries/stops depend on 'timings, levels, behaviour of price'."
+},
+{
+"id": "R0593",
+"key": "X_DISCRETION",
+"name": "Trendline-break 'stop-zone' limit entry on 1-min MNQ (r/Daytrading) [tested_before=false]",
+"reason": "Trendline drawing is discretionary and the stop ratio direction is unclear."
+},
+{
+"id": "R0932",
+"key": "X_DISCRETION",
+"name": "YTC Price Action Trader (Lance Beggs): TST, BOF, BPB, PB and CPB setups around S/R",
+"reason": "Explicitly discretionary, no fixed parameters."
+},
+{
+"id": "R0364",
+"key": "X_DISCRETION",
+"name": "Fast-Slow pattern (published Nasdaq-100 rule set; pre-registered test by chahatpatel2003) [tested_before=false]",
+"reason": "Thresholds not in record (external yaml) and sub-second entry timing; no testable rule."
+},
+{
+"id": "R0879",
+"key": "X_NOT_A_STRATEGY",
+"name": "Collective2 MES/MNQ day-trade programs (Momentum Fusion Duo; Day Tripper Micro / Micro Precision AI)",
+"reason": "Platform-tracked black boxes; all thresholds vague."
+},
+{
+"id": "R0323",
+"key": "X_DISCRETION",
+"name": "Al Brooks trend from the open",
+"reason": "No parameters published; Krueger formalization hidden."
+},
+{
+"id": "R0115",
+"key": "X_DISCRETION",
+"name": "JJ Simon 'Fair Value Theory' 1-min NQ scalp",
+"reason": "Fair value definition vague, ATR length/timeframe unspecified; not mechanical."
+},
+{
+"id": "R0671",
+"key": "X_NOT_A_STRATEGY",
+"name": "ADX/EMA regime-routed composite: ORB + Donchian trend + VWAP-band reversion sharing one position slot (j-nnkim4 'pine-v6-intraday-reference')",
+"reason": "Composite wrapper; thresholds only in external Pine file."
+},
+{
+"id": "R0825",
+"key": "X_DISCRETION",
+"name": "Kevin Haggerty 'Trap Door' first-hour reversal after a gap (TradingMarkets)",
+"reason": "Setup bar and gap size unquantified; stop/target/exit undefined."
+},
+{
+"id": "R0828",
+"key": "X_TICK",
+"name": "Jonathan Kinlay ES volatility scalper (long-vol / short-vol brackets, 1-minute)",
+"reason": "2-tick brackets unresolvable on 1m OHLC; thresholds only in EasyLanguage file, not published in text."
+},
+{
+"id": "R0809",
+"key": "X_DATA",
+"name": "High-frequency investor-sentiment timing of the last two hours (Sun, Najand & Shen, 'Stock Return Predictability and Investor Sentiment: A High-Frequency Perspective')",
+"reason": "Needs proprietary MarketPsych TRMI sentiment data."
+},
+{
+"id": "R0639",
+"key": "X_DISCRETION",
+"name": "ALN session patterns (Asia vs London) and NY sweep probabilities (nqstats; CantoLab and Stouf_038 indicators)",
+"reason": "Entry, stop and target not defined; statistics tags only."
+},
+{
+"id": "R0891",
+"key": "X_NOT_A_STRATEGY",
+"name": "Weekly close-location carry-over: Friday close in the top/bottom 10% of the week's range, then the prior week's extreme trades again (Hermes Trader NQ statistic) [tested_before=false]",
+"reason": "Statistic only; entry timing, stop and exit not specified."
+},
+{
+"id": "R0853",
+"key": "X_NOT_A_STRATEGY",
+"name": "Brock/Sullivan-Timmermann-White technical-rule universe applied intraday (Marshall, Cahan & Cahan 2008, JEF): negative control",
+"reason": "Survey of a whole rule universe with no single rule; includes OBV (volume)."
+},
+{
+"id": "R0810",
+"key": "X_NOT_A_STRATEGY",
+"name": "Intraday technical-rule universe on 5-min S&P (Marshall, Cahan & Cahan 2008, Journal of Empirical Finance) \u2014 NEGATIVE family-wide vetting evidence",
+"reason": "Survey of a rule universe; parameter grids in paper, no single rule."
+},
+{
+"id": "R0867",
+"key": "X_NOT_A_STRATEGY",
+"name": "Universe of 7,846 popular intraday technical rules (filter, moving-average, support/resistance, channel-breakout, on-balance-volume) on 5-minute S&P 500 data; Marshall, Cahan & Cahan (2008)",
+"reason": "Survey of a rule universe; no single rule to test."
+},
+{
+"id": "R0385",
+"key": "X_VOLUME",
+"name": "Automated Trading Strategy #1: LinReg crosses VWMA on NQ range bars (celanbryant / Automated Trading Strategies substack) [tested_before=false]",
+"reason": "VWMA needs volume (and range bars are tick-built); no 1m-bar form given."
+},
+{
+"id": "R0874",
+"key": "X_DATA",
+"name": "Intraday VIX-spike event fade with VIX9D > VIX inversion filter ('DJT Strategy - The Art of the Dip', TradingView open source)",
+"reason": "Needs intraday VIX and VIX9D bars; not available. NQ bars alone cannot form the signal."
+},
+{
+"id": "R0679",
+"key": "X_DISCRETION",
+"name": "Dalton/ShadowTrader multi-day balance rules: look above/below and go vs. look above/below and fail",
+"reason": "Balance definition and acceptance tests (time, price, volume) are not defined; scenario set is discretionary context. No mechanical rule."
+},
+{
+"id": "R0678",
+"key": "X_VOLUME",
+"name": "Market Statistics VWAP-PVP skew trade (jperl, Traders Laboratory 'Trading with Market Statistics' threads, 2007)",
+"reason": "PVP and VWAP need volume at price; bars have no volume. Not a TPO rule."
+},
+{
+"id": "R0706",
+"key": "X_VOLUME",
+"name": "Max-volume opening-bar reference line (Chinese futures day-trader, Xueqiu)",
+"reason": "Core signal is the max-volume bar; reference level, stop, target also vague. No volume in 16-year bars."
+},
+{
+"id": "R0606",
+"key": "X_VOLUME",
+"name": "VA Strategy OA18 [Alphaomega18]: five trades on rolling 15-minute micro volume profiles (POC magnet, VAH/VAL fade, VA breakout, OR-POC retest, group-to-group rotation)",
+"reason": "Profiles and the S3 volume filter need volume; distribution within bars unspecified; protected source. Not a prior-day TPO rule."
+},
+{
+"id": "R0459",
+"key": "X_VOLUME",
+"name": "Volume breakout / weak-volume breakout fade / volume spike and dry-up signals",
+"reason": "Signal depends on volume vs 20-bar average (multiple unstated). Price-only 20-bar breakout is a separate F15 record."
+},
+{
+"id": "R0700",
+"key": "X_VOLUME",
+"name": "Volume Spread Analysis (Tom Williams) intraday no-demand / no-supply / upthrust / stopping-volume bars",
+"reason": "Bar definitions rely on volume vs prior bars; context rule vague; stops, targets, timeframe unstated."
+},
+{
+"id": "R0723",
+"key": "X_VOLUME",
+"name": "Volume-flow oscillator crosses (Chaikin Money Flow zero cross; OBV vs its 20-SMA)",
+"reason": "CMF and OBV are volume indicators; exits and stops vague. Volume not in bars."
+},
+{
+"id": "R0623",
+"key": "X_VOLUME",
+"name": "Volume-spike candle continuation, 15-min, 2R (CE Market Solutions)",
+"reason": "Fully specified but volume-based; only the 49-session MNQ 5m file has volume. Spot-check candidate (15m from 5m)."
+},
+{
+"id": "R0710",
+"key": "X_VOLUME",
+"name": "Volume-spike candle continuation, 2R (CE Market Solutions NQ test)",
+"reason": "Bars have no volume; spot-check only on 49-session MNQ 5m file. Follow-through version (opposite of fade). Tested 5m/15m/1h in source."
+},
+{
+"id": "R0695",
+"key": "X_VOLUME",
+"name": "Volume-spike candle continuation, 2R (CE Market Solutions)",
+"reason": "Bars have no volume; spot-check only on 49-session MNQ 5m file. Follow-through version (opposite of fade). Tested 5m/15m/1h in source."
+},
+{
+"id": "R0654",
+"key": "X_VOLUME",
+"name": "Volume-spike candle continuation: bar volume >= 2x its 20-bar average, trade in the bar's direction, stop beyond the bar, 2R (CE Market Solutions)",
+"reason": "Bars have no volume; spot-check only on 49-session MNQ 5m file. Follow-through version (opposite of fade). Tested 5m/15m/1h in source."
+},
+{
+"id": "R0462",
+"key": "X_ML",
+"name": "VVG (volatility-volume-gap) classifier day reversal (MNQ)",
+"reason": "Cutoffs not given (expanding-window), uses first-bar volume and OLS filter; exact trade rule unspecified."
+},
+{
+"id": "R0453",
+"key": "X_DISCRETION",
+"name": "Trader Dale volume-profile setups (Volume Accumulation, Trend/volume cluster, Rejection, failed-level Reversal)",
+"reason": "Rotation and strong trend undefined; stops/targets vague; needs volume profile."
+},
+{
+"id": "R0460",
+"key": "X_ML",
+"name": "Composite volume-profile daily strategies (POC reversion, Edge-to-Edge, VA breakout, volume exhaustion/no-supply)",
+"reason": "Parameters re-optimised walk-forward 8y/3y; needs daily volume composite profile; multi-day holds."
+},
+{
+"id": "R0474",
+"key": "X_DISCRETION",
+"name": "Low-volume-node (LVN) retest with order-flow confirmation (Carmine / TradeZella)",
+"reason": "Subjective level marking; confirmation needs tick/DOM data."
+},
+{
+"id": "R0328",
+"key": "X_DISCRETION",
+"name": "Wyckoff spring (intraday)",
+"reason": "Range, depth and volume confirmation not quantified."
+}
+]

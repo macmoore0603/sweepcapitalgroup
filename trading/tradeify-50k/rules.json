@@ -1,0 +1,198 @@
+{
+  "firm": "Tradeify",
+  "account": "50K Sim Funded",
+  "verifiedOn": "2026-11-02",
+  "sources": {
+    "drawdown": "https://help.tradeify.co/en/articles/10495897-rules-trailing-max-drawdowns",
+    "dailyLossLimit": "https://help.tradeify.co/en/articles/10468321-rules-daily-loss-limit",
+    "essentials": "https://help.tradeify.co/en/articles/12268167-essential-trading-rules-overview",
+    "growthPayout": "https://help.tradeify.co/en/articles/11083796-growth-funded-account-payout-policy",
+    "selectPayout": "https://help.tradeify.co/en/articles/12853966-select-flex-and-select-daily-payout-policies",
+    "lightning": "https://help.tradeify.co/en/articles/10495938-lightning-funded-accounts",
+    "lightningPayout": "https://help.tradeify.co/en/articles/10495932-lightning-funded-account-payout-policy",
+    "consistency": "https://help.tradeify.co/en/articles/10468320-rules-consistency-rule",
+    "guidelines": "https://help.tradeify.co/en/articles/10468318-guidelines-for-traders",
+    "commonFaqs": "https://help.tradeify.co/en/articles/12268494-common-faqs"
+  },
+  "startBalance": 50000,
+  "microsPerMini": 10,
+  "split": 0.9,
+  "drawdown": {
+    "amount": 2000,
+    "type": "end-of-day trailing: floor = highest end-of-day balance minus 2000, updated only at the end of each trading day, never moves down; enforced in real time against net liquidation (balance plus open P&L); touching or falling below it fails the account permanently",
+    "lockTriggerEodBalance": 52100,
+    "lockedFloor": 50100,
+    "lockOnPayoutRequest": true,
+    "lockNote": "the floor locks at 50100 when an end-of-day balance reaches 52100, or immediately when a payout is requested, whichever comes first"
+  },
+  "dailyLossLimitNote": "soft breach: trading pauses until the next session at 18:00 ET; the account stays open; losses can run past the limit before it triggers",
+  "session": {
+    "startEt": "18:00",
+    "endEt": "17:00",
+    "flatByEt": "16:45",
+    "earlyCloseFlatByEt": "12:59"
+  },
+  "fundedRules": {
+    "microscalping": "more than 50% of trades and of profit must come from trades held longer than 10 seconds, or payouts are blocked",
+    "minActivity": "at least 1 trade per week, Monday through Friday, per account, or the account can be marked inactive",
+    "algo": "allowed only for a strategy you own exclusively, not high-frequency, used only at Tradeify, with proof of ownership on request",
+    "hedging": "not allowed, including opposing positions on correlated products or across accounts",
+    "news": "allowed",
+    "kyc": "identity verification (KYC) and Rise payout verification must be complete before the first payout",
+    "payoutApproval": "funds leave the balance on approval, not on request; the payout minimum balance must hold until approval or the request is denied, and profit made before approval counts toward the cycle being paid; one open request per account; requests outside Mon-Fri 08:00-17:00 ET may take up to 72 h"
+  },
+  "plans": {
+    "growth": {
+      "name": "Growth 50K Funded",
+      "maxContractsMini": 4,
+      "scaling": null,
+      "dailyLossLimit": 1250,
+      "dllRaise": {
+        "atBalance": 53000,
+        "to": 2000,
+        "effective": "next session"
+      },
+      "consistency": [
+        0.35
+      ],
+      "consistencyNote": "largest profitable day at or below 35% of the profit from the first trading day, or from the last approved payout, to the request; resets after each approved payout; losing days reduce the profit; exactly 35% passes (verified on the consistency page, 2026-11-02)",
+      "payout": {
+        "type": "growth",
+        "minQualifyingDays": 5,
+        "qualifyingDayProfitAbove": 150,
+        "minBalance": 53000,
+        "minPayout": 500,
+        "caps": [
+          1500,
+          2000,
+          2500,
+          3000
+        ],
+        "capsRepeatLast": true,
+        "dayCountResetsAfterPayout": true
+      },
+      "legacyBefore": "2025-09-12T08:00:00-04:00",
+      "legacy": {
+        "maxContractsMini": 5,
+        "minBalance": 52100,
+        "caps": [
+          1500,
+          1750,
+          2000,
+          2250,
+          2500,
+          3000
+        ],
+        "dllRemovedAt": 53000,
+        "capAfterTiers": 25000
+      }
+    },
+    "select-flex": {
+      "name": "Select Flex 50K Funded (5-day payouts)",
+      "maxContractsMini": 4,
+      "scaling": [
+        {
+          "minProfit": 0,
+          "maxContractsMini": 2
+        },
+        {
+          "minProfit": 1500,
+          "maxContractsMini": 3
+        },
+        {
+          "minProfit": 2000,
+          "maxContractsMini": 4
+        }
+      ],
+      "scalingNote": "set from the end-of-day balance, effective the next trading day; once a tier is reached it is kept even if the balance falls",
+      "dailyLossLimit": null,
+      "consistency": null,
+      "payout": {
+        "type": "select-flex",
+        "winningDays": 5,
+        "winningDayProfitAtLeast": 150,
+        "shareOfTotalProfit": 0.5,
+        "cap": 2500,
+        "capIfBoughtBefore20260901": 3000,
+        "minPayout": 250,
+        "positiveCycleProfitFromPayout": 2
+      }
+    },
+    "select-daily": {
+      "name": "Select Daily 50K Funded (daily payouts)",
+      "maxContractsMini": 4,
+      "scaling": [
+        {
+          "minProfit": 0,
+          "maxContractsMini": 2
+        },
+        {
+          "minProfit": 1500,
+          "maxContractsMini": 3
+        },
+        {
+          "minProfit": 2000,
+          "maxContractsMini": 4
+        }
+      ],
+      "scalingNote": "set from the end-of-day balance, effective the next trading day; once a tier is reached it is kept even if the balance falls",
+      "dailyLossLimit": 1000,
+      "dllRaise": null,
+      "consistency": null,
+      "payout": {
+        "type": "select-daily",
+        "bufferBalance": 52100,
+        "multipleOfCycleProfit": 2,
+        "cap": 1250,
+        "capIfBoughtBefore20260901": 1000,
+        "minPayout": 250,
+        "positiveCycleProfitFromPayout": 1
+      }
+    },
+    "lightning": {
+      "name": "Lightning 50K Funded (instant)",
+      "maxContractsMini": 4,
+      "scaling": null,
+      "dailyLossLimit": 1250,
+      "dllRaise": {
+        "atBalance": 53000,
+        "to": 2000,
+        "effective": "next session"
+      },
+      "consistency": [
+        0.2,
+        0.25,
+        0.3
+      ],
+      "payout": {
+        "type": "lightning",
+        "profitGoals": [
+          3000,
+          2000
+        ],
+        "profitGoalNote": "profit earned since the last payout; goal 1 for payout 1, goal 2 for every later payout",
+        "minPayout": 1000,
+        "caps": [
+          2000,
+          2000,
+          2000,
+          2500
+        ],
+        "capsRepeatLast": true
+      },
+      "legacyBefore": "2025-09-12T08:00:00-04:00",
+      "legacy": {
+        "maxContractsMini": 5,
+        "consistency": [
+          0.2
+        ]
+      }
+    }
+  },
+  "unverified": [
+    "DLL raise to $2,000 at a $53,000 balance: modelled on an end-of-day balance (the page example suggests reaching $53,000 during a session is enough) and as permanent once reached (the page does not say whether it reverts after a payout drops the balance); a start state raises it when its highest end-of-day balance (--high-eod) is at least $53,000, as the ledger does.",
+    "Daily loss: modelled on realized plus open P&L for the session.",
+    "Select scaling triggers use end-of-day profit (balance minus 50,000).",
+    "Consistency and qualifying days use session P&L after commission (TradingView net P&L and --extra-cost); the consistency page says commissions are not included in profit, which may mean pre-commission day P&L; the $150 qualifying-day test does not say."
+  ]
+}

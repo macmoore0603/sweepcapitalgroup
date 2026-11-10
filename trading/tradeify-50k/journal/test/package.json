@@ -1,0 +1,6 @@
+{
+  "private": true,
+  "type": "module",
+  "description": "Lets `node --test test/` run the tests: Node 22 treats a directory argument as one entry point and resolves it through this main.",
+  "main": "journal.test.mjs"
+}
