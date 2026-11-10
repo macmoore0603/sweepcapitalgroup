@@ -14,7 +14,14 @@ export const Route = createFileRoute("/checkout/return")({
   }),
   component: CheckoutReturn,
   head: () => ({
-    meta: [{ title: "Order status — Sweep Capital Group" }],
+    meta: [
+      { title: "Order status — Sweep Capital Group" },
+      { name: 'description', content: 'Confirm the payment status of your Sweep Capital Group program enrollment.' },
+      { property: 'og:title', content: 'Order status — Sweep Capital Group' },
+      { property: 'og:description', content: 'Confirm your Sweep Capital Group enrollment payment status.' },
+      { property: 'og:type', content: 'website' },
+      { name: 'twitter:card', content: 'summary' },
+    ],
   }),
 });
 
@@ -32,7 +39,7 @@ function CheckoutReturn() {
   useEffect(() => {
     if (!session_id) return;
     let cancelled = false;
-    fetchStatus({ data: { sessionId: session_id, environment: getStripeEnvironment() } })
+    getStripeEnvironment().then((environment) => fetchStatus({ data: { sessionId: session_id, environment } }))
       .then((data) => {
         if (cancelled) return;
         setState({ kind: "ready", data });

@@ -1,5 +1,16 @@
 import { createServerFn } from "@tanstack/react-start";
 import { type StripeEnv, createStripeClient } from "@/lib/stripe.server";
+import { assertProgramAvailable } from '@/lib/payment-catalog';
+
+export const getStripePublicConfiguration = createServerFn({ method: 'GET' })
+  .handler(async () => {
+    const environment: StripeEnv = process.env.STRIPE_CHECKOUT_ENVIRONMENT === 'sandbox' ? 'sandbox' : 'live';
+    const publishableKey = environment === 'sandbox' ? process.env.STRIPE_TEST_PUBLISHABLE_KEY : process.env.STRIPE_PUBLISHABLE_KEY;
+    if (!publishableKey?.startsWith(environment === 'sandbox' ? 'pk_test_' : 'pk_live_')) {
+      throw new Error('Payment setup is incomplete: a matching Stripe publishable key is required.');
+    }
+    return { environment, publishableKey };
+  });
 
 export const createCheckoutSession = createServerFn({ method: "POST" })
   .inputValidator(
@@ -24,18 +35,21 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
     },
   )
   .handler(async ({ data }) => {
+    const tier = assertProgramAvailable(data.priceId, data.environment, process.env.STRIPE_MANAGED_TRADING_APPROVED === 'true');
+    if (process.env.STRIPE_TAX_READY !== 'true') throw new Error('Payments are temporarily unavailable while tax setup is completed.');
     const stripe = createStripeClient(data.environment);
 
-    const prices = await stripe.prices.list({ lookup_keys: [data.priceId] });
-    if (!prices.data.length) throw new Error("Price not found");
-    const stripePrice = prices.data[0];
+    const stripePrice = data.environment === 'live'
+      ? await stripe.prices.retrieve(tier.livePrice)
+      : (await stripe.prices.list({ lookup_keys: [data.priceId], active: true })).data[0];
+    if (!stripePrice || !stripePrice.active || stripePrice.unit_amount !== tier.amount || stripePrice.currency !== 'usd' || stripePrice.recurring) throw new Error('Program price is not configured correctly');
 
     const session = await stripe.checkout.sessions.create({
       line_items: [{ price: stripePrice.id, quantity: 1 }],
       mode: "payment",
-      ui_mode: "embedded_page",
+      ui_mode: "embedded",
       return_url: data.returnUrl,
-      managed_payments: { enabled: true },
+      automatic_tax: { enabled: true },
       expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
       ...(data.customerEmail && { customer_email: data.customerEmail }),
       ...(data.referralCode && { client_reference_id: data.referralCode }),

@@ -8,32 +8,18 @@ const getEnv = (key: string): string => {
 
 export type StripeEnv = 'sandbox' | 'live';
 
-const GATEWAY_STRIPE_BASE = 'https://connector-gateway.lovable.dev/stripe';
-
 export function getConnectionApiKey(env: StripeEnv): string {
-  return env === 'sandbox'
-    ? getEnv('STRIPE_SANDBOX_API_KEY')
-    : getEnv('STRIPE_LIVE_API_KEY');
+  const key = env === 'sandbox' ? getEnv('STRIPE_TEST_SECRET_KEY') : getEnv('STRIPE_SECRET_KEY');
+  const expectedMode = env === 'sandbox' ? '_test_' : '_live_';
+  if (!key.includes(expectedMode)) throw new Error('Stripe key does not match the requested payment environment');
+  return key;
 }
 
 export function createStripeClient(env: StripeEnv): Stripe {
   const connectionApiKey = getConnectionApiKey(env);
-  const lovableApiKey = getEnv('LOVABLE_API_KEY');
-
   return new Stripe(connectionApiKey, {
     apiVersion: '2026-03-25.dahlia',
-    httpClient: Stripe.createFetchHttpClient((input, init) => {
-      const urlStr = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
-      const gatewayUrl = urlStr.replace('https://api.stripe.com', GATEWAY_STRIPE_BASE);
-      return fetch(gatewayUrl, {
-        ...init,
-        headers: {
-          ...Object.fromEntries(new Headers(init?.headers).entries()),
-          'X-Connection-Api-Key': connectionApiKey,
-          'Lovable-API-Key': lovableApiKey,
-        },
-      });
-    }),
+    httpClient: Stripe.createFetchHttpClient(),
   });
 }
 
@@ -41,8 +27,8 @@ export async function verifyWebhook(req: Request, env: StripeEnv): Promise<{ typ
   const signature = req.headers.get("stripe-signature");
   const body = await req.text();
   const secret = env === 'sandbox'
-    ? getEnv('PAYMENTS_SANDBOX_WEBHOOK_SECRET')
-    : getEnv('PAYMENTS_LIVE_WEBHOOK_SECRET');
+    ? getEnv('STRIPE_TEST_WEBHOOK_SECRET')
+    : getEnv('STRIPE_WEBHOOK_SECRET');
 
   if (!signature || !body) throw new Error("Missing signature or body");
 
