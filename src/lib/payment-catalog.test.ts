@@ -10,4 +10,5 @@ describe('one-time program pricing', () => {
   test('unapproved managed trading cannot charge live', () => expect(() => assertProgramAvailable('mentorship_managed_onetime', 'live', false)).toThrow());
   test('unapproved bundle cannot charge live', () => expect(() => assertProgramAvailable('mentorship_all_inclusive_onetime', 'live', false)).toThrow());
   test('course does not need managed trading approval', () => expect(assertProgramAvailable('mentorship_course_onetime', 'live', false).amount).toBe(100000));
+  test('course with coaching does not need managed trading approval', () => expect(assertProgramAvailable('mentorship_course_coaching_onetime', 'live', false).amount).toBe(150000));
 });

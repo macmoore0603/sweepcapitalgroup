@@ -4,8 +4,8 @@ import { createElement } from 'react'
 import { TEMPLATES } from '@/lib/email-templates/registry'
 
 const SITE_NAME = 'Sweep Capital Group'
-const SENDER_DOMAIN = 'notify.sweepcapitalgroup.com'
-const FROM_DOMAIN = 'notify.sweepcapitalgroup.com'
+const SENDER_DOMAIN = 'notify.lexusnexuscapital.com'
+const FROM_DOMAIN = 'notify.lexusnexuscapital.com'
 
 function generateToken(): string {
   const bytes = new Uint8Array(32)
