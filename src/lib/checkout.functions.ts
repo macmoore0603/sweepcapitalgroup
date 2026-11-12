@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { type StripeEnv, createStripeClient } from "@/lib/stripe.server";
 import { assertProgramAvailable } from '@/lib/payment-catalog';
+import { buildCheckoutOptions } from '@/lib/checkout-options';
 
 export const getStripePublicConfiguration = createServerFn({ method: 'GET' })
   .handler(async () => {
@@ -44,16 +45,12 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       : (await stripe.prices.list({ lookup_keys: [data.priceId], active: true })).data[0];
     if (!stripePrice || !stripePrice.active || stripePrice.unit_amount !== tier.amount || stripePrice.currency !== 'usd' || stripePrice.recurring) throw new Error('Program price is not configured correctly');
 
-    const session = await stripe.checkout.sessions.create({
-      line_items: [{ price: stripePrice.id, quantity: 1 }],
-      mode: "payment",
-      ui_mode: "embedded",
-      return_url: data.returnUrl,
-      automatic_tax: { enabled: true },
-      expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
-      ...(data.customerEmail && { customer_email: data.customerEmail }),
-      ...(data.referralCode && { client_reference_id: data.referralCode }),
-    } as any);
+    const session = await stripe.checkout.sessions.create(buildCheckoutOptions({
+      priceId: stripePrice.id,
+      returnUrl: data.returnUrl,
+      customerEmail: data.customerEmail,
+      referralCode: data.referralCode,
+    }));
 
     // Fire-and-forget: record intent so Revenue Agent can chase abandons
     try {

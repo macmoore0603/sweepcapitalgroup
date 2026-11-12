@@ -4,6 +4,7 @@ import { render } from '@react-email/components'
 import { createElement } from 'react'
 import { type StripeEnv, createStripeClient, verifyWebhook } from '@/lib/stripe.server'
 import { TEMPLATES } from '@/lib/email-templates/registry'
+import { completePaidPurchase } from '@/lib/payment-completion.server'
 
 const SITE_NAME = 'Sweep Capital Group'
 const SENDER_DOMAIN = 'notify.lexusnexuscapital.com'
@@ -237,8 +238,11 @@ async function handleEvent(event: { type: string; data: { object: any } }, env: 
             full = await stripe.checkout.sessions.retrieve(session.id, { expand: ['line_items'] })
           } catch (e) { console.error('Failed to expand session', e) }
         }
-        await sendPurchaseConfirmation(full)
-        await recordRevenue(full, env)
+        await completePaidPurchase(
+          () => recordRevenue(full, env),
+          () => sendPurchaseConfirmation(full),
+          (error) => console.error('Optional purchase confirmation unavailable; Stripe receipt is independent', error),
+        )
       }
       break
     }
