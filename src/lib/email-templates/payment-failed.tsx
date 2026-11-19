@@ -6,16 +6,16 @@ interface Props { name?: string; productName?: string; retryUrl?: string }
 const Email = ({ name, productName, retryUrl }: Props) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Your payment didn't go through — your spot is still saved.</Preview>
+    <Preview>Your payment didn't go through — you can still finish checkout.</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>{name ? `${name}, your payment didn't go through.` : 'Your payment didn’t go through.'}</Heading>
+        <Heading style={h1}>{name ? `${name}, your payment didn't go through.` : "Your payment didn't go through."}</Heading>
         <Text style={text}>
-          We tried to process your enrollment in {productName ? productName : 'our program'}, but your bank
+          We tried to process your enrollment in {productName ? productName : 'The Course or Course + Coaching'}, but your bank
           declined the charge. This is almost always fixed by trying the card again, or using a different one.
         </Text>
         <Text style={text}>
-          Your spot and pricing are still locked in — it only takes a minute to finish.
+          You can still finish checkout at the price listed on the mentorship page.
         </Text>
         {retryUrl ? (
           <Section style={{ textAlign: 'center' as const, margin: '28px 0' }}>
@@ -35,7 +35,7 @@ export const template = {
   component: Email,
   subject: 'Action needed: finish your enrollment',
   displayName: 'Payment failed',
-  previewData: { name: 'Sam', productName: 'The Edge', retryUrl: 'https://sweepcapitalgroup.com/mentorship' },
+  previewData: { name: 'Sam', productName: 'The Course', retryUrl: 'https://sweepcapitalgroup.com/mentorship' },
 } satisfies TemplateEntry
 
 const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }

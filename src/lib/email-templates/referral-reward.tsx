@@ -60,7 +60,7 @@ export const template = {
   previewData: {
     name: 'Sam',
     amount: '$1,500.00',
-    productName: 'The Apprenticeship',
+    productName: 'Course + Coaching',
     referralUrl: 'https://sweepcapitalgroup.com/ref/smith7a2b',
   },
 } satisfies TemplateEntry
