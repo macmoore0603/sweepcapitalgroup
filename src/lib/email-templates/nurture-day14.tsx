@@ -15,12 +15,12 @@ const Email = ({ name, siteUrl }: Props) => (
           sent you the playbook and a couple of check-ins — this is the last one.
         </Text>
         <Text style={text}>
-          If you still want in, the $1,000 Edge tier gets you the full course today. If not, no
-          worries — we'll close your file and stop emailing you.
+          If you still want in, The Course is $1,000, one-time, and is on the mentorship page.
+          If not, no worries — we'll close your file and stop emailing you.
         </Text>
         {siteUrl ? (
           <Section style={{ textAlign: 'center' as const, margin: '28px 0' }}>
-            <Button href={siteUrl} style={btn}>Get The Edge — $1,000</Button>
+            <Button href={siteUrl} style={btn}>See The Course — $1,000</Button>
           </Section>
         ) : null}
         <Text style={text}>
@@ -37,7 +37,7 @@ export const template = {
   component: Email,
   subject: 'Closing your file — final note from Sweep Capital Group',
   displayName: 'Nurture · Day 14',
-  previewData: { name: 'Sam', siteUrl: 'https://sweepcapitalgroup.com/' },
+  previewData: { name: 'Sam', siteUrl: 'https://sweepcapitalgroup.com/mentorship' },
 } satisfies TemplateEntry
 
 const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }

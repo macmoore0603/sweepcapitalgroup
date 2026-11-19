@@ -46,7 +46,7 @@ const LEADERS: Leader[] = [
     ],
     stats: [
       { k: "3 YRS", v: "Trading Desks" },
-      { k: "$2.4M", v: "Allocated" },
+      { k: "2 Programs", v: "Course & Coaching" },
       { k: "Johns Creek", v: "Headquarters" },
     ],
   },
@@ -84,14 +84,13 @@ function LeadershipPage() {
           <Link to="/about" className="hover:text-foreground transition-colors">About</Link>
           <Link to="/leadership" className="text-foreground">Leadership</Link>
           <Link to="/mentorship" className="hover:text-foreground transition-colors">Mentorship</Link>
-          <Link to="/" hash="apply" className="hover:text-foreground transition-colors">Apply</Link>
+          <Link to="/mentorship" className="hover:text-foreground transition-colors">Programs</Link>
         </div>
         <Link
-          to="/"
-          hash="apply"
+          to="/mentorship"
           className="px-5 py-2.5 bg-foreground text-background font-extrabold text-[11px] uppercase tracking-widest hover:bg-accent transition-colors"
         >
-          Request Access
+          See the Programs
         </Link>
       </nav>
 
@@ -188,16 +187,15 @@ function LeadershipPage() {
             Work directly with the team.
           </h2>
           <p className="text-muted-foreground text-base md:text-lg leading-relaxed text-pretty">
-            Twelve mentees per quarter. Selection is personal. If our framework fits the way you
-            intend to allocate capital, request access below.
+            If our framework fits the way you want to learn and trade, the programs are on the
+            mentorship page.
           </p>
           <div className="flex flex-wrap gap-4">
             <Link
-              to="/"
-              hash="apply"
+              to="/mentorship"
               className="px-7 py-4 bg-foreground text-background font-extrabold text-sm uppercase tracking-widest hover:bg-accent transition-colors"
             >
-              Start Application
+              See the Programs
             </Link>
             <Link
               to="/about"

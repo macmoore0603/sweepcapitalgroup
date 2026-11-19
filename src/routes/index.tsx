@@ -682,6 +682,7 @@ function Index() {
           </div>
           <div className="flex flex-wrap justify-center gap-6">
             <Link to="/playbook" className="hover:text-foreground transition-colors">Free Playbook</Link>
+            <Link to="/learn" className="hover:text-foreground transition-colors">Learn</Link>
             <Link to="/refer" className="hover:text-foreground transition-colors">Refer &amp; Earn</Link>
             <Link to="/terms" className="hover:text-foreground transition-colors">Terms</Link>
             <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>

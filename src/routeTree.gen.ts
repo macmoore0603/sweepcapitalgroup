@@ -29,7 +29,13 @@ import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } fr
 import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
+import { Route as LearnIndexRouteImport } from './routes/learn.index'
+import { Route as LearnFuturesTradingRiskManagementBeginnersRouteImport } from './routes/learn.futures-trading-risk-management-beginners'
+import { Route as LearnNqVsEsFuturesForNewTradersRouteImport } from './routes/learn.nq-vs-es-futures-for-new-traders'
+import { Route as LearnOpeningRangeBreakoutStrategyRouteImport } from './routes/learn.opening-range-breakout-strategy'
+import { Route as LearnPassFuturesPropFirmEvaluationRouteImport } from './routes/learn.pass-futures-prop-firm-evaluation'
 import { Route as RefCodeRouteImport } from './routes/ref.$code'
+import { Route as SocialFileRouteImport } from './routes/social.$file'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as ApiPublicLeadSubmitRouteImport } from './routes/api/public/lead-submit'
@@ -146,9 +152,43 @@ const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
   path: '/email/unsubscribe',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LearnIndexRoute = LearnIndexRouteImport.update({
+  id: '/learn/',
+  path: '/learn/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LearnFuturesTradingRiskManagementBeginnersRoute =
+  LearnFuturesTradingRiskManagementBeginnersRouteImport.update({
+    id: '/learn/futures-trading-risk-management-beginners',
+    path: '/learn/futures-trading-risk-management-beginners',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const LearnNqVsEsFuturesForNewTradersRoute =
+  LearnNqVsEsFuturesForNewTradersRouteImport.update({
+    id: '/learn/nq-vs-es-futures-for-new-traders',
+    path: '/learn/nq-vs-es-futures-for-new-traders',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const LearnOpeningRangeBreakoutStrategyRoute =
+  LearnOpeningRangeBreakoutStrategyRouteImport.update({
+    id: '/learn/opening-range-breakout-strategy',
+    path: '/learn/opening-range-breakout-strategy',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const LearnPassFuturesPropFirmEvaluationRoute =
+  LearnPassFuturesPropFirmEvaluationRouteImport.update({
+    id: '/learn/pass-futures-prop-firm-evaluation',
+    path: '/learn/pass-futures-prop-firm-evaluation',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const RefCodeRoute = RefCodeRouteImport.update({
   id: '/ref/$code',
   path: '/ref/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SocialFileRoute = SocialFileRouteImport.update({
+  id: '/social/$file',
+  path: '/social/$file',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
@@ -244,7 +284,13 @@ export interface FileRoutesByFullPath {
   '/api/health': typeof ApiHealthRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/learn/futures-trading-risk-management-beginners': typeof LearnFuturesTradingRiskManagementBeginnersRoute
+  '/learn/nq-vs-es-futures-for-new-traders': typeof LearnNqVsEsFuturesForNewTradersRoute
+  '/learn/opening-range-breakout-strategy': typeof LearnOpeningRangeBreakoutStrategyRoute
+  '/learn/pass-futures-prop-firm-evaluation': typeof LearnPassFuturesPropFirmEvaluationRoute
   '/ref/$code': typeof RefCodeRoute
+  '/social/$file': typeof SocialFileRoute
+  '/learn/': typeof LearnIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/api/public/lead-submit': typeof ApiPublicLeadSubmitRoute
@@ -280,7 +326,13 @@ export interface FileRoutesByTo {
   '/api/health': typeof ApiHealthRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/learn/futures-trading-risk-management-beginners': typeof LearnFuturesTradingRiskManagementBeginnersRoute
+  '/learn/nq-vs-es-futures-for-new-traders': typeof LearnNqVsEsFuturesForNewTradersRoute
+  '/learn/opening-range-breakout-strategy': typeof LearnOpeningRangeBreakoutStrategyRoute
+  '/learn/pass-futures-prop-firm-evaluation': typeof LearnPassFuturesPropFirmEvaluationRoute
   '/ref/$code': typeof RefCodeRoute
+  '/social/$file': typeof SocialFileRoute
+  '/learn': typeof LearnIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/api/public/lead-submit': typeof ApiPublicLeadSubmitRoute
@@ -317,7 +369,13 @@ export interface FileRoutesById {
   '/api/health': typeof ApiHealthRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/learn/futures-trading-risk-management-beginners': typeof LearnFuturesTradingRiskManagementBeginnersRoute
+  '/learn/nq-vs-es-futures-for-new-traders': typeof LearnNqVsEsFuturesForNewTradersRoute
+  '/learn/opening-range-breakout-strategy': typeof LearnOpeningRangeBreakoutStrategyRoute
+  '/learn/pass-futures-prop-firm-evaluation': typeof LearnPassFuturesPropFirmEvaluationRoute
   '/ref/$code': typeof RefCodeRoute
+  '/social/$file': typeof SocialFileRoute
+  '/learn/': typeof LearnIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/api/public/lead-submit': typeof ApiPublicLeadSubmitRoute
@@ -355,7 +413,13 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/checkout/return'
     | '/email/unsubscribe'
+    | '/learn/futures-trading-risk-management-beginners'
+    | '/learn/nq-vs-es-futures-for-new-traders'
+    | '/learn/opening-range-breakout-strategy'
+    | '/learn/pass-futures-prop-firm-evaluation'
     | '/ref/$code'
+    | '/social/$file'
+    | '/learn/'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/api/public/lead-submit'
@@ -391,7 +455,13 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/checkout/return'
     | '/email/unsubscribe'
+    | '/learn/futures-trading-risk-management-beginners'
+    | '/learn/nq-vs-es-futures-for-new-traders'
+    | '/learn/opening-range-breakout-strategy'
+    | '/learn/pass-futures-prop-firm-evaluation'
     | '/ref/$code'
+    | '/social/$file'
+    | '/learn'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/api/public/lead-submit'
@@ -427,7 +497,13 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/checkout/return'
     | '/email/unsubscribe'
+    | '/learn/futures-trading-risk-management-beginners'
+    | '/learn/nq-vs-es-futures-for-new-traders'
+    | '/learn/opening-range-breakout-strategy'
+    | '/learn/pass-futures-prop-firm-evaluation'
     | '/ref/$code'
+    | '/social/$file'
+    | '/learn/'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/api/public/lead-submit'
@@ -464,7 +540,13 @@ export interface RootRouteChildren {
   ApiHealthRoute: typeof ApiHealthRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
+  LearnFuturesTradingRiskManagementBeginnersRoute: typeof LearnFuturesTradingRiskManagementBeginnersRoute
+  LearnNqVsEsFuturesForNewTradersRoute: typeof LearnNqVsEsFuturesForNewTradersRoute
+  LearnOpeningRangeBreakoutStrategyRoute: typeof LearnOpeningRangeBreakoutStrategyRoute
+  LearnPassFuturesPropFirmEvaluationRoute: typeof LearnPassFuturesPropFirmEvaluationRoute
   RefCodeRoute: typeof RefCodeRoute
+  SocialFileRoute: typeof SocialFileRoute
+  LearnIndexRoute: typeof LearnIndexRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiPublicLeadSubmitRoute: typeof ApiPublicLeadSubmitRoute
@@ -622,11 +704,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EmailUnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/learn/': {
+      id: '/learn/'
+      path: '/learn'
+      fullPath: '/learn/'
+      preLoaderRoute: typeof LearnIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/learn/futures-trading-risk-management-beginners': {
+      id: '/learn/futures-trading-risk-management-beginners'
+      path: '/learn/futures-trading-risk-management-beginners'
+      fullPath: '/learn/futures-trading-risk-management-beginners'
+      preLoaderRoute: typeof LearnFuturesTradingRiskManagementBeginnersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/learn/nq-vs-es-futures-for-new-traders': {
+      id: '/learn/nq-vs-es-futures-for-new-traders'
+      path: '/learn/nq-vs-es-futures-for-new-traders'
+      fullPath: '/learn/nq-vs-es-futures-for-new-traders'
+      preLoaderRoute: typeof LearnNqVsEsFuturesForNewTradersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/learn/opening-range-breakout-strategy': {
+      id: '/learn/opening-range-breakout-strategy'
+      path: '/learn/opening-range-breakout-strategy'
+      fullPath: '/learn/opening-range-breakout-strategy'
+      preLoaderRoute: typeof LearnOpeningRangeBreakoutStrategyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/learn/pass-futures-prop-firm-evaluation': {
+      id: '/learn/pass-futures-prop-firm-evaluation'
+      path: '/learn/pass-futures-prop-firm-evaluation'
+      fullPath: '/learn/pass-futures-prop-firm-evaluation'
+      preLoaderRoute: typeof LearnPassFuturesPropFirmEvaluationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ref/$code': {
       id: '/ref/$code'
       path: '/ref/$code'
       fullPath: '/ref/$code'
       preLoaderRoute: typeof RefCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/social/$file': {
+      id: '/social/$file'
+      path: '/social/$file'
+      fullPath: '/social/$file'
+      preLoaderRoute: typeof SocialFileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/.lovable/oauth/consent': {
@@ -745,7 +869,16 @@ const rootRouteChildren: RootRouteChildren = {
   ApiHealthRoute: ApiHealthRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
+  LearnFuturesTradingRiskManagementBeginnersRoute:
+    LearnFuturesTradingRiskManagementBeginnersRoute,
+  LearnNqVsEsFuturesForNewTradersRoute: LearnNqVsEsFuturesForNewTradersRoute,
+  LearnOpeningRangeBreakoutStrategyRoute:
+    LearnOpeningRangeBreakoutStrategyRoute,
+  LearnPassFuturesPropFirmEvaluationRoute:
+    LearnPassFuturesPropFirmEvaluationRoute,
   RefCodeRoute: RefCodeRoute,
+  SocialFileRoute: SocialFileRoute,
+  LearnIndexRoute: LearnIndexRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiPublicLeadSubmitRoute: ApiPublicLeadSubmitRoute,

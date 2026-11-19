@@ -6,18 +6,17 @@ interface Props { name?: string; productName?: string; resumeUrl?: string }
 const Email = ({ name, productName, resumeUrl }: Props) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Last note from us — your spot closes soon.</Preview>
+    <Preview>A follow-up on the enrollment you started.</Preview>
     <Body style={main}>
       <Container style={container}>
         <Heading style={h1}>{name ? `${name}, one last note.` : 'One last note.'}</Heading>
         <Text style={text}>
-          A couple of days ago you started enrolling in {productName ? productName : 'our program'} and stopped
+          A couple of days ago you started enrolling in {productName ? productName : 'The Course or Course + Coaching'} and stopped
           before finishing. That's usually one of three things: timing, money, or a question nobody answered.
         </Text>
         <Text style={text}>
-          If it's a question, just reply — a real person reads every response. If it's timing, your spot
-          stays open a little longer, but cohorts are capped and the price on the page today is the
-          lowest it will be.
+          If it's a question, just reply — a real person reads every response. If it's timing, the
+          programs are still on the mentorship page when you're ready.
         </Text>
         {resumeUrl ? (
           <Section style={{ textAlign: 'center' as const, margin: '28px 0' }}>
@@ -35,9 +34,9 @@ const Email = ({ name, productName, resumeUrl }: Props) => (
 
 export const template = {
   component: Email,
-  subject: 'Last note — your spot closes soon',
+  subject: 'A follow-up on the enrollment you started',
   displayName: 'Abandoned checkout (48h follow-up)',
-  previewData: { name: 'Sam', productName: 'The Edge', resumeUrl: 'https://sweepcapitalgroup.com/' },
+  previewData: { name: 'Sam', productName: 'The Course', resumeUrl: 'https://sweepcapitalgroup.com/mentorship' },
 } satisfies TemplateEntry
 
 const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
