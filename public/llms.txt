@@ -1,15 +1,24 @@
 # Sweep Capital Group
 
-> Private, institutional-grade day trading mentorship and capital allocation for serious investors. Discipline is the only edge.
+> Futures trading education from Johns Creek, Georgia: The Course ($1,000 one-time) and Course + Coaching ($1,500 one-time). A written, risk-first process built on Session Sweep, the 5-15 Gap, and Power of 3. Education, not financial advice; no results are promised.
 
-Sweep Capital Group is a private trading firm based in Johns Creek, Georgia offering a structured mentorship cohort, post-trade review, and capital allocation for vetted operators.
+Sweep Capital Group is a futures trading education and mentorship company founded and owned by Mac Moore. It does not manage client money and does not sell trade signals.
 
 ## Pages
 
-- [Home](/): Overview of the firm, philosophy, and how to apply.
-- [About](/about): Origin, principles, and how Sweep Capital Group operates.
-- [Leadership](/leadership): Co-founders Mac Moore and Sam Teese.
-- [Mentorship](/mentorship): Cohort structure, curriculum, and outcomes.
+- [Home](/): Overview of the framework and programs.
+- [Mentorship](/mentorship): The Course and Course + Coaching, pricing, FAQ, and refund window.
+- [Free Playbook](/playbook): The Session Sweep playbook by email.
+- [Learn](/learn): Free futures trading guides.
+- [How to pass a futures prop firm evaluation](/learn/pass-futures-prop-firm-evaluation)
+- [Opening range breakout (ORB) strategy explained](/learn/opening-range-breakout-strategy)
+- [Futures risk management for beginners](/learn/futures-trading-risk-management-beginners)
+- [NQ vs ES for new traders](/learn/nq-vs-es-futures-for-new-traders)
+- [What is a liquidity sweep?](/learn/liquidity-sweep-futures-trading)
+- [How to choose a futures trading course](/learn/how-to-choose-a-futures-trading-course)
+- [About](/about): The company and founder.
+- [Leadership](/leadership): Team.
 - [Book a Call](/book): Schedule an intro conversation.
-- [Privacy](/privacy): Privacy policy.
-- [Terms](/terms): Terms of service.
+- [Privacy](/privacy) and [Terms](/terms).
+
+Risk disclaimer: Trading futures involves substantial risk of loss and is not suitable for every investor.
