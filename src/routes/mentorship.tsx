@@ -7,6 +7,7 @@ import logoAsset from "../assets/scg-logo.png.asset.json";
 const logo = logoAsset.url;
 import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
+import { BookCallCta } from "@/components/BookCallCta";
 
 export const Route = createFileRoute("/mentorship")({
   head: () => ({
@@ -259,6 +260,7 @@ export default function MentorshipPage() {
             </div>
           ))}
         </div>
+        <BookCallCta className="max-w-5xl mx-auto mt-8" />
         <p className="max-w-5xl mx-auto mt-10 font-mono text-[11px] uppercase tracking-widest text-muted-foreground text-center">
           Each program is a single one-time payment.
         </p>
@@ -368,6 +370,7 @@ export default function MentorshipPage() {
               <span>MAC MOORE — FOUNDER &amp; OWNER</span>
               <span>RESPONSE WITHIN 24 HOURS</span>
             </div>
+            <BookCallCta className="mt-4" />
           </div>
           <LeadForm />
         </div>

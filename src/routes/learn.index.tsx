@@ -4,7 +4,7 @@ import { LEARN_ARTICLES, LEARN_BASE_URL } from "@/lib/learn-articles";
 
 const TITLE = "Learn Futures Trading: Free Guides | Sweep Capital Group";
 const DESCRIPTION =
-  "Free, plain-English futures trading guides: prop firm evaluations, opening range breakouts, liquidity sweeps, risk management, and NQ vs ES. Education, not advice.";
+  "Free, plain-English futures trading guides: prop firm evaluations, trailing drawdown, micro futures, the best time to trade NQ, journaling, and risk management. Education, not advice.";
 
 export const Route = createFileRoute("/learn/")({
   head: () => ({
@@ -40,6 +40,17 @@ function LearnIndexPage() {
         </div>
       </header>
       <section className="px-6 md:px-10 py-16">
+        <a
+          href="/checklist"
+          className="max-w-4xl mx-auto mb-10 border border-accent/50 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-accent transition-colors"
+        >
+          <div className="flex flex-col gap-1">
+            <span className="font-mono text-accent text-[10px] uppercase tracking-[0.3em]">Free download</span>
+            <span className="text-lg font-extrabold tracking-tight">Prop Firm Evaluation Checklist (printable)</span>
+            <span className="text-sm text-muted-foreground">Drawdown math, sizing, news, and when to stop, on one page.</span>
+          </div>
+          <span className="font-mono text-[11px] uppercase tracking-widest text-accent shrink-0">Get it →</span>
+        </a>
         <div className="max-w-4xl mx-auto grid gap-6 md:grid-cols-2">
           {LEARN_ARTICLES.map((a) => (
             <a

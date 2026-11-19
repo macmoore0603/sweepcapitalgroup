@@ -14,6 +14,7 @@ import macMoore from "../assets/mac-moore.png";
 import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { ExitIntentPlaybook } from "@/components/ExitIntentPlaybook";
+import { BookCallCta } from "@/components/BookCallCta";
 
 
 const FAQS: { q: string; a: string }[] = [
@@ -493,6 +494,7 @@ function Index() {
               </article>
             ))}
           </div>
+          <BookCallCta className="mt-6 max-w-5xl mx-auto" />
           <RiskNote className="mt-6" />
         </div>
       </section>
@@ -692,6 +694,7 @@ function Index() {
           <div className="flex flex-wrap justify-center gap-6">
             <Link to="/playbook" className="hover:text-foreground transition-colors">Free Playbook</Link>
             <Link to="/learn" className="hover:text-foreground transition-colors">Learn</Link>
+            <Link to="/checklist" className="hover:text-foreground transition-colors">Free Checklist</Link>
             <Link to="/refer" className="hover:text-foreground transition-colors">Refer &amp; Earn</Link>
             <Link to="/terms" className="hover:text-foreground transition-colors">Terms</Link>
             <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
@@ -701,17 +704,17 @@ function Index() {
 
       {/* Mobile sticky CTA */}
       <div className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-background/95 backdrop-blur px-4 py-3 flex items-center gap-3">
-        <a
-          href="#tiers"
-          className="flex-1 text-center bg-accent text-accent-foreground font-mono text-[11px] uppercase tracking-widest py-3 rounded-sm font-bold"
-        >
-          View Tiers
-        </a>
         <Link
           to="/mentorship"
+          className="flex-1 text-center bg-accent text-accent-foreground font-mono text-[11px] uppercase tracking-widest py-3 rounded-sm font-bold"
+        >
+          See Programs
+        </Link>
+        <Link
+          to="/call"
           className="flex-1 text-center border border-border text-foreground font-mono text-[11px] uppercase tracking-widest py-3 rounded-sm"
         >
-          Programs
+          Free 15-min Call
         </Link>
       </div>
     </div>
