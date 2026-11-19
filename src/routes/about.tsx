@@ -38,10 +38,10 @@ function AboutPage() {
           <Link to="/" className="hover:text-foreground transition-colors">Home</Link>
           <Link to="/about" className="text-foreground">About</Link>
           <Link to="/mentorship" className="hover:text-foreground transition-colors">Mentorship</Link>
-          <Link to="/" hash="apply" className="hover:text-foreground transition-colors">Apply</Link>
+          <Link to="/mentorship" className="hover:text-foreground transition-colors">Programs</Link>
         </div>
-        <Link to="/" hash="apply" className="px-5 py-2.5 bg-foreground text-background font-extrabold text-[11px] uppercase tracking-widest hover:bg-accent transition-colors">
-          Request Access
+        <Link to="/mentorship" className="px-5 py-2.5 bg-foreground text-background font-extrabold text-[11px] uppercase tracking-widest hover:bg-accent transition-colors">
+          See the Programs
         </Link>
       </nav>
 
@@ -107,11 +107,10 @@ function AboutPage() {
 
             <div className="pt-8 flex flex-wrap gap-4">
               <Link
-                to="/"
-                hash="apply"
+                to="/mentorship"
                 className="px-7 py-4 bg-foreground text-background font-extrabold text-sm uppercase tracking-widest hover:bg-accent transition-colors"
               >
-                Start Application
+                See the Programs
               </Link>
               <Link
                 to="/"

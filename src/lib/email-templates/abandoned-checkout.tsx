@@ -11,8 +11,8 @@ const Email = ({ name, productName, resumeUrl }: Props) => (
       <Container style={container}>
         <Heading style={h1}>{name ? `${name}, you left something behind.` : 'You left something behind.'}</Heading>
         <Text style={text}>
-          You started enrolling in {productName ? productName : 'our program'} but didn't finish.
-          Seats are limited and priced to move — the same offer won't be here forever.
+          You started enrolling in {productName ? productName : 'The Course or Course + Coaching'} but didn't finish.
+          The programs are still on the mentorship page whenever you want to continue.
         </Text>
         {resumeUrl ? (
           <Section style={{ textAlign: 'center' as const, margin: '28px 0' }}>
@@ -32,7 +32,7 @@ export const template = {
   component: Email,
   subject: 'Your enrollment is still open',
   displayName: 'Abandoned checkout',
-  previewData: { name: 'Sam', productName: 'The Edge', resumeUrl: 'https://sweepcapitalgroup.com/' },
+  previewData: { name: 'Sam', productName: 'The Course', resumeUrl: 'https://sweepcapitalgroup.com/mentorship' },
 } satisfies TemplateEntry
 
 const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
