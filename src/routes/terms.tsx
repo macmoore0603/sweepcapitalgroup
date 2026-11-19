@@ -34,7 +34,7 @@ function TermsPage() {
           <span className="font-mono text-accent text-[11px] uppercase tracking-[0.3em]">Legal</span>
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tighter uppercase">Terms & Conditions</h1>
           <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
-            Last updated: May 23, 2026
+            Last updated: November 19, 2026
           </p>
         </div>
 
@@ -52,7 +52,6 @@ function TermsPage() {
             <p>Sweep Capital Group provides the following:</p>
             <ul className="list-disc pl-5 space-y-2 mt-3">
               <li>Institutional-grade trading mentorship and education programs.</li>
-              <li>Capital allocation and proprietary desk funding for qualified traders.</li>
               <li>AI-powered concierge assistance through Sierra, accessible via SMS, voice, and messaging platforms.</li>
               <li>Social media content management and scheduling services for brand presence.</li>
               <li>Educational resources, market analysis, and community access.</li>
