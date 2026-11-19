@@ -4,7 +4,7 @@ import { LEARN_ARTICLES, LEARN_BASE_URL } from "@/lib/learn-articles";
 
 const TITLE = "Learn Futures Trading: Free Guides | Sweep Capital Group";
 const DESCRIPTION =
-  "Free, plain-English futures trading guides: prop firm evaluations, opening range breakouts, risk management, and NQ vs ES. Education, not advice.";
+  "Free, plain-English futures trading guides: prop firm evaluations, opening range breakouts, liquidity sweeps, risk management, and NQ vs ES. Education, not advice.";
 
 export const Route = createFileRoute("/learn/")({
   head: () => ({
