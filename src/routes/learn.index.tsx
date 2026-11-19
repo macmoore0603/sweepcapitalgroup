@@ -9,10 +9,18 @@ const DESCRIPTION =
 export const Route = createFileRoute("/learn/")({
   head: () => ({
     meta: [
+      { property: "og:image", content: "https://sweepcapitalgroup.com/img/og-learn.jpg" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { property: "og:image:alt", content: "Free futures trading guides" },
+      { name: "twitter:image", content: "https://sweepcapitalgroup.com/img/og-learn.jpg" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: TITLE },
       { name: "description", content: DESCRIPTION },
       { property: "og:title", content: TITLE },
       { property: "og:description", content: DESCRIPTION },
+      { name: "twitter:title", content: TITLE },
+      { name: "twitter:description", content: DESCRIPTION },
       { property: "og:url", content: `${LEARN_BASE_URL}/learn` },
     ],
     links: [{ rel: "canonical", href: `${LEARN_BASE_URL}/learn` }],

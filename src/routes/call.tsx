@@ -2,12 +2,19 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
-import logoAsset from "../assets/scg-logo.png.asset.json";
-const logo = logoAsset.url;
+import { LOGO_SMALL } from "@/lib/logo-small";
+const logo = LOGO_SMALL;
 
 export const Route = createFileRoute("/call")({
   head: () => ({
     meta: [
+      { property: "og:image", content: "https://sweepcapitalgroup.com/img/og-call.jpg" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { property: "og:image:alt", content: "Book a free 15-minute call" },
+      { name: "twitter:image", content: "https://sweepcapitalgroup.com/img/og-call.jpg" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:url", content: "https://sweepcapitalgroup.com/call" },
       { title: "Book a Free 15-Minute Call | Sweep Capital Group" },
       {
         name: "description",
@@ -15,6 +22,7 @@ export const Route = createFileRoute("/call")({
           "Book a free 15-minute call with Mac Moore to see whether The Course or Course + Coaching fits where you are as a futures trader. Education, not advice.",
       },
       { property: "og:title", content: "Book a Free 15-Minute Call | Sweep Capital Group" },
+      { name: "twitter:title", content: "Book a Free 15-Minute Call | Sweep Capital Group" },
       {
         property: "og:description",
         content: "A free 15-minute call to see which Sweep Capital Group program, if any, fits you.",
