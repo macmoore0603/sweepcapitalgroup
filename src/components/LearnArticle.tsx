@@ -109,6 +109,12 @@ function ProgramsCta() {
         >
           Get the Free Playbook
         </Link>
+        <Link
+          to="/call"
+          className="px-5 py-3 border border-border font-extrabold text-[11px] uppercase tracking-widest hover:border-accent transition-colors"
+        >
+          Book a free 15-min call
+        </Link>
       </div>
       <p className="text-xs text-muted-foreground">No income or results are promised. Education, not advice.</p>
     </aside>
@@ -116,7 +122,11 @@ function ProgramsCta() {
 }
 
 export function LearnArticlePage({ article }: { article: Article }) {
-  const related = LEARN_ARTICLES.filter((a) => a.slug !== article.slug);
+  const others = LEARN_ARTICLES.filter((a) => a.slug !== article.slug);
+  const related = [
+    ...others.filter((a) => a.kicker === article.kicker),
+    ...others.filter((a) => a.kicker !== article.kicker),
+  ].slice(0, 4);
   const ctaAfter = Math.min(1, article.sections.length - 1);
   return (
     <div className="min-h-screen bg-background text-foreground font-sans">

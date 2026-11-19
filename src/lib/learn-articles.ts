@@ -1,3 +1,5 @@
+import { LEARN_ARTICLES_MORE } from "./learn-articles-more";
+
 export const LEARN_BASE_URL = "https://sweepcapitalgroup.com";
 
 export type LearnSection = { h2: string; paragraphs: string[]; bullets?: string[] };
@@ -15,7 +17,7 @@ export type LearnArticle = {
   faq: LearnFaq[];
 };
 
-export const LEARN_ARTICLES: LearnArticle[] = [
+const LEARN_ARTICLES_BASE: LearnArticle[] = [
   {
     slug: "pass-futures-prop-firm-evaluation",
     kicker: "Prop firms",
@@ -430,6 +432,8 @@ export const LEARN_ARTICLES: LearnArticle[] = [
     ],
   },
 ];
+
+export const LEARN_ARTICLES: LearnArticle[] = [...LEARN_ARTICLES_BASE, ...LEARN_ARTICLES_MORE];
 
 export function getLearnArticle(slug: string): LearnArticle {
   const a = LEARN_ARTICLES.find((x) => x.slug === slug);
