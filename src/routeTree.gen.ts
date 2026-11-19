@@ -14,6 +14,8 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AgentRouteImport } from './routes/agent'
 import { Route as BookRouteImport } from './routes/book'
+import { Route as CallRouteImport } from './routes/call'
+import { Route as ChecklistRouteImport } from './routes/checklist'
 import { Route as LeadershipRouteImport } from './routes/leadership'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as McpRouteImport } from './routes/mcp'
@@ -30,12 +32,18 @@ import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as LearnIndexRouteImport } from './routes/learn.index'
+import { Route as LearnBestTimeToTradeNqRouteImport } from './routes/learn.best-time-to-trade-nq'
+import { Route as LearnFuturesTradingJournalTemplateRouteImport } from './routes/learn.futures-trading-journal-template'
 import { Route as LearnFuturesTradingRiskManagementBeginnersRouteImport } from './routes/learn.futures-trading-risk-management-beginners'
 import { Route as LearnHowToChooseAFuturesTradingCourseRouteImport } from './routes/learn.how-to-choose-a-futures-trading-course'
+import { Route as LearnIctLiquidityConceptsForBeginnersRouteImport } from './routes/learn.ict-liquidity-concepts-for-beginners'
 import { Route as LearnLiquiditySweepFuturesTradingRouteImport } from './routes/learn.liquidity-sweep-futures-trading'
+import { Route as LearnMicroFuturesMnqMesExplainedRouteImport } from './routes/learn.micro-futures-mnq-mes-explained'
 import { Route as LearnNqVsEsFuturesForNewTradersRouteImport } from './routes/learn.nq-vs-es-futures-for-new-traders'
 import { Route as LearnOpeningRangeBreakoutStrategyRouteImport } from './routes/learn.opening-range-breakout-strategy'
 import { Route as LearnPassFuturesPropFirmEvaluationRouteImport } from './routes/learn.pass-futures-prop-firm-evaluation'
+import { Route as LearnTopstepVsApexPropFirmsForBeginnersRouteImport } from './routes/learn.topstep-vs-apex-prop-firms-for-beginners'
+import { Route as LearnTrailingDrawdownExplainedRouteImport } from './routes/learn.trailing-drawdown-explained'
 import { Route as RefCodeRouteImport } from './routes/ref.$code'
 import { Route as SocialFileRouteImport } from './routes/social.$file'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
@@ -75,6 +83,16 @@ const AgentRoute = AgentRouteImport.update({
 const BookRoute = BookRouteImport.update({
   id: '/book',
   path: '/book',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CallRoute = CallRouteImport.update({
+  id: '/call',
+  path: '/call',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChecklistRoute = ChecklistRouteImport.update({
+  id: '/checklist',
+  path: '/checklist',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LeadershipRoute = LeadershipRouteImport.update({
@@ -159,6 +177,17 @@ const LearnIndexRoute = LearnIndexRouteImport.update({
   path: '/learn/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LearnBestTimeToTradeNqRoute = LearnBestTimeToTradeNqRouteImport.update({
+  id: '/learn/best-time-to-trade-nq',
+  path: '/learn/best-time-to-trade-nq',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LearnFuturesTradingJournalTemplateRoute =
+  LearnFuturesTradingJournalTemplateRouteImport.update({
+    id: '/learn/futures-trading-journal-template',
+    path: '/learn/futures-trading-journal-template',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const LearnFuturesTradingRiskManagementBeginnersRoute =
   LearnFuturesTradingRiskManagementBeginnersRouteImport.update({
     id: '/learn/futures-trading-risk-management-beginners',
@@ -171,10 +200,22 @@ const LearnHowToChooseAFuturesTradingCourseRoute =
     path: '/learn/how-to-choose-a-futures-trading-course',
     getParentRoute: () => rootRouteImport,
   } as any)
+const LearnIctLiquidityConceptsForBeginnersRoute =
+  LearnIctLiquidityConceptsForBeginnersRouteImport.update({
+    id: '/learn/ict-liquidity-concepts-for-beginners',
+    path: '/learn/ict-liquidity-concepts-for-beginners',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const LearnLiquiditySweepFuturesTradingRoute =
   LearnLiquiditySweepFuturesTradingRouteImport.update({
     id: '/learn/liquidity-sweep-futures-trading',
     path: '/learn/liquidity-sweep-futures-trading',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const LearnMicroFuturesMnqMesExplainedRoute =
+  LearnMicroFuturesMnqMesExplainedRouteImport.update({
+    id: '/learn/micro-futures-mnq-mes-explained',
+    path: '/learn/micro-futures-mnq-mes-explained',
     getParentRoute: () => rootRouteImport,
   } as any)
 const LearnNqVsEsFuturesForNewTradersRoute =
@@ -193,6 +234,18 @@ const LearnPassFuturesPropFirmEvaluationRoute =
   LearnPassFuturesPropFirmEvaluationRouteImport.update({
     id: '/learn/pass-futures-prop-firm-evaluation',
     path: '/learn/pass-futures-prop-firm-evaluation',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const LearnTopstepVsApexPropFirmsForBeginnersRoute =
+  LearnTopstepVsApexPropFirmsForBeginnersRouteImport.update({
+    id: '/learn/topstep-vs-apex-prop-firms-for-beginners',
+    path: '/learn/topstep-vs-apex-prop-firms-for-beginners',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const LearnTrailingDrawdownExplainedRoute =
+  LearnTrailingDrawdownExplainedRouteImport.update({
+    id: '/learn/trailing-drawdown-explained',
+    path: '/learn/trailing-drawdown-explained',
     getParentRoute: () => rootRouteImport,
   } as any)
 const RefCodeRoute = RefCodeRouteImport.update({
@@ -283,6 +336,8 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/agent': typeof AgentRoute
   '/book': typeof BookRoute
+  '/call': typeof CallRoute
+  '/checklist': typeof ChecklistRoute
   '/leadership': typeof LeadershipRoute
   '/login': typeof LoginRoute
   '/mcp': typeof McpRoute
@@ -298,12 +353,18 @@ export interface FileRoutesByFullPath {
   '/api/health': typeof ApiHealthRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/learn/best-time-to-trade-nq': typeof LearnBestTimeToTradeNqRoute
+  '/learn/futures-trading-journal-template': typeof LearnFuturesTradingJournalTemplateRoute
   '/learn/futures-trading-risk-management-beginners': typeof LearnFuturesTradingRiskManagementBeginnersRoute
   '/learn/how-to-choose-a-futures-trading-course': typeof LearnHowToChooseAFuturesTradingCourseRoute
+  '/learn/ict-liquidity-concepts-for-beginners': typeof LearnIctLiquidityConceptsForBeginnersRoute
   '/learn/liquidity-sweep-futures-trading': typeof LearnLiquiditySweepFuturesTradingRoute
+  '/learn/micro-futures-mnq-mes-explained': typeof LearnMicroFuturesMnqMesExplainedRoute
   '/learn/nq-vs-es-futures-for-new-traders': typeof LearnNqVsEsFuturesForNewTradersRoute
   '/learn/opening-range-breakout-strategy': typeof LearnOpeningRangeBreakoutStrategyRoute
   '/learn/pass-futures-prop-firm-evaluation': typeof LearnPassFuturesPropFirmEvaluationRoute
+  '/learn/topstep-vs-apex-prop-firms-for-beginners': typeof LearnTopstepVsApexPropFirmsForBeginnersRoute
+  '/learn/trailing-drawdown-explained': typeof LearnTrailingDrawdownExplainedRoute
   '/ref/$code': typeof RefCodeRoute
   '/social/$file': typeof SocialFileRoute
   '/learn/': typeof LearnIndexRoute
@@ -327,6 +388,8 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/agent': typeof AgentRoute
   '/book': typeof BookRoute
+  '/call': typeof CallRoute
+  '/checklist': typeof ChecklistRoute
   '/leadership': typeof LeadershipRoute
   '/login': typeof LoginRoute
   '/mcp': typeof McpRoute
@@ -342,12 +405,18 @@ export interface FileRoutesByTo {
   '/api/health': typeof ApiHealthRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/learn/best-time-to-trade-nq': typeof LearnBestTimeToTradeNqRoute
+  '/learn/futures-trading-journal-template': typeof LearnFuturesTradingJournalTemplateRoute
   '/learn/futures-trading-risk-management-beginners': typeof LearnFuturesTradingRiskManagementBeginnersRoute
   '/learn/how-to-choose-a-futures-trading-course': typeof LearnHowToChooseAFuturesTradingCourseRoute
+  '/learn/ict-liquidity-concepts-for-beginners': typeof LearnIctLiquidityConceptsForBeginnersRoute
   '/learn/liquidity-sweep-futures-trading': typeof LearnLiquiditySweepFuturesTradingRoute
+  '/learn/micro-futures-mnq-mes-explained': typeof LearnMicroFuturesMnqMesExplainedRoute
   '/learn/nq-vs-es-futures-for-new-traders': typeof LearnNqVsEsFuturesForNewTradersRoute
   '/learn/opening-range-breakout-strategy': typeof LearnOpeningRangeBreakoutStrategyRoute
   '/learn/pass-futures-prop-firm-evaluation': typeof LearnPassFuturesPropFirmEvaluationRoute
+  '/learn/topstep-vs-apex-prop-firms-for-beginners': typeof LearnTopstepVsApexPropFirmsForBeginnersRoute
+  '/learn/trailing-drawdown-explained': typeof LearnTrailingDrawdownExplainedRoute
   '/ref/$code': typeof RefCodeRoute
   '/social/$file': typeof SocialFileRoute
   '/learn': typeof LearnIndexRoute
@@ -372,6 +441,8 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/agent': typeof AgentRoute
   '/book': typeof BookRoute
+  '/call': typeof CallRoute
+  '/checklist': typeof ChecklistRoute
   '/leadership': typeof LeadershipRoute
   '/login': typeof LoginRoute
   '/mcp': typeof McpRoute
@@ -387,12 +458,18 @@ export interface FileRoutesById {
   '/api/health': typeof ApiHealthRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/learn/best-time-to-trade-nq': typeof LearnBestTimeToTradeNqRoute
+  '/learn/futures-trading-journal-template': typeof LearnFuturesTradingJournalTemplateRoute
   '/learn/futures-trading-risk-management-beginners': typeof LearnFuturesTradingRiskManagementBeginnersRoute
   '/learn/how-to-choose-a-futures-trading-course': typeof LearnHowToChooseAFuturesTradingCourseRoute
+  '/learn/ict-liquidity-concepts-for-beginners': typeof LearnIctLiquidityConceptsForBeginnersRoute
   '/learn/liquidity-sweep-futures-trading': typeof LearnLiquiditySweepFuturesTradingRoute
+  '/learn/micro-futures-mnq-mes-explained': typeof LearnMicroFuturesMnqMesExplainedRoute
   '/learn/nq-vs-es-futures-for-new-traders': typeof LearnNqVsEsFuturesForNewTradersRoute
   '/learn/opening-range-breakout-strategy': typeof LearnOpeningRangeBreakoutStrategyRoute
   '/learn/pass-futures-prop-firm-evaluation': typeof LearnPassFuturesPropFirmEvaluationRoute
+  '/learn/topstep-vs-apex-prop-firms-for-beginners': typeof LearnTopstepVsApexPropFirmsForBeginnersRoute
+  '/learn/trailing-drawdown-explained': typeof LearnTrailingDrawdownExplainedRoute
   '/ref/$code': typeof RefCodeRoute
   '/social/$file': typeof SocialFileRoute
   '/learn/': typeof LearnIndexRoute
@@ -418,6 +495,8 @@ export interface FileRouteTypes {
     | '/admin'
     | '/agent'
     | '/book'
+    | '/call'
+    | '/checklist'
     | '/leadership'
     | '/login'
     | '/mcp'
@@ -433,12 +512,18 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/checkout/return'
     | '/email/unsubscribe'
+    | '/learn/best-time-to-trade-nq'
+    | '/learn/futures-trading-journal-template'
     | '/learn/futures-trading-risk-management-beginners'
     | '/learn/how-to-choose-a-futures-trading-course'
+    | '/learn/ict-liquidity-concepts-for-beginners'
     | '/learn/liquidity-sweep-futures-trading'
+    | '/learn/micro-futures-mnq-mes-explained'
     | '/learn/nq-vs-es-futures-for-new-traders'
     | '/learn/opening-range-breakout-strategy'
     | '/learn/pass-futures-prop-firm-evaluation'
+    | '/learn/topstep-vs-apex-prop-firms-for-beginners'
+    | '/learn/trailing-drawdown-explained'
     | '/ref/$code'
     | '/social/$file'
     | '/learn/'
@@ -462,6 +547,8 @@ export interface FileRouteTypes {
     | '/admin'
     | '/agent'
     | '/book'
+    | '/call'
+    | '/checklist'
     | '/leadership'
     | '/login'
     | '/mcp'
@@ -477,12 +564,18 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/checkout/return'
     | '/email/unsubscribe'
+    | '/learn/best-time-to-trade-nq'
+    | '/learn/futures-trading-journal-template'
     | '/learn/futures-trading-risk-management-beginners'
     | '/learn/how-to-choose-a-futures-trading-course'
+    | '/learn/ict-liquidity-concepts-for-beginners'
     | '/learn/liquidity-sweep-futures-trading'
+    | '/learn/micro-futures-mnq-mes-explained'
     | '/learn/nq-vs-es-futures-for-new-traders'
     | '/learn/opening-range-breakout-strategy'
     | '/learn/pass-futures-prop-firm-evaluation'
+    | '/learn/topstep-vs-apex-prop-firms-for-beginners'
+    | '/learn/trailing-drawdown-explained'
     | '/ref/$code'
     | '/social/$file'
     | '/learn'
@@ -506,6 +599,8 @@ export interface FileRouteTypes {
     | '/admin'
     | '/agent'
     | '/book'
+    | '/call'
+    | '/checklist'
     | '/leadership'
     | '/login'
     | '/mcp'
@@ -521,12 +616,18 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/checkout/return'
     | '/email/unsubscribe'
+    | '/learn/best-time-to-trade-nq'
+    | '/learn/futures-trading-journal-template'
     | '/learn/futures-trading-risk-management-beginners'
     | '/learn/how-to-choose-a-futures-trading-course'
+    | '/learn/ict-liquidity-concepts-for-beginners'
     | '/learn/liquidity-sweep-futures-trading'
+    | '/learn/micro-futures-mnq-mes-explained'
     | '/learn/nq-vs-es-futures-for-new-traders'
     | '/learn/opening-range-breakout-strategy'
     | '/learn/pass-futures-prop-firm-evaluation'
+    | '/learn/topstep-vs-apex-prop-firms-for-beginners'
+    | '/learn/trailing-drawdown-explained'
     | '/ref/$code'
     | '/social/$file'
     | '/learn/'
@@ -551,6 +652,8 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   AgentRoute: typeof AgentRoute
   BookRoute: typeof BookRoute
+  CallRoute: typeof CallRoute
+  ChecklistRoute: typeof ChecklistRoute
   LeadershipRoute: typeof LeadershipRoute
   LoginRoute: typeof LoginRoute
   McpRoute: typeof McpRoute
@@ -566,12 +669,18 @@ export interface RootRouteChildren {
   ApiHealthRoute: typeof ApiHealthRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
+  LearnBestTimeToTradeNqRoute: typeof LearnBestTimeToTradeNqRoute
+  LearnFuturesTradingJournalTemplateRoute: typeof LearnFuturesTradingJournalTemplateRoute
   LearnFuturesTradingRiskManagementBeginnersRoute: typeof LearnFuturesTradingRiskManagementBeginnersRoute
   LearnHowToChooseAFuturesTradingCourseRoute: typeof LearnHowToChooseAFuturesTradingCourseRoute
+  LearnIctLiquidityConceptsForBeginnersRoute: typeof LearnIctLiquidityConceptsForBeginnersRoute
   LearnLiquiditySweepFuturesTradingRoute: typeof LearnLiquiditySweepFuturesTradingRoute
+  LearnMicroFuturesMnqMesExplainedRoute: typeof LearnMicroFuturesMnqMesExplainedRoute
   LearnNqVsEsFuturesForNewTradersRoute: typeof LearnNqVsEsFuturesForNewTradersRoute
   LearnOpeningRangeBreakoutStrategyRoute: typeof LearnOpeningRangeBreakoutStrategyRoute
   LearnPassFuturesPropFirmEvaluationRoute: typeof LearnPassFuturesPropFirmEvaluationRoute
+  LearnTopstepVsApexPropFirmsForBeginnersRoute: typeof LearnTopstepVsApexPropFirmsForBeginnersRoute
+  LearnTrailingDrawdownExplainedRoute: typeof LearnTrailingDrawdownExplainedRoute
   RefCodeRoute: typeof RefCodeRoute
   SocialFileRoute: typeof SocialFileRoute
   LearnIndexRoute: typeof LearnIndexRoute
@@ -625,6 +734,20 @@ declare module '@tanstack/react-router' {
       path: '/book'
       fullPath: '/book'
       preLoaderRoute: typeof BookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/call': {
+      id: '/call'
+      path: '/call'
+      fullPath: '/call'
+      preLoaderRoute: typeof CallRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checklist': {
+      id: '/checklist'
+      path: '/checklist'
+      fullPath: '/checklist'
+      preLoaderRoute: typeof ChecklistRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/leadership': {
@@ -739,6 +862,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LearnIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/learn/best-time-to-trade-nq': {
+      id: '/learn/best-time-to-trade-nq'
+      path: '/learn/best-time-to-trade-nq'
+      fullPath: '/learn/best-time-to-trade-nq'
+      preLoaderRoute: typeof LearnBestTimeToTradeNqRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/learn/futures-trading-journal-template': {
+      id: '/learn/futures-trading-journal-template'
+      path: '/learn/futures-trading-journal-template'
+      fullPath: '/learn/futures-trading-journal-template'
+      preLoaderRoute: typeof LearnFuturesTradingJournalTemplateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/learn/futures-trading-risk-management-beginners': {
       id: '/learn/futures-trading-risk-management-beginners'
       path: '/learn/futures-trading-risk-management-beginners'
@@ -753,11 +890,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LearnHowToChooseAFuturesTradingCourseRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/learn/ict-liquidity-concepts-for-beginners': {
+      id: '/learn/ict-liquidity-concepts-for-beginners'
+      path: '/learn/ict-liquidity-concepts-for-beginners'
+      fullPath: '/learn/ict-liquidity-concepts-for-beginners'
+      preLoaderRoute: typeof LearnIctLiquidityConceptsForBeginnersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/learn/liquidity-sweep-futures-trading': {
       id: '/learn/liquidity-sweep-futures-trading'
       path: '/learn/liquidity-sweep-futures-trading'
       fullPath: '/learn/liquidity-sweep-futures-trading'
       preLoaderRoute: typeof LearnLiquiditySweepFuturesTradingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/learn/micro-futures-mnq-mes-explained': {
+      id: '/learn/micro-futures-mnq-mes-explained'
+      path: '/learn/micro-futures-mnq-mes-explained'
+      fullPath: '/learn/micro-futures-mnq-mes-explained'
+      preLoaderRoute: typeof LearnMicroFuturesMnqMesExplainedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/learn/nq-vs-es-futures-for-new-traders': {
@@ -779,6 +930,20 @@ declare module '@tanstack/react-router' {
       path: '/learn/pass-futures-prop-firm-evaluation'
       fullPath: '/learn/pass-futures-prop-firm-evaluation'
       preLoaderRoute: typeof LearnPassFuturesPropFirmEvaluationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/learn/topstep-vs-apex-prop-firms-for-beginners': {
+      id: '/learn/topstep-vs-apex-prop-firms-for-beginners'
+      path: '/learn/topstep-vs-apex-prop-firms-for-beginners'
+      fullPath: '/learn/topstep-vs-apex-prop-firms-for-beginners'
+      preLoaderRoute: typeof LearnTopstepVsApexPropFirmsForBeginnersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/learn/trailing-drawdown-explained': {
+      id: '/learn/trailing-drawdown-explained'
+      path: '/learn/trailing-drawdown-explained'
+      fullPath: '/learn/trailing-drawdown-explained'
+      preLoaderRoute: typeof LearnTrailingDrawdownExplainedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ref/$code': {
@@ -895,6 +1060,8 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   AgentRoute: AgentRoute,
   BookRoute: BookRoute,
+  CallRoute: CallRoute,
+  ChecklistRoute: ChecklistRoute,
   LeadershipRoute: LeadershipRoute,
   LoginRoute: LoginRoute,
   McpRoute: McpRoute,
@@ -911,17 +1078,26 @@ const rootRouteChildren: RootRouteChildren = {
   ApiHealthRoute: ApiHealthRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
+  LearnBestTimeToTradeNqRoute: LearnBestTimeToTradeNqRoute,
+  LearnFuturesTradingJournalTemplateRoute:
+    LearnFuturesTradingJournalTemplateRoute,
   LearnFuturesTradingRiskManagementBeginnersRoute:
     LearnFuturesTradingRiskManagementBeginnersRoute,
   LearnHowToChooseAFuturesTradingCourseRoute:
     LearnHowToChooseAFuturesTradingCourseRoute,
+  LearnIctLiquidityConceptsForBeginnersRoute:
+    LearnIctLiquidityConceptsForBeginnersRoute,
   LearnLiquiditySweepFuturesTradingRoute:
     LearnLiquiditySweepFuturesTradingRoute,
+  LearnMicroFuturesMnqMesExplainedRoute: LearnMicroFuturesMnqMesExplainedRoute,
   LearnNqVsEsFuturesForNewTradersRoute: LearnNqVsEsFuturesForNewTradersRoute,
   LearnOpeningRangeBreakoutStrategyRoute:
     LearnOpeningRangeBreakoutStrategyRoute,
   LearnPassFuturesPropFirmEvaluationRoute:
     LearnPassFuturesPropFirmEvaluationRoute,
+  LearnTopstepVsApexPropFirmsForBeginnersRoute:
+    LearnTopstepVsApexPropFirmsForBeginnersRoute,
+  LearnTrailingDrawdownExplainedRoute: LearnTrailingDrawdownExplainedRoute,
   RefCodeRoute: RefCodeRoute,
   SocialFileRoute: SocialFileRoute,
   LearnIndexRoute: LearnIndexRoute,

@@ -16,6 +16,14 @@ Sweep Capital Group is a futures trading education and mentorship company founde
 - [NQ vs ES for new traders](/learn/nq-vs-es-futures-for-new-traders)
 - [What is a liquidity sweep?](/learn/liquidity-sweep-futures-trading)
 - [How to choose a futures trading course](/learn/how-to-choose-a-futures-trading-course)
+- [Topstep vs Apex vs other prop firms for beginners](/learn/topstep-vs-apex-prop-firms-for-beginners)
+- [Trailing drawdown explained](/learn/trailing-drawdown-explained)
+- [Best time to trade NQ](/learn/best-time-to-trade-nq)
+- [Micro futures (MNQ, MES) explained](/learn/micro-futures-mnq-mes-explained)
+- [Futures trading journal template](/learn/futures-trading-journal-template)
+- [ICT and liquidity concepts for beginners](/learn/ict-liquidity-concepts-for-beginners)
+- [Prop firm evaluation checklist](/checklist): Free printable checklist.
+- [Book a free 15-minute call](/call)
 - [About](/about): The company and founder.
 - [Leadership](/leadership): Team.
 - [Book a Call](/book): Schedule an intro conversation.
