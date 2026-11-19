@@ -230,6 +230,7 @@ function Index() {
           <a href="#tiers" className="hover:text-foreground transition-colors">Tiers</a>
           <Link to="/about" className="hover:text-foreground transition-colors">About</Link>
           <Link to="/leadership" className="hover:text-foreground transition-colors">Leadership</Link>
+          <Link to="/learn" className="hover:text-foreground transition-colors">Learn</Link>
           <Link to="/mentorship" className="hover:text-foreground transition-colors">Mentorship</Link>
           <a href="#contact" className="hover:text-foreground transition-colors">Contact</a>
         </div>
@@ -283,6 +284,14 @@ function Index() {
                 </SheetClose>
                 <SheetClose asChild>
                   <Link
+                    to="/learn"
+                    className="py-4 border-b border-border text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Free Guides
+                  </Link>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Link
                     to="/mentorship"
                     className="mt-8 px-5 py-4 bg-foreground text-background font-extrabold text-[11px] uppercase tracking-widest text-center hover:bg-accent transition-colors"
                   >
@@ -316,7 +325,7 @@ function Index() {
               EDGE.
             </h1>
             <p className="max-w-[54ch] text-base md:text-lg text-muted-foreground text-pretty mt-4">
-              Strategies. Risk management. A repeatable process. Build skill. Trade smart. Create freedom — through three
+              Strategies. Risk management. A repeatable process. Build skill. Review every session — through three
               repeatable institutional setups: the Session Sweep, the 5–15 Gap, and the Power of 3.
             </p>
             <div className="flex flex-wrap gap-4 mt-8">
@@ -336,7 +345,7 @@ function Index() {
         <div className="max-w-7xl mx-auto">
           <span className="font-mono text-accent text-[11px] uppercase tracking-[0.3em]">Process</span>
           <h2 className="mt-4 text-4xl md:text-6xl font-extrabold tracking-tighter">
-            THREE STEPS TO YOUR FIRST FUNDED SESSION.
+            THREE STEPS TO A WRITTEN TRADING PROCESS.
           </h2>
           <div className="grid md:grid-cols-3 gap-px bg-border mt-14 border border-border">
             {[
@@ -389,7 +398,7 @@ function Index() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-border">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-border max-w-5xl mx-auto">
             {[
               {
                 num: "01",
@@ -439,7 +448,7 @@ function Index() {
                 featured: false,
                 available: false,
               },
-            ].map((tier) => (
+            ].filter((tier) => tier.available).map((tier) => (
               <article
                 key={tier.num}
                 className={`bg-background p-10 md:p-12 flex flex-col gap-8 ${tier.featured ? "ring-1 ring-accent/40 relative" : ""}`}

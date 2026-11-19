@@ -206,8 +206,8 @@ export default function MentorshipPage() {
 
       {/* Tiers */}
       <section className="px-6 md:px-10 py-20 md:py-28">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {TIERS.map((tier) => (
+        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+          {TIERS.filter((t) => t.available).map((tier) => (
             <div
               key={tier.id}
               className={`relative flex flex-col gap-6 p-8 border ${tier.highlight ? "border-accent bg-white/[0.03]" : "border-border"} `}
@@ -354,9 +354,9 @@ export default function MentorshipPage() {
           <div className="flex flex-col gap-6">
             <span className="font-mono text-accent text-[11px] uppercase tracking-[0.3em]">Enroll</span>
             <h2 className="text-4xl md:text-5xl font-extrabold tracking-tighter uppercase leading-[0.95]">
-              Tell us about you.{" "}
+              Enroll in two minutes.{" "}
               <span className="italic font-semibold text-accent" style={{ fontFamily: "var(--font-serif)" }}>
-                We'll reach out.
+                Secure checkout.
               </span>
             </h2>
             <p className="text-muted-foreground text-base md:text-lg text-pretty">
