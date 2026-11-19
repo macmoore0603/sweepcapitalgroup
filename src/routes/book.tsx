@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { CallScheduler, SchedulingConfirmation } from "@/components/booking";
-import logoAsset from "../assets/scg-logo.png.asset.json";
-const logo = logoAsset.url;
+import { LOGO_SMALL } from "@/lib/logo-small";
+const logo = LOGO_SMALL;
 
 export const Route = createFileRoute("/book")({
   validateSearch: (search: Record<string, unknown>): { lead?: string; token?: string } => ({

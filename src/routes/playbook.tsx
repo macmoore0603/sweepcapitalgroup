@@ -2,8 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
-import logoAsset from "../assets/scg-logo.png.asset.json";
-const logo = logoAsset.url;
+import { LOGO_SMALL } from "@/lib/logo-small";
+const logo = LOGO_SMALL;
 
 export const Route = createFileRoute("/playbook")({
   component: PlaybookPage,
