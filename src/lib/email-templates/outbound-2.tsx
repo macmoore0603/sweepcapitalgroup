@@ -12,11 +12,11 @@ const Email = ({ name }: Props) => (
         <Text style={text}>{name ? `${name},` : 'Following up,'}</Text>
         <Text style={text}>
           Real quick — the three setups we teach: Session Sweep, the 5–15 Gap, and Power of 3.
-          That's it. Discipline over volume. Audited win rate, past performance not indicative of future results.
+          That's it. Discipline over volume. No results are promised; futures involve substantial risk of loss.
         </Text>
         <Text style={text}>
-          If it sounds relevant, the entry tier is $1,000 and starts this week:
-          https://sweepcapitalgroup.com/
+          If it sounds relevant, The Course is a one-time $1,000:
+          https://sweepcapitalgroup.com/mentorship
         </Text>
         <Text style={text}>— SCG</Text>
         <Text style={small}>Reply "stop" and I'll leave you alone. Educational content. Not financial advice.</Text>

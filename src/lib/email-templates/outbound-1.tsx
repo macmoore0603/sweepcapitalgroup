@@ -15,8 +15,8 @@ const Email = ({ name, company, aiMessage }: Props) => (
         ) : (
           <Text style={text}>
             Saw {company ? `${company}` : 'your profile'} and figured I'd reach out. We run a
-            mentorship for traders who are tired of guessing — three setups, one framework,
-            audited results.
+            futures trading course for traders who are tired of guessing: three setups, one
+            written, risk-first framework. Education only, no results promised.
           </Text>
         )}
         <Text style={text}>

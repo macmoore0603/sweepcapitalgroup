@@ -91,8 +91,8 @@ export const seedContentCalendar = createServerFn({ method: 'POST' })
       'Power of 3 breakdown with example chart',
       'Common trader mistake and how to avoid it',
       'Mindset / discipline reminder for consistency',
-      'Behind the scenes of a Managed Trading week',
-      'Client win recap (no dollar guarantees)',
+      'How to size a trade from your prop firm drawdown',
+      'What a trading journal review looks like (no P&L shown)',
     ]
 
     let created = 0
