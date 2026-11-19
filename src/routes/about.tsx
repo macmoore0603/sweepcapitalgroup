@@ -15,7 +15,7 @@ export const Route = createFileRoute("/about")({
       {
         property: "og:description",
         content:
-          "Based in Johns Creek, Georgia. Founded and owned by Mac Moore. Institutional-grade discipline for serious capital allocators.",
+          "Based in Johns Creek, Georgia. Founded and owned by Mac Moore. Futures trading education built around a written, risk-first process.",
       },
     ],
   }),
@@ -56,7 +56,7 @@ function AboutPage() {
             </span>
           </h1>
           <p className="max-w-[60ch] text-base md:text-lg text-muted-foreground text-pretty">
-            Sweep Capital Group is a private trading mentorship and capital allocation practice
+            Sweep Capital Group is a futures trading education and mentorship company
             headquartered in Johns Creek, Georgia. We are founded, owned, and personally led by Mac Moore.
           </p>
         </div>
@@ -79,8 +79,8 @@ function AboutPage() {
               <span>MMXXIV</span>
             </div>
             <div className="flex flex-col gap-1">
-              <span className="text-foreground">Capacity</span>
-              <span>12 Mentees / Quarter</span>
+              <span className="text-foreground">Programs</span>
+              <span>The Course · Course + Coaching</span>
             </div>
           </aside>
 
@@ -88,9 +88,9 @@ function AboutPage() {
             <h2 className="text-3xl md:text-4xl font-extrabold tracking-tighter uppercase">Who we are</h2>
             <p className="text-muted-foreground text-base md:text-lg leading-relaxed text-pretty">
               Sweep Capital Group operates out of Johns Creek, Georgia as a deliberately small,
-              relationship-driven trading practice. We are not a fund-of-funds, not a course, and not a
-              signals service. We are a private office where serious capital allocators are mentored
-              one cohort at a time.
+              relationship-driven trading education company. We are not a fund, not a broker, and not a
+              signals service. We teach a written, risk-first futures process through The Course and
+              Course + Coaching.
             </p>
 
             <h2 className="text-3xl md:text-4xl font-extrabold tracking-tighter uppercase pt-6">The founder</h2>
