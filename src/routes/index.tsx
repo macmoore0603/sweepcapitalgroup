@@ -8,9 +8,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 
 import methodologyImg from "../assets/methodology.jpg";
 import heroBg from "../assets/hero-bg.jpg";
-import logoAsset from "../assets/scg-logo.png.asset.json";
-const logo = logoAsset.url;
-import macMoore from "../assets/mac-moore.png";
+import { LOGO_SMALL } from "@/lib/logo-small";
+const logo = LOGO_SMALL;
+const macMoore = "/img/mac-moore.webp";
 import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { ExitIntentPlaybook } from "@/components/ExitIntentPlaybook";
@@ -61,7 +61,12 @@ export const Route = createFileRoute("/")({
           "Session Sweep, the 5–15 Gap and Power of 3 — taught step by step. One-time payment, no subscriptions.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://sweepcapitalgroup.com/" },
       { name: "twitter:card", content: "summary_large_image" },
+    ],
+    links: [
+      { rel: "canonical", href: "https://sweepcapitalgroup.com/" },
+      { rel: "preload", as: "image", href: heroBg, fetchPriority: "high" },
     ],
     scripts: [
       {
@@ -327,7 +332,7 @@ function Index() {
             </h1>
             <p className="max-w-[54ch] text-base md:text-lg text-muted-foreground text-pretty mt-4">
               Strategies. Risk management. A repeatable process. Build skill. Review every session — through three
-              repeatable institutional setups: the Session Sweep, the 5–15 Gap, and the Power of 3.
+              repeatable, written setups: the Session Sweep, the 5–15 Gap, and the Power of 3.
             </p>
             <div className="flex flex-wrap gap-4 mt-8">
               <Link to="/mentorship" className="px-7 md:px-8 py-4 bg-foreground text-background font-extrabold text-sm uppercase tracking-widest hover:bg-accent transition-colors">

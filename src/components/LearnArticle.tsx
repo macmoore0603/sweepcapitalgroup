@@ -1,8 +1,41 @@
 import { Link } from "@tanstack/react-router";
-import logoAsset from "../assets/scg-logo.png.asset.json";
+import type { ReactNode } from "react";
+import { LOGO_SMALL as logo } from "@/lib/logo-small";
 import { LEARN_ARTICLES, LEARN_BASE_URL, type LearnArticle as Article } from "@/lib/learn-articles";
 
-const logo = logoAsset.url;
+/** Phrases that become contextual links to related guides (first match per article only). */
+const AUTO_LINKS: { re: RegExp; slug: string }[] = [
+  { re: /trailing drawdown guide|trailing drawdown/i, slug: "trailing-drawdown-explained" },
+  { re: /guide to the best time to trade NQ|best time to trade NQ/i, slug: "best-time-to-trade-nq" },
+  { re: /NQ vs ES guide|NQ vs ES/i, slug: "nq-vs-es-futures-for-new-traders" },
+  { re: /micro contracts \(MES, MNQ\)|micro contracts|micros \(MNQ, MES\)/i, slug: "micro-futures-mnq-mes-explained" },
+  { re: /opening range breakout/i, slug: "opening-range-breakout-strategy" },
+  { re: /liquidity sweep/i, slug: "liquidity-sweep-futures-trading" },
+  { re: /prop firm evaluation/i, slug: "pass-futures-prop-firm-evaluation" },
+  { re: /in a journal|trading journal/i, slug: "futures-trading-journal-template" },
+  { re: /risk management/i, slug: "futures-trading-risk-management-beginners" },
+];
+
+function linkify(text: string, self: string, used: Set<string>): ReactNode {
+  for (const { re, slug } of AUTO_LINKS) {
+    if (slug === self || used.has(slug)) continue;
+    const m = re.exec(text);
+    if (!m) continue;
+    used.add(slug);
+    const before = text.slice(0, m.index);
+    const after = text.slice(m.index + m[0].length);
+    return (
+      <>
+        {linkify(before, self, used)}
+        <a href={`/learn/${slug}`} className="text-accent underline underline-offset-2 hover:text-foreground">
+          {m[0]}
+        </a>
+        {linkify(after, self, used)}
+      </>
+    );
+  }
+  return text;
+}
 
 export const LEARN_RISK_DISCLAIMER =
   "Risk disclaimer: Trading futures involves substantial risk of loss and is not suitable for every investor. You can lose more than your initial deposit. This article is general education, not financial advice or a recommendation to buy or sell any contract. Past performance, real or hypothetical, does not guarantee future results.";
@@ -21,6 +54,12 @@ export function learnHead(article: Article) {
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: article.metaTitle },
       { name: "twitter:description", content: article.metaDescription },
+      { property: "og:image", content: `${LEARN_BASE_URL}/img/og-${article.slug}.jpg` },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { property: "og:image:alt", content: article.title },
+      { name: "twitter:image", content: `${LEARN_BASE_URL}/img/og-${article.slug}.jpg` },
+      { name: "twitter:image:alt", content: article.title },
     ],
     links: [{ rel: "canonical", href: url }],
     scripts: [
@@ -30,6 +69,7 @@ export function learnHead(article: Article) {
           "@context": "https://schema.org",
           "@type": "Article",
           headline: article.title,
+          image: `${LEARN_BASE_URL}/img/og-${article.slug}.jpg`,
           description: article.metaDescription,
           datePublished: article.published,
           dateModified: article.published,
@@ -128,6 +168,7 @@ export function LearnArticlePage({ article }: { article: Article }) {
     ...others.filter((a) => a.kicker !== article.kicker),
   ].slice(0, 4);
   const ctaAfter = Math.min(1, article.sections.length - 1);
+  const used = new Set<string>();
   return (
     <div className="min-h-screen bg-background text-foreground font-sans">
       <LearnNav />
@@ -147,13 +188,13 @@ export function LearnArticlePage({ article }: { article: Article }) {
               <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">{s.h2}</h2>
               {s.paragraphs.map((p, j) => (
                 <p key={j} className="mt-4 text-base md:text-lg text-muted-foreground text-pretty leading-relaxed">
-                  {p}
+                  {linkify(p, article.slug, used)}
                 </p>
               ))}
               {s.bullets && (
                 <ul className="mt-4 flex flex-col gap-2 list-disc pl-6 text-base md:text-lg text-muted-foreground">
                   {s.bullets.map((b, j) => (
-                    <li key={j}>{b}</li>
+                    <li key={j}>{linkify(b, article.slug, used)}</li>
                   ))}
                 </ul>
               )}

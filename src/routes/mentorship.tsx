@@ -3,8 +3,8 @@ import { useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
 
-import logoAsset from "../assets/scg-logo.png.asset.json";
-const logo = logoAsset.url;
+import { LOGO_SMALL } from "@/lib/logo-small";
+const logo = LOGO_SMALL;
 import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { BookCallCta } from "@/components/BookCallCta";
@@ -12,19 +12,32 @@ import { BookCallCta } from "@/components/BookCallCta";
 export const Route = createFileRoute("/mentorship")({
   head: () => ({
     meta: [
-      { title: "Mentorship — Sweep Capital Group" },
+      { property: "og:image", content: "https://sweepcapitalgroup.com/img/og-mentorship.jpg" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { property: "og:image:alt", content: "The Course and Course + Coaching" },
+      { name: "twitter:image", content: "https://sweepcapitalgroup.com/img/og-mentorship.jpg" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:url", content: "https://sweepcapitalgroup.com/mentorship" },
+      { title: "Futures Trading Course & Coaching | Sweep Capital Group" },
       {
         name: "description",
         content:
-          "Two one-time programs from Sweep Capital Group: The Course ($1,000) and Course + Coaching ($1,500).",
+          "Two one-time futures trading education programs from Sweep Capital Group in Johns Creek, GA: The Course ($1,000) and Course + Coaching ($1,500). Education, not advice.",
       },
-      { property: "og:title", content: "Mentorship — Sweep Capital Group" },
+      { property: "og:title", content: "Futures Trading Course & Coaching | Sweep Capital Group" },
       {
         property: "og:description",
         content:
-          "One-time pricing. The Course or Course + Coaching.",
+          "The Course ($1,000) or Course + Coaching ($1,500). One-time payment, no subscription. Education, not advice.",
+      },
+      { name: "twitter:title", content: "Futures Trading Course & Coaching | Sweep Capital Group" },
+      {
+        name: "twitter:description",
+        content: "The Course ($1,000) or Course + Coaching ($1,500). One-time payment, no subscription.",
       },
     ],
+    links: [{ rel: "canonical", href: "https://sweepcapitalgroup.com/mentorship" }],
   }),
   component: MentorshipPage,
 });
