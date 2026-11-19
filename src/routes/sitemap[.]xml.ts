@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type {} from "@tanstack/react-start";
+import { LEARN_ARTICLES } from "@/lib/learn-articles";
 
 const BASE_URL = "https://sweepcapitalgroup.com";
 
@@ -20,6 +21,12 @@ export const Route = createFileRoute("/sitemap.xml")({
           { path: "/mentorship", changefreq: "monthly", priority: "0.9" },
           { path: "/playbook", changefreq: "monthly", priority: "0.9" },
           { path: "/book", changefreq: "monthly", priority: "0.7" },
+          { path: "/learn", changefreq: "weekly", priority: "0.8" },
+          ...LEARN_ARTICLES.map((a) => ({
+            path: `/learn/${a.slug}`,
+            changefreq: "monthly" as const,
+            priority: "0.7",
+          })),
           { path: "/refer", changefreq: "monthly", priority: "0.6" },
           { path: "/privacy", changefreq: "yearly", priority: "0.3" },
           { path: "/terms", changefreq: "yearly", priority: "0.3" },
