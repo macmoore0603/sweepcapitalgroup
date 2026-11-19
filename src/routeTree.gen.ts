@@ -31,6 +31,8 @@ import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as LearnIndexRouteImport } from './routes/learn.index'
 import { Route as LearnFuturesTradingRiskManagementBeginnersRouteImport } from './routes/learn.futures-trading-risk-management-beginners'
+import { Route as LearnHowToChooseAFuturesTradingCourseRouteImport } from './routes/learn.how-to-choose-a-futures-trading-course'
+import { Route as LearnLiquiditySweepFuturesTradingRouteImport } from './routes/learn.liquidity-sweep-futures-trading'
 import { Route as LearnNqVsEsFuturesForNewTradersRouteImport } from './routes/learn.nq-vs-es-futures-for-new-traders'
 import { Route as LearnOpeningRangeBreakoutStrategyRouteImport } from './routes/learn.opening-range-breakout-strategy'
 import { Route as LearnPassFuturesPropFirmEvaluationRouteImport } from './routes/learn.pass-futures-prop-firm-evaluation'
@@ -163,6 +165,18 @@ const LearnFuturesTradingRiskManagementBeginnersRoute =
     path: '/learn/futures-trading-risk-management-beginners',
     getParentRoute: () => rootRouteImport,
   } as any)
+const LearnHowToChooseAFuturesTradingCourseRoute =
+  LearnHowToChooseAFuturesTradingCourseRouteImport.update({
+    id: '/learn/how-to-choose-a-futures-trading-course',
+    path: '/learn/how-to-choose-a-futures-trading-course',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const LearnLiquiditySweepFuturesTradingRoute =
+  LearnLiquiditySweepFuturesTradingRouteImport.update({
+    id: '/learn/liquidity-sweep-futures-trading',
+    path: '/learn/liquidity-sweep-futures-trading',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const LearnNqVsEsFuturesForNewTradersRoute =
   LearnNqVsEsFuturesForNewTradersRouteImport.update({
     id: '/learn/nq-vs-es-futures-for-new-traders',
@@ -285,6 +299,8 @@ export interface FileRoutesByFullPath {
   '/checkout/return': typeof CheckoutReturnRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/learn/futures-trading-risk-management-beginners': typeof LearnFuturesTradingRiskManagementBeginnersRoute
+  '/learn/how-to-choose-a-futures-trading-course': typeof LearnHowToChooseAFuturesTradingCourseRoute
+  '/learn/liquidity-sweep-futures-trading': typeof LearnLiquiditySweepFuturesTradingRoute
   '/learn/nq-vs-es-futures-for-new-traders': typeof LearnNqVsEsFuturesForNewTradersRoute
   '/learn/opening-range-breakout-strategy': typeof LearnOpeningRangeBreakoutStrategyRoute
   '/learn/pass-futures-prop-firm-evaluation': typeof LearnPassFuturesPropFirmEvaluationRoute
@@ -327,6 +343,8 @@ export interface FileRoutesByTo {
   '/checkout/return': typeof CheckoutReturnRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/learn/futures-trading-risk-management-beginners': typeof LearnFuturesTradingRiskManagementBeginnersRoute
+  '/learn/how-to-choose-a-futures-trading-course': typeof LearnHowToChooseAFuturesTradingCourseRoute
+  '/learn/liquidity-sweep-futures-trading': typeof LearnLiquiditySweepFuturesTradingRoute
   '/learn/nq-vs-es-futures-for-new-traders': typeof LearnNqVsEsFuturesForNewTradersRoute
   '/learn/opening-range-breakout-strategy': typeof LearnOpeningRangeBreakoutStrategyRoute
   '/learn/pass-futures-prop-firm-evaluation': typeof LearnPassFuturesPropFirmEvaluationRoute
@@ -370,6 +388,8 @@ export interface FileRoutesById {
   '/checkout/return': typeof CheckoutReturnRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/learn/futures-trading-risk-management-beginners': typeof LearnFuturesTradingRiskManagementBeginnersRoute
+  '/learn/how-to-choose-a-futures-trading-course': typeof LearnHowToChooseAFuturesTradingCourseRoute
+  '/learn/liquidity-sweep-futures-trading': typeof LearnLiquiditySweepFuturesTradingRoute
   '/learn/nq-vs-es-futures-for-new-traders': typeof LearnNqVsEsFuturesForNewTradersRoute
   '/learn/opening-range-breakout-strategy': typeof LearnOpeningRangeBreakoutStrategyRoute
   '/learn/pass-futures-prop-firm-evaluation': typeof LearnPassFuturesPropFirmEvaluationRoute
@@ -414,6 +434,8 @@ export interface FileRouteTypes {
     | '/checkout/return'
     | '/email/unsubscribe'
     | '/learn/futures-trading-risk-management-beginners'
+    | '/learn/how-to-choose-a-futures-trading-course'
+    | '/learn/liquidity-sweep-futures-trading'
     | '/learn/nq-vs-es-futures-for-new-traders'
     | '/learn/opening-range-breakout-strategy'
     | '/learn/pass-futures-prop-firm-evaluation'
@@ -456,6 +478,8 @@ export interface FileRouteTypes {
     | '/checkout/return'
     | '/email/unsubscribe'
     | '/learn/futures-trading-risk-management-beginners'
+    | '/learn/how-to-choose-a-futures-trading-course'
+    | '/learn/liquidity-sweep-futures-trading'
     | '/learn/nq-vs-es-futures-for-new-traders'
     | '/learn/opening-range-breakout-strategy'
     | '/learn/pass-futures-prop-firm-evaluation'
@@ -498,6 +522,8 @@ export interface FileRouteTypes {
     | '/checkout/return'
     | '/email/unsubscribe'
     | '/learn/futures-trading-risk-management-beginners'
+    | '/learn/how-to-choose-a-futures-trading-course'
+    | '/learn/liquidity-sweep-futures-trading'
     | '/learn/nq-vs-es-futures-for-new-traders'
     | '/learn/opening-range-breakout-strategy'
     | '/learn/pass-futures-prop-firm-evaluation'
@@ -541,6 +567,8 @@ export interface RootRouteChildren {
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   LearnFuturesTradingRiskManagementBeginnersRoute: typeof LearnFuturesTradingRiskManagementBeginnersRoute
+  LearnHowToChooseAFuturesTradingCourseRoute: typeof LearnHowToChooseAFuturesTradingCourseRoute
+  LearnLiquiditySweepFuturesTradingRoute: typeof LearnLiquiditySweepFuturesTradingRoute
   LearnNqVsEsFuturesForNewTradersRoute: typeof LearnNqVsEsFuturesForNewTradersRoute
   LearnOpeningRangeBreakoutStrategyRoute: typeof LearnOpeningRangeBreakoutStrategyRoute
   LearnPassFuturesPropFirmEvaluationRoute: typeof LearnPassFuturesPropFirmEvaluationRoute
@@ -718,6 +746,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LearnFuturesTradingRiskManagementBeginnersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/learn/how-to-choose-a-futures-trading-course': {
+      id: '/learn/how-to-choose-a-futures-trading-course'
+      path: '/learn/how-to-choose-a-futures-trading-course'
+      fullPath: '/learn/how-to-choose-a-futures-trading-course'
+      preLoaderRoute: typeof LearnHowToChooseAFuturesTradingCourseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/learn/liquidity-sweep-futures-trading': {
+      id: '/learn/liquidity-sweep-futures-trading'
+      path: '/learn/liquidity-sweep-futures-trading'
+      fullPath: '/learn/liquidity-sweep-futures-trading'
+      preLoaderRoute: typeof LearnLiquiditySweepFuturesTradingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/learn/nq-vs-es-futures-for-new-traders': {
       id: '/learn/nq-vs-es-futures-for-new-traders'
       path: '/learn/nq-vs-es-futures-for-new-traders'
@@ -871,6 +913,10 @@ const rootRouteChildren: RootRouteChildren = {
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   LearnFuturesTradingRiskManagementBeginnersRoute:
     LearnFuturesTradingRiskManagementBeginnersRoute,
+  LearnHowToChooseAFuturesTradingCourseRoute:
+    LearnHowToChooseAFuturesTradingCourseRoute,
+  LearnLiquiditySweepFuturesTradingRoute:
+    LearnLiquiditySweepFuturesTradingRoute,
   LearnNqVsEsFuturesForNewTradersRoute: LearnNqVsEsFuturesForNewTradersRoute,
   LearnOpeningRangeBreakoutStrategyRoute:
     LearnOpeningRangeBreakoutStrategyRoute,

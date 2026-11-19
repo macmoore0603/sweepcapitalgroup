@@ -306,6 +306,129 @@ export const LEARN_ARTICLES: LearnArticle[] = [
       },
     ],
   },
+  {
+    slug: "liquidity-sweep-futures-trading",
+    kicker: "Concepts",
+    title: "What Is a Liquidity Sweep in Futures Trading?",
+    metaTitle: "What Is a Liquidity Sweep? Futures Trading Guide | Sweep Capital",
+    metaDescription:
+      "A plain-English explanation of liquidity sweeps on ES and NQ: why prior highs and lows matter, how a sweep differs from a breakout, and how to define risk.",
+    intro:
+      "If you've spent time around futures traders you've heard it: \"price swept the highs.\" A liquidity sweep is a quick run through an obvious level, often a prior high or low, followed by a move back the other way. Here's what traders mean by it, why it happens, and how to think about risk around it.",
+    readMinutes: 6,
+    published: "2026-11-19",
+    sections: [
+      {
+        h2: "Why obvious levels attract orders",
+        paragraphs: [
+          "Prior-day highs and lows, overnight highs and lows, and the opening range are levels everyone can see. That makes them natural places for stop-loss orders and breakout entries to cluster. Buy stops tend to sit just above highs; sell stops just below lows.",
+          "When price reaches those levels, those resting orders get filled. That pool of orders is what traders loosely call liquidity.",
+        ],
+      },
+      {
+        h2: "Sweep vs. breakout",
+        paragraphs: [
+          "A breakout is a move through a level that keeps going. A sweep is a move through a level that fails to hold and returns back inside. On the chart, a sweep often shows up as a wick beyond the level with a close back inside the prior range.",
+          "You can't know in advance which one you're looking at. That's why the useful question isn't \"is this a sweep?\" but \"what has to happen next for my idea to be valid, and where am I wrong?\"",
+        ],
+      },
+      {
+        h2: "How the Session Sweep framework uses it",
+        paragraphs: ["At Sweep Capital Group we teach the sweep as a condition, not a signal:"],
+        bullets: [
+          "Map the prior session's high and low before the open.",
+          "Wait for one of them to be taken. No sweep, no interest.",
+          "Look for price to return back through the level, then drop to the 5- and 15-minute charts for a defined entry (the 5-15 Gap).",
+          "Write the invalidation before entering. If price goes back beyond the sweep extreme, the idea is wrong.",
+          "If none of that happens cleanly, skip the session.",
+        ],
+      },
+      {
+        h2: "Common mistakes",
+        paragraphs: ["Most problems come from treating every wick as a reversal:"],
+        bullets: [
+          "Entering the moment a level is touched, before any return.",
+          "Placing the stop so tight that normal noise takes it out, or so wide the dollar risk breaks your rules.",
+          "Ignoring scheduled news, which can make sweeps and breakouts far more violent.",
+          "Trading every level on the chart instead of a few you mapped in advance.",
+        ],
+      },
+    ],
+    faq: [
+      {
+        q: "Is a liquidity sweep the same as a stop hunt?",
+        a: "Traders often use the terms loosely for the same idea: price running through a level where stop orders cluster and then reversing. Whether anyone is intentionally hunting stops is debated; the practical point is that obvious levels attract orders.",
+      },
+      {
+        q: "Do liquidity sweeps always reverse?",
+        a: "No. Sometimes what looks like a sweep becomes a sustained breakout. That's why a written invalidation level and a predefined dollar risk matter more than the label.",
+      },
+    ],
+  },
+  {
+    slug: "how-to-choose-a-futures-trading-course",
+    kicker: "Buying guide",
+    title: "How to Choose a Futures Trading Course (and Red Flags to Avoid)",
+    metaTitle: "How to Choose a Futures Trading Course: Red Flags | Sweep Capital",
+    metaDescription:
+      "What a legitimate futures trading course should include, the red flags that signal a scam, and the questions to ask before you pay for any trading education.",
+    intro:
+      "Trading education ranges from genuinely useful to outright predatory. Since we sell a course ourselves, read this with that bias in mind, but these are the same questions we'd want a friend to ask before paying anyone, including us.",
+    readMinutes: 6,
+    published: "2026-11-19",
+    sections: [
+      {
+        h2: "Red flags",
+        paragraphs: ["Walk away, or at least slow down, if you see any of these:"],
+        bullets: [
+          "Guaranteed profits, guaranteed funding, or \"replace your income in 30 days\" claims.",
+          "Screenshots of big wins with no context, no losing trades, and no explanation of risk.",
+          "Pressure tactics: countdown timers that reset, \"only 2 spots left\" every week.",
+          "Signals or copy-trading sold as education. Being told what to click is not learning a skill.",
+          "No clear refund terms, or recurring billing buried in the fine print.",
+          "Anyone offering to trade your money for you without being properly registered.",
+        ],
+      },
+      {
+        h2: "What a solid course should include",
+        paragraphs: ["Good futures education usually covers:"],
+        bullets: [
+          "Contract mechanics: tick values, margin, sessions, and how leverage works.",
+          "Risk management first: position sizing from the stop, daily loss limits, and when to stop.",
+          "A small number of clearly defined setups with written entry and invalidation rules.",
+          "A journaling and review process so you can see whether you're following the rules.",
+          "Honest discussion of losing streaks and the fact that most traders lose money.",
+        ],
+      },
+      {
+        h2: "Questions to ask before you pay",
+        paragraphs: ["Ask the seller directly, and get the answers in writing:"],
+        bullets: [
+          "Is this a one-time payment or a subscription?",
+          "What is the refund policy, exactly?",
+          "Will I learn a process I can apply myself, or am I following someone's calls?",
+          "What kind of personal feedback is included, and for how long?",
+          "What do you say about results? (The right answer: they're not guaranteed.)",
+        ],
+      },
+      {
+        h2: "Where Sweep Capital Group fits",
+        paragraphs: [
+          "Our programs are one-time payments: The Course ($1,000) is the self-paced curriculum and community; Course + Coaching ($1,500) adds 1:1 walkthroughs and trade reviews during an agreed coaching window. We teach a written framework (Session Sweep, the 5-15 Gap, and Power of 3), not signals, and we don't promise results. The details and the refund window are on the mentorship page, so you can check them against the questions above.",
+        ],
+      },
+    ],
+    faq: [
+      {
+        q: "Are futures trading courses worth it?",
+        a: "It depends on the course and on you. A course can shorten the learning curve on mechanics and risk, but no course can guarantee profitability. Prioritize risk education, clear rules, and honest terms.",
+      },
+      {
+        q: "How can I tell if a trading course is a scam?",
+        a: "Be wary of guaranteed returns, unverifiable win screenshots, high-pressure scarcity, hidden subscriptions, and offers to manage your money. The CFTC and NFA publish guidance on spotting trading fraud.",
+      },
+    ],
+  },
 ];
 
 export function getLearnArticle(slug: string): LearnArticle {
