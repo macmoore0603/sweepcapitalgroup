@@ -31,6 +31,7 @@ import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } fr
 import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
+import { Route as ImgFileRouteImport } from './routes/img.$file'
 import { Route as LearnIndexRouteImport } from './routes/learn.index'
 import { Route as LearnBestTimeToTradeNqRouteImport } from './routes/learn.best-time-to-trade-nq'
 import { Route as LearnFuturesTradingJournalTemplateRouteImport } from './routes/learn.futures-trading-journal-template'
@@ -170,6 +171,11 @@ const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
 const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
   id: '/email/unsubscribe',
   path: '/email/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ImgFileRoute = ImgFileRouteImport.update({
+  id: '/img/$file',
+  path: '/img/$file',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LearnIndexRoute = LearnIndexRouteImport.update({
@@ -353,6 +359,7 @@ export interface FileRoutesByFullPath {
   '/api/health': typeof ApiHealthRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/img/$file': typeof ImgFileRoute
   '/learn/best-time-to-trade-nq': typeof LearnBestTimeToTradeNqRoute
   '/learn/futures-trading-journal-template': typeof LearnFuturesTradingJournalTemplateRoute
   '/learn/futures-trading-risk-management-beginners': typeof LearnFuturesTradingRiskManagementBeginnersRoute
@@ -405,6 +412,7 @@ export interface FileRoutesByTo {
   '/api/health': typeof ApiHealthRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/img/$file': typeof ImgFileRoute
   '/learn/best-time-to-trade-nq': typeof LearnBestTimeToTradeNqRoute
   '/learn/futures-trading-journal-template': typeof LearnFuturesTradingJournalTemplateRoute
   '/learn/futures-trading-risk-management-beginners': typeof LearnFuturesTradingRiskManagementBeginnersRoute
@@ -458,6 +466,7 @@ export interface FileRoutesById {
   '/api/health': typeof ApiHealthRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/img/$file': typeof ImgFileRoute
   '/learn/best-time-to-trade-nq': typeof LearnBestTimeToTradeNqRoute
   '/learn/futures-trading-journal-template': typeof LearnFuturesTradingJournalTemplateRoute
   '/learn/futures-trading-risk-management-beginners': typeof LearnFuturesTradingRiskManagementBeginnersRoute
@@ -512,6 +521,7 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/checkout/return'
     | '/email/unsubscribe'
+    | '/img/$file'
     | '/learn/best-time-to-trade-nq'
     | '/learn/futures-trading-journal-template'
     | '/learn/futures-trading-risk-management-beginners'
@@ -564,6 +574,7 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/checkout/return'
     | '/email/unsubscribe'
+    | '/img/$file'
     | '/learn/best-time-to-trade-nq'
     | '/learn/futures-trading-journal-template'
     | '/learn/futures-trading-risk-management-beginners'
@@ -616,6 +627,7 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/checkout/return'
     | '/email/unsubscribe'
+    | '/img/$file'
     | '/learn/best-time-to-trade-nq'
     | '/learn/futures-trading-journal-template'
     | '/learn/futures-trading-risk-management-beginners'
@@ -669,6 +681,7 @@ export interface RootRouteChildren {
   ApiHealthRoute: typeof ApiHealthRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
+  ImgFileRoute: typeof ImgFileRoute
   LearnBestTimeToTradeNqRoute: typeof LearnBestTimeToTradeNqRoute
   LearnFuturesTradingJournalTemplateRoute: typeof LearnFuturesTradingJournalTemplateRoute
   LearnFuturesTradingRiskManagementBeginnersRoute: typeof LearnFuturesTradingRiskManagementBeginnersRoute
@@ -853,6 +866,13 @@ declare module '@tanstack/react-router' {
       path: '/email/unsubscribe'
       fullPath: '/email/unsubscribe'
       preLoaderRoute: typeof EmailUnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/img/$file': {
+      id: '/img/$file'
+      path: '/img/$file'
+      fullPath: '/img/$file'
+      preLoaderRoute: typeof ImgFileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/learn/': {
@@ -1078,6 +1098,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiHealthRoute: ApiHealthRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
+  ImgFileRoute: ImgFileRoute,
   LearnBestTimeToTradeNqRoute: LearnBestTimeToTradeNqRoute,
   LearnFuturesTradingJournalTemplateRoute:
     LearnFuturesTradingJournalTemplateRoute,
