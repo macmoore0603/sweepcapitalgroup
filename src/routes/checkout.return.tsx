@@ -265,22 +265,17 @@ function Upsell({ amount, email }: { amount: number; email: string | null }) {
   const [open, setOpen] = useState(false);
 
   // Tier detection by amount paid — no upsell for the all-inclusive package.
+  // Only offer the coaching upgrade to Course buyers. Managed Trading and
+  // All-Inclusive are not available for purchase.
   const offer =
     amount > 0 && amount < 1200
       ? {
           priceId: "mentorship_course_coaching_onetime",
-          label: "Add the Apprenticeship",
+          label: "Add Course + Coaching",
           price: "$1,500",
-          body: "You have the framework. Add live 1-on-1 coaching and get your entries reviewed every week until the sweep setup is automatic.",
+          body: "Add 1:1 walkthroughs and trade reviews during the coaching window we agree on.",
         }
-      : amount >= 1200 && amount < 1800
-        ? {
-            priceId: "mentorship_managed_onetime",
-            label: "Add Managed Trading",
-            price: "$1,000",
-            body: "Have your account personally traded alongside your coaching so you learn while the model runs live.",
-          }
-        : null;
+      : null;
 
   if (!offer) return null;
 

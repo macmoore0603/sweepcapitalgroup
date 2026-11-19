@@ -11,7 +11,6 @@ import heroBg from "../assets/hero-bg.jpg";
 import logoAsset from "../assets/scg-logo.png.asset.json";
 const logo = logoAsset.url;
 import macMoore from "../assets/mac-moore.png";
-import { CallScheduler, SchedulingConfirmation } from "@/components/booking";
 import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { ExitIntentPlaybook } from "@/components/ExitIntentPlaybook";
@@ -19,12 +18,12 @@ import { ExitIntentPlaybook } from "@/components/ExitIntentPlaybook";
 
 const FAQS: { q: string; a: string }[] = [
   {
-    q: "What exactly do I get with The Edge ($1,000)?",
+    q: "What exactly do I get with The Course ($1,000)?",
     a: "Lifetime access to the full Sweep Capital Group course: Session Sweep, the 5–15 Gap, and Power of 3 — taught step by step with live chart breakdowns and the exact rules we trade.",
   },
   {
     q: "Is this a one-time payment or a subscription?",
-    a: "Every tier is a single one-time payment. No monthly fees, no upsells, no recurring billing.",
+    a: "Both programs are a single one-time payment. No monthly fees, no recurring billing.",
   },
   {
     q: "Do I need experience to start?",
@@ -52,7 +51,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Learn the Session Sweep, 5–15 Gap and Power of 3 models. One-time payment futures mentorship from Sweep Capital Group — twelve mentees per quarter.",
+          "Learn the Session Sweep, 5–15 Gap and Power of 3 models. One-time payment futures education from Sweep Capital Group: The Course ($1,000) or Course + Coaching ($1,500).",
       },
       { property: "og:title", content: "Sweep Capital Group — Futures Trading Mentorship" },
       {
@@ -80,6 +79,15 @@ export const Route = createFileRoute("/")({
   }),
 });
 
+function RiskNote({ className = "" }: { className?: string }) {
+  return (
+    <p className={`text-xs text-muted-foreground text-pretty max-w-2xl ${className}`}>
+      Risk disclaimer: Trading futures involves substantial risk of loss and is not suitable for every investor.
+      This is education, not financial advice. Past performance does not guarantee future results.
+    </p>
+  );
+}
+
 function FAQSection() {
   return (
     <section id="faq" className="px-6 md:px-10 py-24 md:py-32 border-t border-border">
@@ -106,12 +114,6 @@ function FAQSection() {
   );
 }
 
-
-const leadSchema = z.object({
-  full_name: z.string().trim().min(2, "Name is required").max(100),
-  email: z.string().trim().email("Invalid email").max(255),
-  capital_size: z.string().trim().max(100).optional(),
-});
 
 /** Attribution captured from the current URL so the agent can score channels. */
 function utmPayload() {
@@ -202,6 +204,7 @@ function PlaybookOptIn() {
             </button>
           </form>
         )}
+        <RiskNote />
       </div>
     </section>
   );
@@ -224,18 +227,16 @@ function Index() {
         </div>
         <div className="hidden md:flex items-center gap-8 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
           <a href="#methodology" className="hover:text-foreground transition-colors">Methodology</a>
-          <a href="#performance" className="hover:text-foreground transition-colors">Performance</a>
           <a href="#tiers" className="hover:text-foreground transition-colors">Tiers</a>
           <Link to="/about" className="hover:text-foreground transition-colors">About</Link>
           <Link to="/leadership" className="hover:text-foreground transition-colors">Leadership</Link>
           <Link to="/mentorship" className="hover:text-foreground transition-colors">Mentorship</Link>
-          <a href="#apply" className="hover:text-foreground transition-colors">Apply</a>
           <a href="#contact" className="hover:text-foreground transition-colors">Contact</a>
         </div>
         <div className="flex items-center gap-3">
-          <a href="#apply" className="hidden sm:inline-block px-5 py-2.5 bg-foreground text-background font-extrabold text-[11px] uppercase tracking-widest hover:bg-accent transition-colors">
-            Request Access
-          </a>
+          <Link to="/mentorship" className="hidden sm:inline-block px-5 py-2.5 bg-foreground text-background font-extrabold text-[11px] uppercase tracking-widest hover:bg-accent transition-colors">
+            See Programs
+          </Link>
           <Sheet>
             <SheetTrigger
               aria-label="Open menu"
@@ -252,9 +253,7 @@ function Index() {
               <nav className="flex flex-col mt-8 font-mono text-xs uppercase tracking-widest">
                 {[
                   { label: "Methodology", href: "#methodology", type: "hash" as const },
-                  { label: "Performance", href: "#performance", type: "hash" as const },
                   { label: "Tiers", href: "#tiers", type: "hash" as const },
-                  { label: "Apply", href: "#apply", type: "hash" as const },
                   { label: "Contact", href: "#contact", type: "hash" as const },
                 ].map((item) => (
                   <SheetClose asChild key={item.label}>
@@ -283,12 +282,12 @@ function Index() {
                   </Link>
                 </SheetClose>
                 <SheetClose asChild>
-                  <a
-                    href="#apply"
+                  <Link
+                    to="/mentorship"
                     className="mt-8 px-5 py-4 bg-foreground text-background font-extrabold text-[11px] uppercase tracking-widest text-center hover:bg-accent transition-colors"
                   >
-                    Request Access
-                  </a>
+                    See Programs
+                  </Link>
                 </SheetClose>
               </nav>
             </SheetContent>
@@ -317,13 +316,13 @@ function Index() {
               EDGE.
             </h1>
             <p className="max-w-[54ch] text-base md:text-lg text-muted-foreground text-pretty mt-4">
-              Strategies. Risk Management. Real Results. Build skill. Trade smart. Create freedom — through three
+              Strategies. Risk management. A repeatable process. Build skill. Trade smart. Create freedom — through three
               repeatable institutional setups: the Session Sweep, the 5–15 Gap, and the Power of 3.
             </p>
             <div className="flex flex-wrap gap-4 mt-8">
-              <a href="#apply" className="px-7 md:px-8 py-4 bg-foreground text-background font-extrabold text-sm uppercase tracking-widest hover:bg-accent transition-colors">
-                Start Application
-              </a>
+              <Link to="/mentorship" className="px-7 md:px-8 py-4 bg-foreground text-background font-extrabold text-sm uppercase tracking-widest hover:bg-accent transition-colors">
+                See the Programs
+              </Link>
               <a href="#methodology" className="px-7 md:px-8 py-4 border border-border font-extrabold text-sm uppercase tracking-widest hover:bg-white/5 transition-colors">
                 View Methodology
               </a>
@@ -331,30 +330,6 @@ function Index() {
           </div>
         </div>
       </header>
-
-      {/* Performance Matrix */}
-      <section id="performance" className="px-6 md:px-10 py-20 md:py-24 border-t border-border bg-white/[0.02]">
-        <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-10 md:gap-12">
-          {[
-            { label: "Audited Win Rate", value: "76.4", suffix: "%" },
-            { label: "Avg. Profit Factor", value: "2.42" },
-            { label: "Max Drawdown", value: "4.1%", accent: true },
-            { label: "Assets Managed", value: "$3.6M" },
-            { label: "Avg. Trade Return", value: "4.2x" },
-            { label: "Avg. Monthly Return", value: "5.6", suffix: "%" },
-            { label: "Risk / Reward Ratio", value: "1:2.8" },
-            { label: "Sharpe Ratio", value: "2.14" },
-          ].map((stat) => (
-            <div key={stat.label} className="flex flex-col gap-2">
-              <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest">{stat.label}</span>
-              <span className={`text-3xl md:text-4xl font-extrabold tracking-tight ${stat.accent ? "text-accent" : ""}`}>
-                {stat.value}
-                {stat.suffix && <span className="text-accent">{stat.suffix}</span>}
-              </span>
-            </div>
-          ))}
-        </div>
-      </section>
 
       {/* How it works */}
       <section id="process" className="px-6 md:px-10 py-24 md:py-28 border-t border-border">
@@ -367,8 +342,8 @@ function Index() {
             {[
               {
                 n: "01",
-                title: "Apply",
-                body: "Two minutes. Tell us your capital, experience, and what you want out of the desk. No screening fee, no pressure.",
+                title: "Choose a Program",
+                body: "Pick The Course or Course + Coaching on the mentorship page. One-time payment, secure checkout.",
               },
               {
                 n: "02",
@@ -378,7 +353,7 @@ function Index() {
               {
                 n: "03",
                 title: "Trade the Framework",
-                body: "One sweep, one gap, one direction per session — with review, risk limits, and direct access until it's repeatable.",
+                body: "One sweep, one gap, one direction per session — with trade reviews and risk limits. Coaching members get 1:1 walkthroughs during the coaching window we agree on.",
               },
             ].map((step) => (
               <div key={step.n} className="bg-background p-8 md:p-10 flex flex-col gap-4">
@@ -389,56 +364,13 @@ function Index() {
             ))}
           </div>
           <div className="mt-12">
-            <a
-              href="#apply"
+            <Link
+              to="/mentorship"
               className="inline-block px-8 py-4 bg-foreground text-background font-extrabold text-sm uppercase tracking-widest hover:bg-accent transition-colors"
             >
-              Start Application
-            </a>
+              See the Programs
+            </Link>
           </div>
-        </div>
-      </section>
-
-      {/* Social proof */}
-      <section id="results" className="px-6 md:px-10 py-24 md:py-32 border-t border-border bg-white/[0.02]">
-        <div className="max-w-7xl mx-auto">
-          <span className="font-mono text-accent text-[11px] uppercase tracking-[0.3em]">From the desk</span>
-          <h2 className="mt-4 text-4xl md:text-5xl font-extrabold tracking-tighter uppercase mb-16 md:mb-20">
-            Traders who{" "}
-            <span className="italic font-semibold text-accent capitalize" style={{ fontFamily: "var(--font-serif)" }}>
-              did the work
-            </span>
-          </h2>
-          <div className="grid md:grid-cols-3 gap-6 md:gap-8">
-            {[
-              {
-                quote: "The 5–15 gap alone changed how I read the open. I stopped forcing trades and started waiting for my setup.",
-                name: "Marcus D.",
-                detail: "The Edge graduate",
-              },
-              {
-                quote: "Weekly reviews in the Apprenticeship kept me honest. My journal went from chaos to a real process in about a month.",
-                name: "Priya S.",
-                detail: "Apprenticeship member",
-              },
-              {
-                quote: "I didn't have time to learn while working full-time. Managed Trading let me stay in the market without staring at charts all day.",
-                name: "Jordan T.",
-                detail: "Managed Trading client",
-              },
-            ].map((t) => (
-              <figure key={t.name} className="rounded-2xl border border-border bg-card/40 p-8 flex flex-col gap-6">
-                <blockquote className="text-base md:text-lg leading-relaxed text-foreground/90">“{t.quote}”</blockquote>
-                <figcaption className="mt-auto">
-                  <div className="font-semibold">{t.name}</div>
-                  <div className="text-sm text-muted-foreground">{t.detail}</div>
-                </figcaption>
-              </figure>
-            ))}
-          </div>
-          <p className="mt-10 text-xs text-muted-foreground max-w-2xl">
-            Testimonials reflect individual experiences and are not a guarantee of results. Trading futures involves substantial risk of loss.
-          </p>
         </div>
       </section>
 
@@ -453,7 +385,7 @@ function Index() {
               </span>
             </h2>
             <p className="max-w-xs font-mono text-[11px] text-muted-foreground uppercase leading-relaxed">
-              All one-time payment. The most affordable mentorship on the market.
+              One-time payment. No subscriptions.
             </p>
           </div>
 
@@ -462,46 +394,50 @@ function Index() {
               {
                 num: "01",
                 tag: "Self-Paced",
-                title: "The Edge",
+                title: "The Course",
                 price: "$1,000",
                 priceId: "mentorship_course_onetime",
-                desc: "My complete trading system in one self-paced course — the exact framework, setups, and risk rules I use to stay profitable.",
+                desc: "The complete self-paced curriculum: Session Sweep, the 5–15 Gap, Power of 3, and the risk rules behind them.",
                 features: ["Full video curriculum", "Lifetime updates", "Private student community"],
-                cta: "Get The Edge",
+                cta: "Buy The Course",
                 featured: false,
+                available: true,
               },
               {
                 num: "02",
                 tag: "Most Popular",
-                title: "The Apprenticeship",
+                title: "Course + Coaching",
                 price: "$1,500",
                 priceId: "mentorship_course_coaching_onetime",
-                desc: "The Edge plus personal 1-on-1 coaching — I walk you through every setup, review your trades, and stay with you until you're consistently profitable.",
-                features: ["Everything in The Edge", "1:1 step-by-step walkthroughs", "Direct messaging access", "Coaching until profitable"],
-                cta: "Start Apprenticeship",
+                desc: "Everything in The Course, plus 1:1 walkthroughs and trade reviews during the coaching window we agree on.",
+                features: ["Everything in The Course", "1:1 step-by-step walkthroughs", "Trade reviews", "Direct messaging during your coaching window"],
+                cta: "Buy Course + Coaching",
                 featured: true,
+                available: true,
               },
               {
                 num: "03",
-                tag: "Done-For-You",
+                tag: "Not Available",
                 title: "Managed Trading",
                 price: "$1,000",
                 priceId: "mentorship_managed_onetime",
-                desc: "Your account is personally managed and traded on your behalf. Guaranteed $3,100 minimum profit in a 3–4 week window — or your money back, no questions asked.",
-                features: ["We trade your account for you", "Guaranteed $3,100 minimum profit", "3–4 week performance window", "Weekly transparent updates", "Money-back guarantee"],
-                cta: "Start Managed Trading",
+                desc: "Not currently available for purchase.",
+                features: ["Not available for purchase"],
+                cta: "Not available",
                 featured: false,
+                available: false,
               },
               {
                 num: "04",
-                tag: "Best Value",
-                title: "The Full Send",
+                tag: "Not Available",
+                title: "All-Inclusive",
                 price: "$2,000",
                 priceId: "mentorship_all_inclusive_onetime",
-                desc: "Everything in one package — The Edge course, 1-on-1 apprenticeship, and managed trading with the $3,100 guarantee. The fastest path from beginner to profitable.",
-                features: ["Full Edge course access", "1:1 mentorship until profitable", "Managed trading ($3,100 guarantee)", "Highest-priority support"],
-                cta: "Go Full Send",
+                desc: "Not currently available for purchase.",
+                features: ["Not available for purchase"],
+                cta: "Not available",
                 featured: false,
+                available: false,
               },
             ].map((tier) => (
               <article
@@ -533,11 +469,13 @@ function Index() {
                 </ul>
                 <button
                   type="button"
+                  disabled={!tier.available}
                   onClick={() => {
+                    if (!tier.available) return;
                     setCheckoutTitle(tier.title);
                     setCheckoutPriceId(tier.priceId);
                   }}
-                  className={`w-full py-4 text-center text-[11px] font-extrabold uppercase tracking-widest transition-colors ${
+                  className={`w-full py-4 text-center text-[11px] font-extrabold uppercase tracking-widest transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                     tier.featured ? "bg-foreground text-background hover:bg-accent" : "border border-border hover:bg-white/5"
                   }`}
                 >
@@ -546,6 +484,7 @@ function Index() {
               </article>
             ))}
           </div>
+          <RiskNote className="mt-6" />
         </div>
       </section>
 
@@ -643,20 +582,20 @@ function Index() {
             </h2>
             <p className="text-muted-foreground text-base md:text-lg leading-relaxed text-pretty">
               Three years behind the screens of institutional desks taught Mac one lesson worth repeating:
-              the market does not reward intelligence — it rewards success. He founded Sweep Capital Group
-              Group in Johns Creek to compress that lesson into a deliberate, repeatable framework for the
+              the market does not reward intelligence — it rewards process. He founded Sweep Capital Group
+              in Johns Creek to compress that lesson into a deliberate, repeatable framework for the
               traders he chooses to mentor.
             </p>
             <p className="text-muted-foreground text-base md:text-lg leading-relaxed text-pretty">
               His approach is unromantic: edge is built through statistical rigor, position sizing, and an
-              unwavering process. Each mentee is selected personally, briefed personally, and held personally
+              unwavering process. Coaching members are briefed personally and held
               accountable to the same standards Mac runs his own book against.
             </p>
             <div className="grid grid-cols-3 gap-6 pt-4 border-t border-border mt-2">
               {[
                 { k: "3 YRS", v: "Trading Desks" },
-                { k: "$3.6M", v: "Allocated" },
-                { k: "12 / QTR", v: "Selected Mentees" },
+                { k: "3", v: "Core Setups" },
+                { k: "1x", v: "One-Time Payment" },
               ].map((s) => (
                 <div key={s.k} className="flex flex-col gap-1">
                   <span className="font-extrabold text-xl md:text-2xl tracking-tight text-accent">{s.k}</span>
@@ -668,29 +607,26 @@ function Index() {
         </div>
       </section>
 
-      {/* Apply */}
-      <section id="apply" className="px-6 md:px-10 py-24 md:py-32 border-t border-border">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-32">
-            <div className="flex flex-col gap-8">
-              <h2 className="text-5xl md:text-6xl font-extrabold tracking-tighter uppercase">
-                Secure <br />
-                <span className="italic font-semibold text-accent capitalize" style={{ fontFamily: "var(--font-serif)" }}>
-                  Your Seat
-                </span>
-              </h2>
-              <p className="text-muted-foreground text-sm font-mono uppercase leading-relaxed tracking-wider">
-                Sweep Capital Group accepts a maximum of twelve mentees per quarter. This ensures the integrity
-                of our instruction and the quality of our network.
-              </p>
-              <div className="pt-8 flex flex-col gap-3 font-mono text-[10px] text-muted-foreground tracking-widest">
-                <span>JOHNS CREEK, GEORGIA</span>
-                <span>MAC MOORE — FOUNDER &amp; OWNER</span>
-                <span>EST. MMXXIV — SWEEP</span>
-              </div>
-            </div>
-            <ApplicationForm />
-          </div>
+      {/* Start */}
+      <section id="start" className="px-6 md:px-10 py-24 md:py-32 border-t border-border">
+        <div className="max-w-3xl mx-auto flex flex-col items-center text-center gap-8">
+          <h2 className="text-5xl md:text-6xl font-extrabold tracking-tighter uppercase">
+            Ready to{" "}
+            <span className="italic font-semibold text-accent capitalize" style={{ fontFamily: "var(--font-serif)" }}>
+              start?
+            </span>
+          </h2>
+          <p className="text-muted-foreground text-base md:text-lg text-pretty">
+            Choose The Course or Course + Coaching on the mentorship page. One-time payment, secure checkout,
+            and next steps by email right after.
+          </p>
+          <Link
+            to="/mentorship"
+            className="px-8 py-4 bg-foreground text-background font-extrabold text-sm uppercase tracking-widest hover:bg-accent transition-colors"
+          >
+            See the Programs
+          </Link>
+          <RiskNote />
         </div>
       </section>
 
@@ -761,142 +697,13 @@ function Index() {
         >
           View Tiers
         </a>
-        <a
-          href="#apply"
+        <Link
+          to="/mentorship"
           className="flex-1 text-center border border-border text-foreground font-mono text-[11px] uppercase tracking-widest py-3 rounded-sm"
         >
-          Apply
-        </a>
+          Programs
+        </Link>
       </div>
     </div>
   );
 }
-
-
-function ApplicationForm() {
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [capitalSize, setCapitalSize] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [leadId, setLeadId] = useState<string | null>(null);
-  const [bookingToken, setBookingToken] = useState<string | null>(null);
-  const [scheduledAt, setScheduledAt] = useState<Date | null>(null);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const parsed = leadSchema.safeParse({
-      full_name: fullName,
-      email,
-      capital_size: capitalSize || undefined,
-    });
-    if (!parsed.success) {
-      toast.error(parsed.error.issues[0]?.message ?? "Please check your inputs");
-      return;
-    }
-    setSubmitting(true);
-    let payload: any = null;
-    try {
-      const res = await fetch("/api/public/lead-submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          full_name: parsed.data.full_name,
-          email: parsed.data.email,
-          tier: parsed.data.capital_size || "Application",
-          ...utmPayload(),
-        }),
-      });
-      payload = await res.json();
-      if (!res.ok || !payload?.success) throw new Error(payload?.error ?? "failed");
-    } catch {
-      setSubmitting(false);
-      toast.error("Submission failed. Please try again.");
-      return;
-    }
-    setSubmitting(false);
-    toast.success("Application received. Check your email, then book your call.");
-    setLeadId(payload.lead_id);
-    setBookingToken(payload.booking_token);
-
-  };
-
-  const [rescheduling, setRescheduling] = useState(false);
-
-  if (leadId && bookingToken && scheduledAt && !rescheduling) {
-    return (
-      <SchedulingConfirmation
-        slot={scheduledAt}
-        leadId={leadId}
-        bookingToken={bookingToken}
-        onReschedule={() => setRescheduling(true)}
-        onCancelled={() => setScheduledAt(null)}
-      />
-    );
-  }
-
-  if (leadId && bookingToken) {
-    return (
-      <CallScheduler
-        leadId={leadId}
-        bookingToken={bookingToken}
-        mode={rescheduling ? "reschedule" : "initial"}
-        currentSlot={scheduledAt}
-        onScheduled={(slot) => {
-          setScheduledAt(slot);
-          setRescheduling(false);
-        }}
-        onBack={rescheduling ? () => setRescheduling(false) : undefined}
-      />
-    );
-  }
-
-  return (
-    <form className="space-y-8" onSubmit={handleSubmit}>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-        <div className="space-y-2">
-          <label className="font-mono text-[10px] uppercase text-muted-foreground tracking-widest">Full Name</label>
-          <input
-            required
-            type="text"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            maxLength={100}
-            className="w-full bg-transparent border-b border-border py-4 focus:outline-none focus:border-accent text-lg placeholder:text-muted-foreground/40"
-            placeholder="ALEXANDER VAUGHN"
-          />
-        </div>
-        <div className="space-y-2">
-          <label className="font-mono text-[10px] uppercase text-muted-foreground tracking-widest">Capital Size</label>
-          <input
-            type="text"
-            value={capitalSize}
-            onChange={(e) => setCapitalSize(e.target.value)}
-            maxLength={100}
-            className="w-full bg-transparent border-b border-border py-4 focus:outline-none focus:border-accent text-lg placeholder:text-muted-foreground/40"
-            placeholder="$100K — $500K"
-          />
-        </div>
-      </div>
-      <div className="space-y-2">
-        <label className="font-mono text-[10px] uppercase text-muted-foreground tracking-widest">Email Address</label>
-        <input
-          required
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          maxLength={255}
-          className="w-full bg-transparent border-b border-border py-4 focus:outline-none focus:border-accent text-lg placeholder:text-muted-foreground/40"
-          placeholder="CLIENT@PROTOCOL.COM"
-        />
-      </div>
-      <button
-        type="submit"
-        disabled={submitting}
-        className="w-full py-5 md:py-6 bg-foreground text-background font-extrabold uppercase tracking-[0.2em] hover:bg-accent transition-colors duration-500 disabled:opacity-50"
-      >
-        {submitting ? "Submitting…" : "Submit Application for Review"}
-      </button>
-    </form>
-  );
-}
-

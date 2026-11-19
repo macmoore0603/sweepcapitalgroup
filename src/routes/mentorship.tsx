@@ -15,13 +15,13 @@ export const Route = createFileRoute("/mentorship")({
       {
         name: "description",
         content:
-          "Four one-time mentorship options from Sweep Capital Group. Course, full step-by-step coaching, managed trading, or the complete package — the most affordable on the market.",
+          "Two one-time programs from Sweep Capital Group: The Course ($1,000) and Course + Coaching ($1,500).",
       },
       { property: "og:title", content: "Mentorship — Sweep Capital Group" },
       {
         property: "og:description",
         content:
-          "One-time pricing. Four ways in. Course, coaching, managed trading, or all-inclusive.",
+          "One-time pricing. The Course or Course + Coaching.",
       },
     ],
   }),
@@ -37,6 +37,7 @@ type Tier = {
   features: string[];
   highlight?: boolean;
   badge?: string;
+  available: boolean;
 };
 
 const TIERS: Tier[] = [
@@ -52,6 +53,7 @@ const TIERS: Tier[] = [
       "Private student community",
       "One-time payment — no subscriptions",
     ],
+    available: true,
   },
   {
     id: "course-coaching",
@@ -63,38 +65,31 @@ const TIERS: Tier[] = [
       "Everything in The Course",
       "Step-by-step 1:1 walkthroughs",
       "Direct messaging access",
-      "Setup reviews until you're profitable",
+      "1:1 walkthroughs and trade reviews during the coaching window we agree on",
     ],
     highlight: true,
     badge: "Most Popular",
+    available: true,
   },
   {
     id: "managed",
     name: "Managed Trading",
     price: "$1,000",
     priceId: "mentorship_managed_onetime",
-    tagline: "I trade for you. Guaranteed $3,100 minimum in 3–4 weeks.",
-    features: [
-      "Hands-off — I trade your account",
-      "Guaranteed $3,100 minimum profit",
-      "3–4 week target window",
-      "Weekly performance updates",
-    ],
-    badge: "Managed",
+    tagline: "Not currently available for purchase.",
+    features: ["Not available for purchase"],
+    badge: "Not Available",
+    available: false,
   },
   {
     id: "all-in",
     name: "All-Inclusive",
     price: "$2,000",
     priceId: "mentorship_all_inclusive_onetime",
-    tagline: "Course + coaching + managed trading. Everything.",
-    features: [
-      "Full course access",
-      "Step-by-step personal coaching",
-      "Managed trading ($3,100+ target)",
-      "Highest priority direct access",
-    ],
-    badge: "Best Value",
+    tagline: "Not currently available for purchase.",
+    features: ["Not available for purchase"],
+    badge: "Not Available",
+    available: false,
   },
 ];
 
@@ -112,11 +107,11 @@ const FAQ_GROUPS: FaqGroup[] = [
       },
       {
         q: "Is there a minimum account size?",
-        a: "For self-trading tiers, $500–$2,000 in starting capital is the practical floor. For Managed Trading, the minimum funded account is $2,500.",
+        a: "For self-trading tiers, $500–$2,000 in starting capital is the practical floor. ",
       },
       {
         q: "Country requirements?",
-        a: "Open to US residents 18+. International students can enroll in The Course; managed trading and direct coaching are US-only at this time.",
+        a: "Open to US residents 18+. International students can enroll in The Course; direct coaching is US-only at this time.",
       },
       {
         q: "What broker do I need?",
@@ -125,7 +120,7 @@ const FAQ_GROUPS: FaqGroup[] = [
     ],
   },
   {
-    title: "Refunds & Guarantees",
+    title: "Refunds",
     kicker: "Where we stand",
     items: [
       {
@@ -133,16 +128,12 @@ const FAQ_GROUPS: FaqGroup[] = [
         a: "The Course and Course + Coaching include a 7-day satisfaction window from the date of first login — full refund, no questions, if the material isn't for you.",
       },
       {
-        q: "What does the Managed Trading guarantee cover?",
-        a: "If your account does not reach a $3,100 minimum net profit within the 3–4 week target window, we continue trading at no additional cost until it does, or we refund the $1,000 setup fee. Full terms in your written agreement.",
-      },
-      {
-        q: "Are returns guaranteed for self-trading tiers?",
-        a: "No. Self-trading outcomes depend on your execution. We guarantee curriculum quality and coaching access, not market returns.",
+        q: "Are results guaranteed?",
+        a: "No. Trading outcomes depend on the market and your own execution. We provide curriculum and coaching access, not returns.",
       },
       {
         q: "Can I upgrade after I start?",
-        a: "Yes. Any tier can be upgraded within 30 days and we credit 100% of what you've already paid toward the higher tier.",
+        a: "Yes. The Course can be upgraded to Course + Coaching within 30 days, and we credit 100% of what you've already paid.",
       },
     ],
   },
@@ -163,34 +154,12 @@ const TIER_EXPECTATIONS: { id: string; name: string; timeline: string; steps: st
   {
     id: "course-coaching",
     name: "Course + Coaching",
-    timeline: "6–8 weeks to first profit",
+    timeline: "Coaching window agreed at kickoff",
     steps: [
-      "Kickoff call within 24 hours to map your starting point",
-      "1:1 walkthroughs of every core setup until executed cleanly",
-      "Direct messaging access for live trade reviews",
-      "Coaching continues until you hit your first profitable week",
-    ],
-  },
-  {
-    id: "managed",
-    name: "Managed Trading",
-    timeline: "3–4 week target window",
-    steps: [
-      "Sign agreement and connect your funded account",
-      "I trade your account hands-off with weekly performance reports",
-      "$3,100 minimum target — continue at no cost or refund if missed",
-      "Quarterly review on whether to continue managed or transition you to self-trading",
-    ],
-  },
-  {
-    id: "all-in",
-    name: "All-Inclusive",
-    timeline: "Full stack from day one",
-    steps: [
-      "Everything in Course + Coaching, with highest-priority direct access",
-      "Managed Trading runs in parallel while you learn",
-      "Side-by-side reviews of my trades vs. yours",
-      "Continued support after the managed window closes",
+      "Kickoff call to map your starting point and agree your coaching window",
+      "1:1 walkthroughs of each core setup",
+      "Trade reviews and direct messaging during your coaching window",
+      "Full course access continues after the window ends",
     ],
   },
 ];
@@ -223,15 +192,14 @@ export default function MentorshipPage() {
         <div className="max-w-5xl mx-auto flex flex-col gap-6">
           <span className="font-mono text-accent text-[12px] uppercase tracking-[0.3em]">Mentorship</span>
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter uppercase leading-[0.9]">
-            Four ways in.{" "}
+            Two ways in.{" "}
             <span className="italic font-semibold text-accent" style={{ fontFamily: "var(--font-serif)" }}>
               One-time payment.
             </span>
           </h1>
           <p className="max-w-[60ch] text-base md:text-lg text-muted-foreground text-pretty">
-            No subscriptions. No upsells. Pick the path that fits where you are — the course, full
-            coaching, managed trading, or the complete package. The most affordable mentorship on
-            the market, by a wide margin.
+            No subscriptions. Pick the path that fits where you are — The Course, or Course + Coaching
+            with 1:1 walkthroughs and trade reviews during the coaching window we agree on.
           </p>
         </div>
       </header>
@@ -263,6 +231,7 @@ export default function MentorshipPage() {
                   </li>
                 ))}
               </ul>
+              {tier.available ? (
               <a
                 href={`#lead`}
                 onClick={() => {
@@ -279,12 +248,21 @@ export default function MentorshipPage() {
               >
                 Choose {tier.name}
               </a>
+              ) : (
+                <span
+                  aria-disabled="true"
+                  className="mt-auto text-center px-5 py-3 font-extrabold text-[11px] uppercase tracking-widest border border-border text-muted-foreground cursor-not-allowed"
+                >
+                  Not available for purchase
+                </span>
+              )}
             </div>
           ))}
         </div>
         <p className="max-w-5xl mx-auto mt-10 font-mono text-[11px] uppercase tracking-widest text-muted-foreground text-center">
-          All options are a single one-time payment — the most affordable mentorship on the market.
+          Each program is a single one-time payment.
         </p>
+        <RiskNote className="max-w-5xl mx-auto mt-4 text-center" />
       </section>
 
       {/* FAQ */}
@@ -332,7 +310,7 @@ export default function MentorshipPage() {
             <h3 className="text-2xl md:text-3xl font-extrabold tracking-tighter uppercase">
               What to expect — by tier
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-border">
+            <div className="grid grid-cols-1 md:grid-cols-2 md:grid-cols-2 gap-px bg-border">
               {TIER_EXPECTATIONS.map((te) => (
                 <div key={te.id} className="bg-background p-6 flex flex-col gap-4">
                   <div className="flex flex-col gap-1">
@@ -364,10 +342,7 @@ export default function MentorshipPage() {
             <p className="text-sm text-muted-foreground text-pretty">
               Trading involves substantial risk of loss and is not suitable for every investor.
               Nothing on this page is financial, legal, or tax advice. Past performance and example
-              results do not guarantee future returns. Any "guaranteed" language in the Managed
-              Trading tier refers to a contractual minimum performance commitment that will be
-              detailed in a written agreement before any capital is deployed — by enrolling, you
-              acknowledge you've read and understood the terms in that agreement.
+              results do not guarantee future returns.
             </p>
           </div>
         </div>
@@ -377,7 +352,7 @@ export default function MentorshipPage() {
       <section id="lead" className="px-6 md:px-10 py-24 md:py-32 border-t border-border bg-white/[0.02]">
         <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24">
           <div className="flex flex-col gap-6">
-            <span className="font-mono text-accent text-[11px] uppercase tracking-[0.3em]">Get More Leads</span>
+            <span className="font-mono text-accent text-[11px] uppercase tracking-[0.3em]">Enroll</span>
             <h2 className="text-4xl md:text-5xl font-extrabold tracking-tighter uppercase leading-[0.95]">
               Tell us about you.{" "}
               <span className="italic font-semibold text-accent" style={{ fontFamily: "var(--font-serif)" }}>
@@ -385,8 +360,8 @@ export default function MentorshipPage() {
               </span>
             </h2>
             <p className="text-muted-foreground text-base md:text-lg text-pretty">
-              Drop your details and the option that fits. We follow up personally within 24 hours
-              with next steps, payment, and a kickoff call.
+              Enter your details, pick a program, and pay securely. We follow up personally within 24 hours
+              with next steps and a kickoff call.
             </p>
             <div className="pt-4 flex flex-col gap-2 font-mono text-[10px] text-muted-foreground tracking-widest">
               <span>JOHNS CREEK, GEORGIA</span>
@@ -412,6 +387,15 @@ export default function MentorshipPage() {
   );
 }
 
+function RiskNote({ className = "" }: { className?: string }) {
+  return (
+    <p className={`text-xs text-muted-foreground text-pretty ${className}`}>
+      Risk disclaimer: Trading futures involves substantial risk of loss and is not suitable for every investor.
+      This is education, not financial advice. Past performance does not guarantee future results.
+    </p>
+  );
+}
+
 const leadSchema = z.object({
   full_name: z.string().min(2, "Please enter your full name").max(120),
   email: z.string().email("Please enter a valid email"),
@@ -423,18 +407,19 @@ function LeadForm() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [tier, setTier] = useState(TIERS[1].name);
+  const purchasable = TIERS.filter((t) => t.available);
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [checkoutEmail, setCheckoutEmail] = useState<string | null>(null);
-  const selectedTier = TIERS.find((t) => t.name === tier) ?? TIERS[0];
+  const selectedTier = purchasable.find((t) => t.name === tier) ?? purchasable[0];
 
   if (typeof window !== "undefined") {
     if (!(window as unknown as { __lncTierWired?: boolean }).__lncTierWired) {
       (window as unknown as { __lncTierWired?: boolean }).__lncTierWired = true;
       window.addEventListener("lnc:tier-selected", () => {
         const saved = window.sessionStorage.getItem("lnc_selected_tier");
-        if (saved) setTier(saved);
+        if (saved && TIERS.some((t) => t.name === saved && t.available)) setTier(saved);
       });
     }
   }
@@ -524,6 +509,7 @@ function LeadForm() {
         >
           ← Change selection
         </button>
+        <RiskNote />
       </div>
     );
   }
@@ -556,7 +542,7 @@ function LeadForm() {
           onChange={(e) => setTier(e.target.value)}
           className="bg-background border border-border focus:border-accent outline-none py-2 px-3 text-foreground"
         >
-          {TIERS.map((t) => (
+          {purchasable.map((t) => (
             <option key={t.id} value={t.name}>
               {t.name} — {t.price}
             </option>
@@ -577,8 +563,9 @@ function LeadForm() {
         disabled={submitting}
         className="mt-2 px-6 py-4 bg-foreground text-background font-extrabold text-[11px] uppercase tracking-widest hover:bg-accent transition-colors disabled:opacity-50"
       >
-        {submitting ? "Submitting…" : "Request Access"}
+        {submitting ? "Submitting…" : "Continue to Secure Checkout"}
       </button>
+      <RiskNote />
     </form>
   );
 }
