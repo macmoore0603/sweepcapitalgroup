@@ -1,14 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import logoAsset from "../assets/scg-logo.png.asset.json";
-const logo = logoAsset.url;
+import { LOGO_SMALL } from "@/lib/logo-small";
+const logo = LOGO_SMALL;
 
 export const Route = createFileRoute("/privacy")({
   head: () => ({
     meta: [
       { title: "Privacy Policy — Sweep Capital Group" },
-      { name: "description", content: "Privacy Policy for Sweep Capital Group and Sierra messaging services." },
+      { name: "description", content: "Privacy Policy for Sweep Capital Group, a futures trading education company." },
       { property: "og:title", content: "Privacy Policy — Sweep Capital Group" },
-      { property: "og:description", content: "Privacy Policy for Sweep Capital Group and Sierra messaging services." },
+      { property: "og:description", content: "Privacy Policy for Sweep Capital Group, a futures trading education company." },
       { name: "robots", content: "index, follow" },
     ],
   }),

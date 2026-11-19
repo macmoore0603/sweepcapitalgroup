@@ -1,14 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import logoAsset from "../assets/scg-logo.png.asset.json";
-const logo = logoAsset.url;
+import { LOGO_SMALL } from "@/lib/logo-small";
+const logo = LOGO_SMALL;
 
 export const Route = createFileRoute("/terms")({
   head: () => ({
     meta: [
       { title: "Terms & Conditions — Sweep Capital Group" },
-      { name: "description", content: "Terms and Conditions for Sweep Capital Group and Sierra messaging services." },
+      { name: "description", content: "Terms and Conditions for Sweep Capital Group futures trading education programs." },
       { property: "og:title", content: "Terms & Conditions — Sweep Capital Group" },
-      { property: "og:description", content: "Terms and Conditions for Sweep Capital Group and Sierra messaging services." },
+      { property: "og:description", content: "Terms and Conditions for Sweep Capital Group futures trading education programs." },
       { name: "robots", content: "index, follow" },
     ],
   }),
@@ -51,13 +51,13 @@ function TermsPage() {
           <Section title="Description of Services">
             <p>Sweep Capital Group provides the following:</p>
             <ul className="list-disc pl-5 space-y-2 mt-3">
-              <li>Institutional-grade trading mentorship and education programs.</li>
-              <li>AI-powered concierge assistance through Sierra, accessible via SMS, voice, and messaging platforms.</li>
-              <li>Social media content management and scheduling services for brand presence.</li>
-              <li>Educational resources, market analysis, and community access.</li>
+              <li>The Course: a self-paced futures trading education curriculum with community access, sold as a one-time payment.</li>
+              <li>Course + Coaching: The Course plus 1:1 coaching walkthroughs and trade reviews during an agreed coaching window, sold as a one-time payment.</li>
+              <li>Free educational resources, such as written guides, checklists, and the Session Sweep playbook.</li>
+              <li>Scheduling, enrollment, and support communications by email, SMS, or our automated assistant, Sierra.</li>
             </ul>
             <p>
-              Sierra is an AI assistant designed to help you schedule tasks, set reminders, manage social media posts, search for information, and communicate via email on your behalf. Sierra operates under your explicit direction and does not make independent financial or investment decisions.
+              Our Services are educational only. We do not provide individualized financial or investment advice, manage accounts, allocate capital, or trade on your behalf. Sierra is an automated assistant that helps with scheduling, reminders, and questions about our programs; it operates under your direction and does not make financial or investment decisions.
             </p>
           </Section>
 
